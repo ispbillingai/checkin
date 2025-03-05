@@ -40,10 +40,12 @@ if ($conn->query($sql) === TRUE) {
     echo "Error creating users table: " . $conn->error . "<br>";
 }
 
-// Create rooms table
+// Create rooms table with passcode settings
 $sql = "CREATE TABLE IF NOT EXISTS rooms (
     id VARCHAR(20) PRIMARY KEY,
-    name VARCHAR(100) NOT NULL
+    name VARCHAR(100) NOT NULL,
+    fixed_passcode VARCHAR(10) NULL,
+    reset_hours INT DEFAULT 2
 )";
 
 if ($conn->query($sql) === TRUE) {
@@ -59,8 +61,8 @@ $sql = "CREATE TABLE IF NOT EXISTS bookings (
     guest_name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL,
     phone VARCHAR(20) NOT NULL,
-    arrival_date_time DATETIME NOT NULL,
-    departure_date_time DATETIME NOT NULL,
+    arrival_datetime DATETIME NOT NULL,
+    departure_datetime DATETIME NOT NULL,
     access_code VARCHAR(10) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (room_id) REFERENCES rooms(id)
@@ -70,6 +72,28 @@ if ($conn->query($sql) === TRUE) {
     echo "Bookings table created successfully<br>";
 } else {
     echo "Error creating bookings table: " . $conn->error . "<br>";
+}
+
+// Create notification settings table
+$sql = "CREATE TABLE IF NOT EXISTS notification_settings (
+    id INT(11) AUTO_INCREMENT PRIMARY KEY,
+    email_enabled TINYINT(1) DEFAULT 1,
+    sms_enabled TINYINT(1) DEFAULT 0,
+    email_template TEXT,
+    sms_template VARCHAR(255),
+    smtp_host VARCHAR(100),
+    smtp_port INT,
+    smtp_username VARCHAR(100),
+    smtp_password VARCHAR(100),
+    sms_api_key VARCHAR(100),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+)";
+
+if ($conn->query($sql) === TRUE) {
+    echo "Notification settings table created successfully<br>";
+} else {
+    echo "Error creating notification settings table: " . $conn->error . "<br>";
 }
 
 // Check if default admin user exists
@@ -132,6 +156,58 @@ if ($result->num_rows == 0) {
         } else {
             echo "Error creating room '{$room[1]}': " . $stmt->error . "<br>";
         }
+    }
+}
+
+// Check if default notification settings exist
+$stmt = $conn->prepare("SELECT * FROM notification_settings LIMIT 1");
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows == 0) {
+    // Insert default notification settings
+    $defaultEmailTemplate = '
+    <html>
+    <head>
+        <title>Your Booking Confirmation</title>
+    </head>
+    <body>
+        <h2>Booking Confirmation</h2>
+        <p>Dear {GUEST_NAME},</p>
+        <p>Your booking has been confirmed with the following details:</p>
+        <table style="border-collapse: collapse; width: 100%;">
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;"><strong>Room:</strong></td>
+                <td style="border: 1px solid #ddd; padding: 8px;">{ROOM_NAME}</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;"><strong>Check-in:</strong></td>
+                <td style="border: 1px solid #ddd; padding: 8px;">{ARRIVAL_DATETIME}</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;"><strong>Check-out:</strong></td>
+                <td style="border: 1px solid #ddd; padding: 8px;">{DEPARTURE_DATETIME}</td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;"><strong>Access Code:</strong></td>
+                <td style="border: 1px solid #ddd; padding: 8px;"><h3>{ACCESS_CODE}</h3></td>
+            </tr>
+        </table>
+        <p>Please use this access code during your stay.</p>
+        <p>Thank you for choosing our service!</p>
+    </body>
+    </html>
+    ';
+    
+    $defaultSmsTemplate = 'Your booking at {ROOM_NAME} is confirmed. Access code: {ACCESS_CODE}. Check-in: {ARRIVAL_DATETIME}.';
+    
+    $stmt = $conn->prepare("INSERT INTO notification_settings (email_enabled, sms_enabled, email_template, sms_template, smtp_host, smtp_port) VALUES (1, 0, ?, ?, 'smtp.example.com', 587)");
+    $stmt->bind_param("ss", $defaultEmailTemplate, $defaultSmsTemplate);
+    
+    if ($stmt->execute()) {
+        echo "Default notification settings created successfully<br>";
+    } else {
+        echo "Error creating default notification settings: " . $stmt->error . "<br>";
     }
 }
 
