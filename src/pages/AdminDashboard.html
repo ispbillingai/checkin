@@ -9,19 +9,149 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
 </head>
-<body class="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4 md:p-8">
-  <div class="max-w-7xl w-full mx-auto">
-    <div class="flex items-center justify-between mb-8">
-      <a href="index.html" class="flex items-center gap-1 text-gray-500 hover:text-gray-800">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
-        Sign Out
-      </a>
-      <h1 class="text-2xl font-medium text-center">Admin Dashboard</h1>
-      <div class="w-24"></div> <!-- Spacer for alignment -->
+<body class="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+  <div class="flex w-full min-h-screen">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="border-r bg-background transition-all duration-300 ease-in-out w-64">
+      <div class="flex flex-col h-full">
+        <div class="sidebar-content flex-1 overflow-auto py-2">
+          <!-- Management section -->
+          <div class="py-2">
+            <div class="px-4 py-1 text-xs font-medium text-gray-500">Management</div>
+            <div class="py-1">
+              <ul class="grid gap-1 px-2">
+                <li>
+                  <button 
+                    class="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm font-medium bg-blue-100 text-blue-600" 
+                    data-section="bookings">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    </svg>
+                    <span>Bookings</span>
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    class="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm font-medium hover:bg-gray-100" 
+                    data-section="passcodes">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    </svg>
+                    <span>Room Passcodes</span>
+                  </button>
+                </li>
+                <li>
+                  <button 
+                    class="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm font-medium hover:bg-gray-100" 
+                    data-section="database">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                    </svg>
+                    <span>Database Schema</span>
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+          
+          <!-- Notification section -->
+          <div class="py-2">
+            <div class="px-4 py-1 text-xs font-medium text-gray-500">Notification</div>
+            <div class="py-1">
+              <ul class="grid gap-1 px-2">
+                <li>
+                  <button class="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm font-medium hover:bg-gray-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <span>Email Templates</span>
+                  </button>
+                </li>
+                <li>
+                  <button class="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm font-medium hover:bg-gray-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                    </svg>
+                    <span>SMS Templates</span>
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+          
+          <!-- System section -->
+          <div class="py-2">
+            <div class="px-4 py-1 text-xs font-medium text-gray-500">System</div>
+            <div class="py-1">
+              <ul class="grid gap-1 px-2">
+                <li>
+                  <button class="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm font-medium hover:bg-gray-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                    </svg>
+                    <span>Users</span>
+                  </button>
+                </li>
+                <li>
+                  <button class="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm font-medium hover:bg-gray-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>Settings</span>
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <div class="flex-1">
+      <div class="p-4 md:p-8">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+          <div class="flex items-center gap-2">
+            <button id="sidebarToggle" class="p-2 rounded-md hover:bg-gray-100">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <h1 class="text-2xl font-medium">Admin Dashboard</h1>
+          </div>
+          <a href="index.html" class="flex items-center gap-1 px-3 py-2 rounded-md text-gray-500 hover:bg-gray-100">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Sign Out
+          </a>
+        </div>
+        
+        <!-- Content sections -->
+        <div class="max-w-7xl mx-auto">
+          <!-- Bookings section -->
+          <div id="bookingsSection" class="section-content">
+            <!-- Content will be loaded here -->
+          </div>
+          
+          <!-- Passcodes section (hidden by default) -->
+          <div id="passcodesSection" class="section-content hidden">
+            <!-- Content will be loaded here -->
+          </div>
+          
+          <!-- Database section (hidden by default) -->
+          <div id="databaseSection" class="section-content hidden">
+            <!-- Content will be loaded here -->
+          </div>
+        </div>
+      </div>
     </div>
-    
+  </div>
+
+  <!-- Templates for section content -->
+  <template id="bookingsTemplate">
     <div class="backdrop-blur-sm bg-white/90 border shadow-lg rounded-lg overflow-hidden mb-8">
       <div class="bg-blue-50 border-b p-6">
         <h2 class="text-xl font-semibold">Bookings Summary</h2>
@@ -115,12 +245,143 @@
         </div>
       </div>
     </div>
-  </div>
+  </template>
 
-  <!-- Print Template (hidden) -->
-  <div id="printTemplate" class="hidden">
-    <div id="printContent"></div>
-  </div>
+  <template id="passcodesTemplate">
+    <div class="backdrop-blur-sm bg-white/90 border shadow-lg rounded-lg overflow-hidden mb-8">
+      <div class="bg-blue-50 border-b p-6">
+        <h2 class="text-xl font-semibold">Room Passcodes</h2>
+        <p class="text-sm text-gray-500 mt-1">
+          Manage passcodes for rooms and notification settings
+        </p>
+      </div>
+      <div class="p-6">
+        <div class="space-y-6">
+          <div class="grid gap-4">
+            <h3 class="text-lg font-medium">Default Passcode Settings</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label for="passcode-length" class="block text-sm font-medium text-gray-700">Passcode Length</label>
+                <select id="passcode-length" class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="4">4 digits</option>
+                  <option value="6" selected>6 digits</option>
+                  <option value="8">8 digits</option>
+                </select>
+              </div>
+              <div class="space-y-2">
+                <label for="passcode-type" class="block text-sm font-medium text-gray-700">Passcode Type</label>
+                <select id="passcode-type" class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="numeric" selected>Numeric only</option>
+                  <option value="alphanumeric">Alphanumeric</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <div class="grid gap-4">
+            <h3 class="text-lg font-medium">Notification Settings</h3>
+            <div class="grid grid-cols-1 gap-4">
+              <div class="flex items-start space-x-2">
+                <input
+                  type="checkbox"
+                  id="email-notification"
+                  class="mt-1"
+                  checked
+                />
+                <div class="space-y-1">
+                  <label for="email-notification" class="block text-sm font-medium text-gray-700">Email Notification</label>
+                  <p class="text-sm text-gray-500">Send passcode to guest via email when booking is confirmed</p>
+                </div>
+              </div>
+              <div class="flex items-start space-x-2">
+                <input
+                  type="checkbox"
+                  id="sms-notification"
+                  class="mt-1"
+                />
+                <div class="space-y-1">
+                  <label for="sms-notification" class="block text-sm font-medium text-gray-700">SMS Notification</label>
+                  <p class="text-sm text-gray-500">Send passcode to guest via SMS when booking is confirmed</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="grid gap-4" id="roomSettingsContainer">
+            <h3 class="text-lg font-medium">Room-Specific Settings</h3>
+            <!-- Room settings will be populated here by JavaScript -->
+          </div>
+          
+          <div class="flex justify-end">
+            <button id="saveSettings" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Save Settings
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template id="databaseTemplate">
+    <div class="backdrop-blur-sm bg-white/90 border shadow-lg rounded-lg overflow-hidden mb-8">
+      <div class="bg-blue-50 border-b p-6">
+        <h2 class="text-xl font-semibold">Database Schema</h2>
+        <p class="text-sm text-gray-500 mt-1">
+          Overview of the database structure for this application
+        </p>
+      </div>
+      <div class="p-6">
+        <div class="space-y-8">
+          <!-- Database tables will be populated here by JavaScript -->
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template id="roomSettingTemplate">
+    <div class="border rounded-md overflow-hidden mb-4">
+      <div class="bg-gray-50 py-3 px-4 border-b">
+        <h4 class="text-base font-medium">Room Name</h4>
+      </div>
+      <div class="p-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700 custom-passcode-label">Custom Fixed Passcode (Optional)</label>
+            <input type="text" class="custom-passcode w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Leave empty for auto-generated">
+            <p class="text-xs text-gray-500">If set, this fixed passcode will be used for all bookings</p>
+          </div>
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700 reset-hours-label">Auto Reset (hours after checkout)</label>
+            <input type="number" min="0" value="2" class="reset-hours w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <template id="databaseTableTemplate">
+    <div>
+      <h3 class="text-lg font-medium mb-3">Table Name</h3>
+      <div class="rounded-md border overflow-x-auto">
+        <table class="w-full border-collapse">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Column</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200 table-body">
+            <!-- Table rows will be populated here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </template>
 
   <!-- Toast message for notifications -->
   <div id="toast" class="fixed top-4 right-4 z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
@@ -133,253 +394,11 @@
     </div>
   </div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Initialize date picker
-      const datePicker = flatpickr("#date", {
-        dateFormat: "Y-m-d",
-        defaultDate: "today",
-        onChange: function(selectedDates) {
-          loadBookings();
-        }
-      });
-      
-      // DOM elements
-      const roomFilter = document.getElementById('room-filter');
-      const searchInput = document.getElementById('search');
-      const refreshButton = document.getElementById('refreshButton');
-      const refreshEmptyButton = document.getElementById('refreshEmptyButton');
-      const bookingsContainer = document.getElementById('bookingsContainer');
-      const bookingsTableBody = document.getElementById('bookingsTableBody');
-      const emptyState = document.getElementById('emptyState');
-      const loadingState = document.getElementById('loadingState');
-      
-      // Event listeners
-      refreshButton.addEventListener('click', loadBookings);
-      refreshEmptyButton.addEventListener('click', loadBookings);
-      roomFilter.addEventListener('change', filterBookings);
-      searchInput.addEventListener('input', filterBookings);
-      
-      // Initial load
-      loadBookings();
-      
-      // Load bookings function
-      function loadBookings() {
-        // Show loading state
-        bookingsContainer.classList.add('hidden');
-        emptyState.classList.add('hidden');
-        loadingState.classList.remove('hidden');
-        
-        // Start spinner animation
-        const refreshIcon = document.getElementById('refreshIcon');
-        refreshIcon.classList.add('animate-spin');
-        
-        // Get selected date
-        const selectedDate = datePicker.selectedDates[0];
-        const formattedDate = selectedDate ? formatDate(selectedDate) : formatDate(new Date());
-        
-        // Simulate API call (replace with actual fetch to PHP backend)
-        setTimeout(() => {
-          // Generate mock bookings
-          const bookings = generateMockBookings(selectedDate || new Date());
-          
-          // Update UI with bookings
-          updateBookingsTable(bookings);
-          
-          // Stop spinner animation
-          refreshIcon.classList.remove('animate-spin');
-          
-          // Show toast notification
-          showToast('success', 'Data refreshed', 'Booking data has been updated.');
-        }, 1000);
-      }
-      
-      // Filter bookings function
-      function filterBookings() {
-        const selectedRoom = roomFilter.value;
-        const searchQuery = searchInput.value.toLowerCase();
-        
-        // Get all rows
-        const rows = bookingsTableBody.querySelectorAll('tr');
-        
-        let visibleCount = 0;
-        
-        // Filter rows
-        rows.forEach(row => {
-          const roomId = row.getAttribute('data-room-id');
-          const guestName = row.getAttribute('data-guest-name').toLowerCase();
-          const accessCode = row.getAttribute('data-access-code');
-          
-          const matchesRoom = selectedRoom === 'all' || roomId === selectedRoom;
-          const matchesSearch = searchQuery === '' || 
-            guestName.includes(searchQuery) || 
-            accessCode.includes(searchQuery);
-          
-          if (matchesRoom && matchesSearch) {
-            row.classList.remove('hidden');
-            visibleCount++;
-          } else {
-            row.classList.add('hidden');
-          }
-        });
-        
-        // Show empty state if no visible bookings
-        if (visibleCount === 0) {
-          bookingsContainer.classList.add('hidden');
-          emptyState.classList.remove('hidden');
-        } else {
-          bookingsContainer.classList.remove('hidden');
-          emptyState.classList.add('hidden');
-        }
-      }
-      
-      // Update bookings table
-      function updateBookingsTable(bookings) {
-        // Clear table
-        bookingsTableBody.innerHTML = '';
-        
-        // Hide loading state
-        loadingState.classList.add('hidden');
-        
-        // Check if empty
-        if (bookings.length === 0) {
-          bookingsContainer.classList.add('hidden');
-          emptyState.classList.remove('hidden');
-          return;
-        }
-        
-        // Show table and hide empty state
-        bookingsContainer.classList.remove('hidden');
-        emptyState.classList.add('hidden');
-        
-        // Add bookings to table
-        bookings.forEach(booking => {
-          const row = document.createElement('tr');
-          row.className = 'hover:bg-gray-50 transition-colors';
-          row.setAttribute('data-room-id', booking.roomId);
-          row.setAttribute('data-guest-name', booking.guestName);
-          row.setAttribute('data-access-code', booking.accessCode);
-          
-          row.innerHTML = `
-            <td class="px-4 py-4 whitespace-nowrap">
-              <div class="font-medium text-gray-900">${booking.room}</div>
-            </td>
-            <td class="px-4 py-4 whitespace-nowrap">
-              <div class="text-gray-900">${booking.guestName}</div>
-            </td>
-            <td class="px-4 py-4 whitespace-nowrap hidden md:table-cell">
-              <div class="text-sm text-gray-500">
-                <div>${booking.email}</div>
-                <div>${booking.phone}</div>
-              </div>
-            </td>
-            <td class="px-4 py-4 whitespace-nowrap">
-              <div class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                ${booking.accessCode}
-              </div>
-            </td>
-            <td class="px-4 py-4 whitespace-nowrap hidden md:table-cell">
-              <div class="text-sm text-gray-500">${formatTime(booking.arrivalDateTime)}</div>
-            </td>
-            <td class="px-4 py-4 whitespace-nowrap hidden md:table-cell">
-              <div class="text-sm text-gray-500">${formatTime(booking.departureDateTime)}</div>
-            </td>
-            <td class="px-4 py-4 whitespace-nowrap text-right">
-              <button class="text-gray-400 hover:text-gray-500 focus:outline-none" onclick="printBooking('${booking.id}')">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                </svg>
-              </button>
-            </td>
-          `;
-          
-          bookingsTableBody.appendChild(row);
-        });
-      }
-      
-      // Generate mock bookings
-      function generateMockBookings(date) {
-        const roomNames = ["Room 1", "Room 2", "Room 3", "Room 4", "Room 5"];
-        const formattedDate = formatDate(date);
-        
-        return Array.from({ length: Math.floor(Math.random() * 8) + 2 }, (_, i) => {
-          const roomIndex = Math.floor(Math.random() * roomNames.length);
-          const arrivalHour = Math.floor(Math.random() * 12) + 8;
-          const departureHour = arrivalHour + Math.floor(Math.random() * 8) + 2;
-          
-          return {
-            id: `booking-${i}-${formattedDate}`,
-            room: roomNames[roomIndex],
-            roomId: `room${roomIndex + 1}`,
-            guestName: `Guest ${i + 1}`,
-            email: `guest${i + 1}@example.com`,
-            phone: `+1 (555) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
-            arrivalDateTime: `${formattedDate} ${arrivalHour < 10 ? `0${arrivalHour}` : arrivalHour}:00`,
-            departureDateTime: `${formattedDate} ${departureHour < 10 ? `0${departureHour}` : departureHour}:00`,
-            accessCode: Math.floor(100000 + Math.random() * 900000).toString(),
-          };
-        });
-      }
-      
-      // Helper functions
-      function formatDate(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      }
-      
-      function formatTime(dateTimeString) {
-        const date = new Date(dateTimeString);
-        let hours = date.getHours();
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12;
-        hours = hours ? hours : 12;
-        return `${hours}:00 ${ampm}`;
-      }
-      
-      // Print booking function
-      window.printBooking = function(bookingId) {
-        // In a real implementation, you would fetch the booking details from the server
-        // For demo purposes, we'll just show a success message
-        showToast('success', 'Printing booking details...', 'The booking information has been sent to the printer.');
-        console.log("Printing booking:", bookingId);
-      };
-      
-      // Toast notification function
-      window.showToast = function(type, title, message) {
-        const toast = document.getElementById('toast');
-        const toastTitle = document.getElementById('toastTitle');
-        const toastMessage = document.getElementById('toastMessage');
-        const toastIcon = document.getElementById('toastIcon');
-        
-        // Set content and styles based on type
-        toastTitle.textContent = title;
-        toastMessage.textContent = message;
-        
-        if (type === 'success') {
-          toastIcon.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-            </svg>
-          `;
-        } else if (type === 'error') {
-          toastIcon.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-            </svg>
-          `;
-        }
-        
-        // Show toast
-        toast.classList.remove('translate-x-full');
-        
-        // Hide toast after 5 seconds
-        setTimeout(() => {
-          toast.classList.add('translate-x-full');
-        }, 5000);
-      };
-    });
-  </script>
+  <!-- Scripts -->
+  <script src="js/admin-sidebar.js"></script>
+  <script src="js/admin-bookings.js"></script>
+  <script src="js/admin-passcodes.js"></script>
+  <script src="js/admin-database.js"></script>
+  <script src="js/admin-utils.js"></script>
 </body>
 </html>
