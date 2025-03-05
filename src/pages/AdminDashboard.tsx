@@ -1,763 +1,237 @@
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
-import { 
-  Calendar as CalendarIcon, 
-  Printer, 
-  ArrowLeft, 
-  Search, 
-  RefreshCw, 
-  LayoutDashboard, 
-  Users, 
-  Settings, 
-  Database, 
-  Key, 
-  Mail, 
-  Phone 
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
-import { toast } from "sonner";
-import { 
-  Sidebar, 
-  SidebarContent, 
-  SidebarGroup, 
-  SidebarGroupContent, 
-  SidebarGroupLabel, 
-  SidebarMenu, 
-  SidebarMenuButton, 
-  SidebarMenuItem, 
-  SidebarProvider,
-  SidebarTrigger
-} from "@/components/ui/sidebar";
-
-// Mock data for bookings
-const generateMockBookings = (date: Date) => {
-  const roomNames = ["Room 1", "Room 2", "Room 3", "Room 4", "Room 5"];
-  const formattedDate = format(date, "yyyy-MM-dd");
-  
-  return Array.from({ length: Math.floor(Math.random() * 8) + 2 }, (_, i) => {
-    const roomIndex = Math.floor(Math.random() * roomNames.length);
-    const arrivalHour = Math.floor(Math.random() * 12) + 8;
-    const departureHour = arrivalHour + Math.floor(Math.random() * 8) + 2;
-    
-    return {
-      id: `booking-${i}-${formattedDate}`,
-      room: roomNames[roomIndex],
-      roomId: `room${roomIndex + 1}`,
-      guestName: `Guest ${i + 1}`,
-      email: `guest${i + 1}@example.com`,
-      phone: `+1 (555) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
-      arrivalDateTime: `${formattedDate} ${arrivalHour < 10 ? `0${arrivalHour}` : arrivalHour}:00`,
-      departureDateTime: `${formattedDate} ${departureHour < 10 ? `0${departureHour}` : departureHour}:00`,
-      accessCode: Math.floor(100000 + Math.random() * 900000).toString(),
-    };
-  });
-};
+import { useEffect } from "react";
+import { Helmet } from "react-helmet";
 
 const AdminDashboard = () => {
-  const navigate = useNavigate();
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [selectedRoom, setSelectedRoom] = useState<string>("all");
-  const [isLoading, setIsLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [bookings, setBookings] = useState(() => generateMockBookings(new Date()));
-  const [activeSection, setActiveSection] = useState("bookings");
+  useEffect(() => {
+    // Load the required scripts for the admin dashboard
+    const loadScript = (src: string) => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.async = true;
+      document.body.appendChild(script);
+      return script;
+    };
 
-  const rooms = [
-    { id: "all", name: "All Rooms" },
-    { id: "room1", name: "Room 1" },
-    { id: "room2", name: "Room 2" },
-    { id: "room3", name: "Room 3" },
-    { id: "room4", name: "Room 4" },
-    { id: "room5", name: "Room 5" },
-  ];
+    // Reference to the scripts we're adding
+    const scripts: HTMLScriptElement[] = [];
 
-  const fetchBookings = () => {
-    setIsLoading(true);
+    // Load admin scripts in order
+    scripts.push(loadScript("/js/admin-utils.js"));
+    scripts.push(loadScript("/js/admin-sidebar.js"));
+    scripts.push(loadScript("/js/admin-bookings.js"));
+    scripts.push(loadScript("/js/admin-passcodes.js"));
+    scripts.push(loadScript("/js/admin-database.js"));
+
+    // Flatpickr for date picking
+    const flatpickrCSS = document.createElement('link');
+    flatpickrCSS.rel = 'stylesheet';
+    flatpickrCSS.href = 'https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css';
+    document.head.appendChild(flatpickrCSS);
     
-    // Simulate API call
-    setTimeout(() => {
-      setBookings(generateMockBookings(selectedDate));
-      setIsLoading(false);
-    }, 1000);
-  };
+    const flatpickrScript = document.createElement('script');
+    flatpickrScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js';
+    document.body.appendChild(flatpickrScript);
+    scripts.push(flatpickrScript);
 
-  const handleDateChange = (date: Date | undefined) => {
-    if (date) {
-      setSelectedDate(date);
-      setIsLoading(true);
-      
-      // Simulate API call
-      setTimeout(() => {
-        setBookings(generateMockBookings(date));
-        setIsLoading(false);
-      }, 1000);
-    }
-  };
-
-  const handleRoomChange = (roomId: string) => {
-    setSelectedRoom(roomId);
-  };
-
-  const handlePrintBooking = (bookingId: string) => {
-    toast.success("Printing booking details...");
-    console.log("Printing booking:", bookingId);
-  };
-
-  const filteredBookings = bookings.filter((booking) => {
-    const matchesRoom = selectedRoom === "all" || booking.roomId === selectedRoom;
-    const matchesSearch = searchQuery === "" || 
-      booking.guestName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      booking.accessCode.includes(searchQuery);
-    
-    return matchesRoom && matchesSearch;
-  });
-
-  const renderContent = () => {
-    switch (activeSection) {
-      case "bookings":
-        return (
-          <Card className="backdrop-blur-sm bg-white/90 border shadow-lg animate-scale-in overflow-hidden">
-            <CardHeader className="bg-primary/5 border-b">
-              <CardTitle>Bookings Summary</CardTitle>
-              <CardDescription>
-                View and manage all bookings for the selected date
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                {/* Date Selection */}
-                <div className="space-y-2">
-                  <Label htmlFor="date">Select Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        id="date"
-                        className={cn(
-                          "w-full h-11 justify-start text-left font-normal",
-                          !selectedDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {selectedDate ? format(selectedDate, "PPP") : "Select date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={handleDateChange}
-                        initialFocus
-                        className="pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                
-                {/* Room Selection */}
-                <div className="space-y-2">
-                  <Label htmlFor="room-filter">Filter by Room</Label>
-                  <Select value={selectedRoom} onValueChange={handleRoomChange}>
-                    <SelectTrigger id="room-filter" className="h-11">
-                      <SelectValue placeholder="Select a room" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {rooms.map((room) => (
-                        <SelectItem key={room.id} value={room.id}>
-                          {room.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                {/* Search */}
-                <div className="space-y-2">
-                  <Label htmlFor="search">Search by Name or Code</Label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="search"
-                      className="h-11 pl-10"
-                      placeholder="Search bookings..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex justify-end mb-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1"
-                  onClick={fetchBookings}
-                  disabled={isLoading}
-                >
-                  <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
-                  Refresh
-                </Button>
-              </div>
-              
-              {isLoading ? (
-                <div className="h-[300px] flex items-center justify-center">
-                  <div className="flex flex-col items-center animate-pulse">
-                    <RefreshCw className="h-8 w-8 text-primary animate-spin mb-2" />
-                    <p className="text-muted-foreground">Loading bookings...</p>
-                  </div>
-                </div>
-              ) : filteredBookings.length > 0 ? (
-                <div className="rounded-md border overflow-hidden">
-                  <Table>
-                    <TableHeader className="bg-muted/30">
-                      <TableRow>
-                        <TableHead>Room</TableHead>
-                        <TableHead>Guest Name</TableHead>
-                        <TableHead className="hidden md:table-cell">Contact</TableHead>
-                        <TableHead>Access Code</TableHead>
-                        <TableHead className="hidden md:table-cell">Check-in</TableHead>
-                        <TableHead className="hidden md:table-cell">Check-out</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredBookings.map((booking) => (
-                        <TableRow key={booking.id} className="hover:bg-muted/20 transition-colors">
-                          <TableCell className="font-medium">{booking.room}</TableCell>
-                          <TableCell>{booking.guestName}</TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            <div className="text-sm text-muted-foreground">
-                              <div>{booking.email}</div>
-                              <div>{booking.phone}</div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                              {booking.accessCode}
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            {format(new Date(booking.arrivalDateTime), "h:mm a")}
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">
-                            {format(new Date(booking.departureDateTime), "h:mm a")}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handlePrintBooking(booking.id)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Printer className="h-4 w-4" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="rounded-full bg-primary/10 p-3 mb-4">
-                    <CalendarIcon className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-medium mb-1">No bookings found</h3>
-                  <p className="text-muted-foreground mb-4">
-                    There are no bookings for the selected date and filters.
-                  </p>
-                  <Button variant="outline" onClick={fetchBookings}>
-                    Refresh Data
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        );
-      case "passcodes":
-        return (
-          <Card className="backdrop-blur-sm bg-white/90 border shadow-lg animate-scale-in overflow-hidden">
-            <CardHeader className="bg-primary/5 border-b">
-              <CardTitle>Room Passcodes</CardTitle>
-              <CardDescription>
-                Manage passcodes for rooms and notification settings
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="space-y-6">
-                <div className="grid gap-4">
-                  <h3 className="text-lg font-medium">Default Passcode Settings</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="passcode-length">Passcode Length</Label>
-                      <Select defaultValue="6">
-                        <SelectTrigger id="passcode-length">
-                          <SelectValue placeholder="Select length" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="4">4 digits</SelectItem>
-                          <SelectItem value="6">6 digits</SelectItem>
-                          <SelectItem value="8">8 digits</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="passcode-type">Passcode Type</Label>
-                      <Select defaultValue="numeric">
-                        <SelectTrigger id="passcode-type">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="numeric">Numeric only</SelectItem>
-                          <SelectItem value="alphanumeric">Alphanumeric</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="grid gap-4">
-                  <h3 className="text-lg font-medium">Notification Settings</h3>
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="flex items-start space-x-2">
-                      <input
-                        type="checkbox"
-                        id="email-notification"
-                        className="mt-1"
-                        defaultChecked
-                      />
-                      <div className="space-y-1">
-                        <Label htmlFor="email-notification" className="font-medium">Email Notification</Label>
-                        <p className="text-sm text-muted-foreground">Send passcode to guest via email when booking is confirmed</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-2">
-                      <input
-                        type="checkbox"
-                        id="sms-notification"
-                        className="mt-1"
-                      />
-                      <div className="space-y-1">
-                        <Label htmlFor="sms-notification" className="font-medium">SMS Notification</Label>
-                        <p className="text-sm text-muted-foreground">Send passcode to guest via SMS when booking is confirmed</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="grid gap-4">
-                  <h3 className="text-lg font-medium">Room-Specific Settings</h3>
-                  {rooms.slice(1).map((room) => (
-                    <Card key={room.id} className="overflow-hidden">
-                      <CardHeader className="bg-muted/20 py-3">
-                        <CardTitle className="text-base">{room.name}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor={`${room.id}-custom-passcode`}>Custom Fixed Passcode (Optional)</Label>
-                            <Input 
-                              id={`${room.id}-custom-passcode`} 
-                              placeholder="Leave empty for auto-generated" 
-                            />
-                            <p className="text-xs text-muted-foreground">If set, this fixed passcode will be used for all bookings</p>
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor={`${room.id}-reset-hours`}>Auto Reset (hours after checkout)</Label>
-                            <Input 
-                              id={`${room.id}-reset-hours`} 
-                              type="number" 
-                              min="0"
-                              defaultValue="2" 
-                            />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-                
-                <div className="flex justify-end">
-                  <Button 
-                    onClick={() => toast.success("Settings saved successfully")}
-                    className="gap-2"
-                  >
-                    <Settings className="h-4 w-4" />
-                    Save Settings
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-      case "database":
-        return (
-          <Card className="backdrop-blur-sm bg-white/90 border shadow-lg animate-scale-in overflow-hidden">
-            <CardHeader className="bg-primary/5 border-b">
-              <CardTitle>Database Schema</CardTitle>
-              <CardDescription>
-                Overview of the database structure for this application
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <div className="space-y-8">
-                {/* Users Table */}
-                <div>
-                  <h3 className="text-lg font-medium mb-3">Users Table</h3>
-                  <div className="rounded-md border overflow-x-auto">
-                    <Table>
-                      <TableHeader className="bg-muted/30">
-                        <TableRow>
-                          <TableHead>Column</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Description</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell className="font-medium">id</TableCell>
-                          <TableCell>INT</TableCell>
-                          <TableCell>Primary key, auto-increment</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">username</TableCell>
-                          <TableCell>VARCHAR(50)</TableCell>
-                          <TableCell>Unique username for login</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">password</TableCell>
-                          <TableCell>VARCHAR(255)</TableCell>
-                          <TableCell>Hashed password</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">is_admin</TableCell>
-                          <TableCell>TINYINT(1)</TableCell>
-                          <TableCell>Flag for admin privilege</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">created_at</TableCell>
-                          <TableCell>TIMESTAMP</TableCell>
-                          <TableCell>Account creation timestamp</TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
-                
-                {/* Rooms Table */}
-                <div>
-                  <h3 className="text-lg font-medium mb-3">Rooms Table</h3>
-                  <div className="rounded-md border overflow-x-auto">
-                    <Table>
-                      <TableHeader className="bg-muted/30">
-                        <TableRow>
-                          <TableHead>Column</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Description</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell className="font-medium">id</TableCell>
-                          <TableCell>VARCHAR(20)</TableCell>
-                          <TableCell>Primary key (e.g., "room1")</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">name</TableCell>
-                          <TableCell>VARCHAR(100)</TableCell>
-                          <TableCell>Display name for the room</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">fixed_passcode</TableCell>
-                          <TableCell>VARCHAR(10)</TableCell>
-                          <TableCell>Optional fixed passcode for this room</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">reset_hours</TableCell>
-                          <TableCell>INT</TableCell>
-                          <TableCell>Hours after checkout to reset passcode</TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
-                
-                {/* Bookings Table */}
-                <div>
-                  <h3 className="text-lg font-medium mb-3">Bookings Table</h3>
-                  <div className="rounded-md border overflow-x-auto">
-                    <Table>
-                      <TableHeader className="bg-muted/30">
-                        <TableRow>
-                          <TableHead>Column</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Description</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell className="font-medium">id</TableCell>
-                          <TableCell>INT</TableCell>
-                          <TableCell>Primary key, auto-increment</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">room_id</TableCell>
-                          <TableCell>VARCHAR(20)</TableCell>
-                          <TableCell>Foreign key to rooms.id</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">guest_name</TableCell>
-                          <TableCell>VARCHAR(100)</TableCell>
-                          <TableCell>Name of the guest</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">email</TableCell>
-                          <TableCell>VARCHAR(100)</TableCell>
-                          <TableCell>Email address of the guest</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">phone</TableCell>
-                          <TableCell>VARCHAR(20)</TableCell>
-                          <TableCell>Phone number of the guest</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">arrival_datetime</TableCell>
-                          <TableCell>DATETIME</TableCell>
-                          <TableCell>Check-in date and time</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">departure_datetime</TableCell>
-                          <TableCell>DATETIME</TableCell>
-                          <TableCell>Check-out date and time</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">access_code</TableCell>
-                          <TableCell>VARCHAR(10)</TableCell>
-                          <TableCell>Room access code for this booking</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">created_at</TableCell>
-                          <TableCell>TIMESTAMP</TableCell>
-                          <TableCell>Booking creation timestamp</TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
-
-                {/* Notification Settings Table */}
-                <div>
-                  <h3 className="text-lg font-medium mb-3">Notification Settings Table</h3>
-                  <div className="rounded-md border overflow-x-auto">
-                    <Table>
-                      <TableHeader className="bg-muted/30">
-                        <TableRow>
-                          <TableHead>Column</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Description</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        <TableRow>
-                          <TableCell className="font-medium">id</TableCell>
-                          <TableCell>INT</TableCell>
-                          <TableCell>Primary key, auto-increment</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">email_enabled</TableCell>
-                          <TableCell>TINYINT(1)</TableCell>
-                          <TableCell>Whether email notifications are enabled</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">sms_enabled</TableCell>
-                          <TableCell>TINYINT(1)</TableCell>
-                          <TableCell>Whether SMS notifications are enabled</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">email_template</TableCell>
-                          <TableCell>TEXT</TableCell>
-                          <TableCell>HTML template for email notifications</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">sms_template</TableCell>
-                          <TableCell>VARCHAR(255)</TableCell>
-                          <TableCell>Template for SMS notifications</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">smtp_host</TableCell>
-                          <TableCell>VARCHAR(100)</TableCell>
-                          <TableCell>SMTP server host</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">smtp_port</TableCell>
-                          <TableCell>INT</TableCell>
-                          <TableCell>SMTP server port</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">smtp_username</TableCell>
-                          <TableCell>VARCHAR(100)</TableCell>
-                          <TableCell>SMTP username</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">smtp_password</TableCell>
-                          <TableCell>VARCHAR(100)</TableCell>
-                          <TableCell>SMTP password (stored encrypted)</TableCell>
-                        </TableRow>
-                        <TableRow>
-                          <TableCell className="font-medium">sms_api_key</TableCell>
-                          <TableCell>VARCHAR(100)</TableCell>
-                          <TableCell>API key for SMS service</TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-      default:
-        return null;
-    }
-  };
-
-  const AppSidebar = () => {
-    return (
-      <Sidebar>
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Management</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    onClick={() => setActiveSection("bookings")}
-                    className={cn(activeSection === "bookings" ? "bg-primary/10 text-primary" : "")}
-                  >
-                    <LayoutDashboard className="h-4 w-4" />
-                    <span>Bookings</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    onClick={() => setActiveSection("passcodes")}
-                    className={cn(activeSection === "passcodes" ? "bg-primary/10 text-primary" : "")}
-                  >
-                    <Key className="h-4 w-4" />
-                    <span>Room Passcodes</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    onClick={() => setActiveSection("database")}
-                    className={cn(activeSection === "database" ? "bg-primary/10 text-primary" : "")}
-                  >
-                    <Database className="h-4 w-4" />
-                    <span>Database Schema</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-          <SidebarGroup>
-            <SidebarGroupLabel>Notification</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton onClick={() => toast.info("Email settings will be implemented soon")}>
-                    <Mail className="h-4 w-4" />
-                    <span>Email Templates</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton onClick={() => toast.info("SMS settings will be implemented soon")}>
-                    <Phone className="h-4 w-4" />
-                    <span>SMS Templates</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-          <SidebarGroup>
-            <SidebarGroupLabel>System</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton onClick={() => toast.info("User management will be implemented soon")}>
-                    <Users className="h-4 w-4" />
-                    <span>Users</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton onClick={() => toast.info("Settings will be implemented soon")}>
-                    <Settings className="h-4 w-4" />
-                    <span>Settings</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-      </Sidebar>
-    );
-  };
+    // Cleanup function
+    return () => {
+      scripts.forEach(script => {
+        script.remove();
+      });
+      flatpickrCSS.remove();
+    };
+  }, []);
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-to-b from-blue-50 to-white">
-        <AppSidebar />
-        <div className="flex-1">
-          <div className="p-4 md:p-8 animate-fade-in">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-2">
-                <SidebarTrigger />
-                <h1 className="text-2xl font-medium">Admin Dashboard</h1>
+    <>
+      <Helmet>
+        <title>Admin Dashboard - Booking System</title>
+      </Helmet>
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+        <div className="flex w-full min-h-screen">
+          {/* Sidebar */}
+          <aside id="sidebar" className="border-r bg-background transition-all duration-300 ease-in-out w-64">
+            <div className="flex flex-col h-full">
+              <div className="sidebar-content flex-1 overflow-auto py-2">
+                {/* Management section */}
+                <div className="py-2">
+                  <div className="px-4 py-1 text-xs font-medium text-gray-500">Management</div>
+                  <div className="py-1">
+                    <ul className="grid gap-1 px-2">
+                      <li>
+                        <button 
+                          className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm font-medium bg-blue-100 text-blue-600" 
+                          data-section="bookings">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                          </svg>
+                          <span>Bookings</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button 
+                          className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm font-medium hover:bg-gray-100" 
+                          data-section="passcodes">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                          </svg>
+                          <span>Room Passcodes</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button 
+                          className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm font-medium hover:bg-gray-100" 
+                          data-section="database">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+                          </svg>
+                          <span>Database Schema</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm font-medium hover:bg-gray-100" 
+                          data-section="rooms">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                          <span>Manage Rooms</span>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                
+                {/* Notification section */}
+                <div className="py-2">
+                  <div className="px-4 py-1 text-xs font-medium text-gray-500">Notification</div>
+                  <div className="py-1">
+                    <ul className="grid gap-1 px-2">
+                      <li>
+                        <button className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm font-medium hover:bg-gray-100"
+                          data-section="email-templates">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                          <span>Email Templates</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm font-medium hover:bg-gray-100"
+                          data-section="sms-templates">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                          <span>SMS Templates</span>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                
+                {/* System section */}
+                <div className="py-2">
+                  <div className="px-4 py-1 text-xs font-medium text-gray-500">System</div>
+                  <div className="py-1">
+                    <ul className="grid gap-1 px-2">
+                      <li>
+                        <button className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm font-medium hover:bg-gray-100">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                          </svg>
+                          <span>Users</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm font-medium hover:bg-gray-100">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          <span>Settings</span>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
               </div>
-              <Button 
-                variant="ghost" 
-                className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
-                onClick={() => navigate("/")}
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Sign Out
-              </Button>
             </div>
-            
-            <div className="max-w-7xl mx-auto">
-              {renderContent()}
+          </aside>
+
+          {/* Main content */}
+          <div className="flex-1">
+            <div className="p-4 md:p-8">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-2">
+                  <button id="sidebarToggle" className="p-2 rounded-md hover:bg-gray-100">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  </button>
+                  <h1 className="text-2xl font-medium">Admin Dashboard</h1>
+                </div>
+                <a href="/" className="flex items-center gap-1 px-3 py-2 rounded-md text-gray-500 hover:bg-gray-100">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                  </svg>
+                  Sign Out
+                </a>
+              </div>
+              
+              {/* Content sections */}
+              <div className="max-w-7xl mx-auto">
+                {/* Bookings section */}
+                <div id="bookingsSection" className="section-content">
+                  {/* Content will be loaded here by JavaScript */}
+                </div>
+                
+                {/* Passcodes section (hidden by default) */}
+                <div id="passcodesSection" className="section-content hidden">
+                  {/* Content will be loaded here by JavaScript */}
+                </div>
+                
+                {/* Database section (hidden by default) */}
+                <div id="databaseSection" className="section-content hidden">
+                  {/* Content will be loaded here by JavaScript */}
+                </div>
+
+                {/* Rooms section (hidden by default) */}
+                <div id="roomsSection" className="section-content hidden">
+                  {/* Content will be loaded here by JavaScript */}
+                </div>
+
+                {/* Email Templates section (hidden by default) */}
+                <div id="email-templatesSection" className="section-content hidden">
+                  {/* Content will be loaded here by JavaScript */}
+                </div>
+
+                {/* SMS Templates section (hidden by default) */}
+                <div id="sms-templatesSection" className="section-content hidden">
+                  {/* Content will be loaded here by JavaScript */}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Templates for section content */}
+        <div id="templates" className="hidden">
+          {/* Templates will be here but are hidden */}
+        </div>
+
+        {/* Toast message for notifications */}
+        <div id="toast" className="fixed top-4 right-4 z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
+          <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 flex items-start max-w-xs">
+            <div id="toastIcon" className="flex-shrink-0 w-5 h-5 mr-3"></div>
+            <div>
+              <p id="toastTitle" className="font-medium text-gray-900 text-sm"></p>
+              <p id="toastMessage" className="text-sm text-gray-500 mt-1"></p>
             </div>
           </div>
         </div>
       </div>
-    </SidebarProvider>
+    </>
   );
 };
 
