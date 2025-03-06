@@ -12,9 +12,9 @@
   </head>
 
   <body>
-    <script>
-      // Redirect to the main HTML file
-      window.location.href = "/src/main.html";
-    </script>
+    <!-- Instead of JS redirect, we'll include content directly -->
+    <iframe src="/src/main.html" style="position:fixed; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:999999;">
+      Your browser doesn't support iframes - <a href="/src/main.html">Click here to go to main page</a>
+    </iframe>
   </body>
 </html>

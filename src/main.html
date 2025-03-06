@@ -108,6 +108,9 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+      // Add console log for debugging
+      console.log("main.html loaded successfully");
+      
       // Login form submission
       document.getElementById('loginForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -115,6 +118,8 @@
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
         const loginButton = document.getElementById('loginButton');
+        
+        console.log("Login attempt with username:", username);
         
         // Disable button and show loading state
         loginButton.disabled = true;
@@ -133,10 +138,12 @@
             
             showToast('success', 'Login successful', 'You have been signed in.');
             
-            // Redirect based on role
+            // Redirect based on role using direct path instead of route names
             if (username === 'admin') {
+              console.log("Redirecting to admin dashboard");
               setTimeout(() => { window.location.href = '/admin'; }, 1000);
             } else {
+              console.log("Redirecting to booking page");
               setTimeout(() => { window.location.href = '/booking'; }, 1000);
             }
           } else {

@@ -9,15 +9,17 @@ RewriteBase /
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 
-# For specific routes, redirect to HTML pages
+# For specific routes, handle them explicitly
 RewriteRule ^booking$ /src/pages/BookingForm.html [L]
 RewriteRule ^admin$ /admin-dashboard.html [L]
+
+# Important: For root URL, serve main.html directly
 RewriteRule ^$ /src/main.html [L]
 
-# For all other non-file/directory requests, redirect to NotFound page
+# For all other non-file/directory requests, show NotFound page
 RewriteRule ^(.*)$ /src/pages/NotFound.html [L]
 
-# Enable error logging
+# Enable detailed error logging
 php_flag display_errors on
 php_value error_reporting E_ALL
 
@@ -28,4 +30,10 @@ ErrorDocument 500 /src/pages/error.html
 # Enable CORS if needed
 <IfModule mod_headers.c>
     Header set Access-Control-Allow-Origin "*"
+</IfModule>
+
+# Add debugging for redirect loops
+<IfModule mod_rewrite.c>
+    # Set environment variable to log rewrite info
+    LogLevel alert rewrite:trace3
 </IfModule>
