@@ -1,18 +1,47 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>check-in-simplify</title>
-    <meta name="description" content="Lovable Generated Project" />
+    <title>Check-in-Simplify</title>
+    <meta name="description" content="Simple check-in and booking system" />
     <meta name="author" content="Lovable" />
     <meta property="og:image" content="/og-image.png" />
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+      .animate-fade-in {
+        animation: fadeIn 0.5s ease-in;
+      }
+      .animate-scale-in {
+        animation: scaleIn 0.5s ease-out;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes scaleIn {
+        from { transform: scale(0.95); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+    </style>
   </head>
 
   <body>
-    <div id="root"></div>
-    <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
-    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
-    <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Redirect to the appropriate page based on the URL path
+      const path = window.location.pathname;
+      if (path === "/") {
+        window.location.href = "/src/pages/index.html";
+      } else if (path === "/booking") {
+        window.location.href = "/src/pages/BookingForm.html";
+      } else if (path === "/admin") {
+        window.location.href = "/admin-dashboard.html";
+      } else if (path !== "/src/pages/index.html" && 
+                path !== "/src/pages/BookingForm.html" && 
+                path !== "/admin-dashboard.html") {
+        window.location.href = "/src/pages/NotFound.html";
+      }
+    </script>
   </body>
 </html>

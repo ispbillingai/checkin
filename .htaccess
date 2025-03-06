@@ -1,0 +1,30 @@
+
+# Enable rewriting
+RewriteEngine On
+
+# Set the base
+RewriteBase /
+
+# Don't apply to existing files or directories
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# For specific routes, redirect to HTML pages
+RewriteRule ^booking$ /src/pages/BookingForm.html [L]
+RewriteRule ^admin$ /admin-dashboard.html [L]
+
+# For all other non-file/directory requests, redirect to index.html
+RewriteRule ^(.*)$ /index.html [L]
+
+# Enable error logging
+php_flag display_errors on
+php_value error_reporting E_ALL
+
+# Set custom error pages
+ErrorDocument 404 /src/pages/NotFound.html
+ErrorDocument 500 /src/pages/error.html
+
+# Enable CORS if needed
+<IfModule mod_headers.c>
+    Header set Access-Control-Allow-Origin "*"
+</IfModule>
