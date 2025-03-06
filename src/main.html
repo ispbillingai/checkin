@@ -1,0 +1,186 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Check-in-Simplify</title>
+  <meta name="description" content="Simple check-in and booking system" />
+  <meta name="author" content="Lovable" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .animate-fade-in {
+      animation: fadeIn 0.5s ease-in;
+    }
+    .animate-scale-in {
+      animation: scaleIn 0.5s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes scaleIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-blue-50 to-white">
+  <div 
+    class="absolute inset-0 bg-cover bg-center opacity-5 z-0"
+    style="background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')"
+  ></div>
+  
+  <div class="w-full max-w-md z-10">
+    <div class="flex justify-center mb-8">
+      <div class="p-3 rounded-full bg-blue-100 text-blue-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      </div>
+    </div>
+
+    <div class="backdrop-blur-sm bg-white/90 border-0 shadow-lg rounded-lg overflow-hidden">
+      <div class="p-6 space-y-1 text-center border-b">
+        <h2 class="text-2xl font-medium">Welcome back</h2>
+        <p class="text-sm text-gray-500">
+          Enter your credentials to sign in to your account
+        </p>
+      </div>
+      <div class="p-6">
+        <form id="loginForm" class="space-y-4">
+          <div class="space-y-2">
+            <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+            <input
+              id="username"
+              type="text"
+              placeholder="Enter your username"
+              required
+              class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+              <a 
+                href="#" 
+                class="text-sm text-blue-600 hover:underline"
+                onclick="event.preventDefault(); alert('Please contact your administrator to reset your password.');"
+              >
+                Forgot password?
+              </a>
+            </div>
+            <input
+              id="password"
+              type="password"
+              placeholder="Enter your password"
+              required
+              class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <button 
+            type="submit" 
+            id="loginButton"
+            class="w-full h-11 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            Sign In
+          </button>
+        </form>
+      </div>
+      <div class="text-center text-sm text-gray-500 border-t bg-gray-50 px-6 py-4">
+        <p class="w-full">
+          Demo credentials: "admin"/"admin" or "user"/"user"
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast message for notifications -->
+  <div id="toast" class="fixed top-4 right-4 z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
+    <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 flex items-start max-w-xs">
+      <div id="toastIcon" class="flex-shrink-0 w-5 h-5 mr-3"></div>
+      <div>
+        <p id="toastTitle" class="font-medium text-gray-900 text-sm"></p>
+        <p id="toastMessage" class="text-sm text-gray-500 mt-1"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Login form submission
+      document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const loginButton = document.getElementById('loginButton');
+        
+        // Disable button and show loading state
+        loginButton.disabled = true;
+        loginButton.innerHTML = `
+          <span class="mr-2">Signing in</span>
+          <svg class="inline-block animate-spin h-4 w-4" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        `;
+        
+        // Simulate authentication (or use actual PHP backend call)
+        setTimeout(() => {
+          if ((username === 'admin' && password === 'admin') || 
+              (username === 'user' && password === 'user')) {
+            
+            showToast('success', 'Login successful', 'You have been signed in.');
+            
+            // Redirect based on role
+            if (username === 'admin') {
+              setTimeout(() => { window.location.href = '/admin'; }, 1000);
+            } else {
+              setTimeout(() => { window.location.href = '/booking'; }, 1000);
+            }
+          } else {
+            showToast('error', 'Login failed', 'Invalid username or password.');
+            loginButton.disabled = false;
+            loginButton.textContent = 'Sign In';
+          }
+        }, 1000);
+      });
+      
+      // Toast notification function
+      window.showToast = function(type, title, message) {
+        const toast = document.getElementById('toast');
+        const toastTitle = document.getElementById('toastTitle');
+        const toastMessage = document.getElementById('toastMessage');
+        const toastIcon = document.getElementById('toastIcon');
+        
+        // Set content and styles based on type
+        toastTitle.textContent = title;
+        toastMessage.textContent = message;
+        
+        if (type === 'success') {
+          toastIcon.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+          `;
+        } else if (type === 'error') {
+          toastIcon.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          `;
+        }
+        
+        // Show toast
+        toast.classList.remove('translate-x-full');
+        
+        // Hide toast after 5 seconds
+        setTimeout(() => {
+          toast.classList.add('translate-x-full');
+        }, 5000);
+      };
+    });
+  </script>
+</body>
+</html>
