@@ -3,7 +3,7 @@
 console.log("Application initialized");
 
 // Redirect to the appropriate page based on URL
-window.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
   const path = window.location.pathname;
   
   // Specific redirects can be handled here if needed
