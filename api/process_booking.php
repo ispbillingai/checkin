@@ -28,102 +28,93 @@ if (empty($room) || empty($arrivalDateTime) || empty($departureDateTime) || empt
 }
 
 try {
-    // Connect to database
-    $conn = new PDO("mysql:host=$db_host;dbname=$db_name", $db_user, $db_pass);
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    
-    // Check if room has a fixed passcode
-    $stmt = $conn->prepare("SELECT fixed_passcode FROM rooms WHERE id = :room");
-    $stmt->bindParam(':room', $room);
+    // Prepare SQL statement to check for room's fixed passcode
+    $stmt = $conn->prepare("SELECT name, fixed_passcode FROM rooms WHERE id = ?");
+    $stmt->bind_param("s", $room);
     $stmt->execute();
-    $roomData = $stmt->fetch(PDO::FETCH_ASSOC);
+    $result = $stmt->get_result();
+    $roomData = $result->fetch_assoc();
     
     // Generate access code or use fixed code if available
     if ($roomData && !empty($roomData['fixed_passcode'])) {
         $accessCode = $roomData['fixed_passcode'];
     } else {
         // Generate a random 6-digit access code
-        $accessCode = mt_rand(100000, 999999);
+        $accessCode = generate_access_code();
     }
     
-    // Prepare SQL statement
+    $roomName = $roomData['name'] ?? $room;
+    
+    // Insert booking into database
     $stmt = $conn->prepare("INSERT INTO bookings (room_id, guest_name, email, phone, arrival_datetime, departure_datetime, access_code) 
-                            VALUES (:room, :name, :email, :phone, :arrival, :departure, :access_code)");
-    
-    // Bind parameters
-    $stmt->bindParam(':room', $room);
-    $stmt->bindParam(':name', $name);
-    $stmt->bindParam(':email', $email);
-    $stmt->bindParam(':phone', $phone);
-    $stmt->bindParam(':arrival', $arrivalDateTime);
-    $stmt->bindParam(':departure', $departureDateTime);
-    $stmt->bindParam(':access_code', $accessCode);
-    
-    // Execute the statement
+                            VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssssss", $room, $name, $email, $phone, $arrivalDateTime, $departureDateTime, $accessCode);
     $stmt->execute();
     
-    // Get room name for notification
-    $stmt = $conn->prepare("SELECT name FROM rooms WHERE id = :room");
-    $stmt->bindParam(':room', $room);
-    $stmt->execute();
-    $roomName = $stmt->fetch(PDO::FETCH_ASSOC)['name'] ?? $room;
-    
-    // Get notification settings
-    $stmt = $conn->prepare("SELECT * FROM notification_settings LIMIT 1");
-    $stmt->execute();
-    $notificationSettings = $stmt->fetch(PDO::FETCH_ASSOC);
-    
-    // Check if email notifications are enabled
-    if ($notificationSettings && $notificationSettings['email_enabled']) {
-        // Get email template and replace placeholders
-        $emailTemplate = $notificationSettings['email_template'];
-        $emailTemplate = str_replace('{GUEST_NAME}', $name, $emailTemplate);
-        $emailTemplate = str_replace('{ROOM_NAME}', $roomName, $emailTemplate);
-        $emailTemplate = str_replace('{ARRIVAL_DATETIME}', $arrivalDateTime, $emailTemplate);
-        $emailTemplate = str_replace('{DEPARTURE_DATETIME}', $departureDateTime, $emailTemplate);
-        $emailTemplate = str_replace('{ACCESS_CODE}', $accessCode, $emailTemplate);
+    if ($stmt->affected_rows > 0) {
+        $bookingId = $conn->insert_id;
         
-        // Set email parameters
-        $to = $email;
-        $subject = "Your Booking Confirmation";
-        $message = $emailTemplate;
+        // Get notification settings
+        $query = "SELECT * FROM notification_settings LIMIT 1";
+        $result = $conn->query($query);
+        $notificationSettings = $result->fetch_assoc();
         
-        // Set content-type header for sending HTML email
-        $headers = "MIME-Version: 1.0" . "\r\n";
-        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
-        $headers .= "From: noreply@example.com" . "\r\n";
+        // Check if email notifications are enabled
+        if ($notificationSettings && $notificationSettings['email_enabled']) {
+            // Get email template and replace placeholders
+            $emailTemplate = $notificationSettings['email_template'];
+            $emailTemplate = str_replace('{GUEST_NAME}', $name, $emailTemplate);
+            $emailTemplate = str_replace('{ROOM_NAME}', $roomName, $emailTemplate);
+            $emailTemplate = str_replace('{ARRIVAL_DATETIME}', $arrivalDateTime, $emailTemplate);
+            $emailTemplate = str_replace('{DEPARTURE_DATETIME}', $departureDateTime, $emailTemplate);
+            $emailTemplate = str_replace('{ACCESS_CODE}', $accessCode, $emailTemplate);
+            
+            // Set email parameters
+            $to = $email;
+            $subject = "Your Booking Confirmation";
+            $message = $emailTemplate;
+            
+            // Set content-type header for sending HTML email
+            $headers = "MIME-Version: 1.0" . "\r\n";
+            $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+            $headers .= "From: noreply@example.com" . "\r\n";
+            
+            // Send email (commented out for testing)
+            // mail($to, $subject, $message, $headers);
+            error_log("Email would be sent to $email with access code $accessCode");
+        }
         
-        // Send email (commented out for testing)
-        // mail($to, $subject, $message, $headers);
+        // Check if SMS notifications are enabled
+        if ($notificationSettings && $notificationSettings['sms_enabled']) {
+            // Get SMS template and replace placeholders
+            $smsTemplate = $notificationSettings['sms_template'];
+            $smsTemplate = str_replace('{GUEST_NAME}', $name, $smsTemplate);
+            $smsTemplate = str_replace('{ROOM_NAME}', $roomName, $smsTemplate);
+            $smsTemplate = str_replace('{ARRIVAL_DATETIME}', $arrivalDateTime, $smsTemplate);
+            $smsTemplate = str_replace('{DEPARTURE_DATETIME}', $departureDateTime, $smsTemplate);
+            $smsTemplate = str_replace('{ACCESS_CODE}', $accessCode, $smsTemplate);
+            
+            // SMS API integration would go here
+            error_log("SMS would be sent to $phone: $smsTemplate");
+        }
+        
+        // Return success response
+        echo json_encode([
+            'success' => true, 
+            'message' => 'Booking created successfully', 
+            'data' => [
+                'bookingId' => $bookingId,
+                'accessCode' => $accessCode
+            ]
+        ]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Error creating booking: ' . $stmt->error]);
     }
-    
-    // Check if SMS notifications are enabled
-    if ($notificationSettings && $notificationSettings['sms_enabled']) {
-        // Get SMS template and replace placeholders
-        $smsTemplate = $notificationSettings['sms_template'];
-        $smsTemplate = str_replace('{GUEST_NAME}', $name, $smsTemplate);
-        $smsTemplate = str_replace('{ROOM_NAME}', $roomName, $smsTemplate);
-        $smsTemplate = str_replace('{ARRIVAL_DATETIME}', $arrivalDateTime, $smsTemplate);
-        $smsTemplate = str_replace('{DEPARTURE_DATETIME}', $departureDateTime, $smsTemplate);
-        $smsTemplate = str_replace('{ACCESS_CODE}', $accessCode, $smsTemplate);
-        
-        // SMS API integration would go here
-        // For now, we'll just log that we would send an SMS
-        error_log("Would send SMS to $phone: $smsTemplate");
-    }
-    
-    // Return success response
-    echo json_encode([
-        'success' => true, 
-        'message' => 'Booking created successfully', 
-        'data' => [
-            'bookingId' => $conn->lastInsertId(),
-            'accessCode' => $accessCode
-        ]
-    ]);
-    
-} catch(PDOException $e) {
+} catch(Exception $e) {
     // Return error response
     echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
 }
+
+// Close connection
+$conn->close();
 ?>

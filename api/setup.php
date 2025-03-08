@@ -1,5 +1,9 @@
 
 <?php
+// Enable error reporting
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 // Database configuration
 $db_host = "localhost";
 $db_user = "your_db_username"; // Replace with your MySQL username
@@ -44,8 +48,11 @@ if ($conn->query($sql) === TRUE) {
 $sql = "CREATE TABLE IF NOT EXISTS rooms (
     id VARCHAR(20) PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
+    description TEXT,
     fixed_passcode VARCHAR(10) NULL,
-    reset_hours INT DEFAULT 2
+    reset_hours INT DEFAULT 2,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 )";
 
 if ($conn->query($sql) === TRUE) {
@@ -64,8 +71,10 @@ $sql = "CREATE TABLE IF NOT EXISTS bookings (
     arrival_datetime DATETIME NOT NULL,
     departure_datetime DATETIME NOT NULL,
     access_code VARCHAR(10) NOT NULL,
+    status ENUM('active', 'completed', 'cancelled') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (room_id) REFERENCES rooms(id)
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE RESTRICT
 )";
 
 if ($conn->query($sql) === TRUE) {
@@ -94,6 +103,23 @@ if ($conn->query($sql) === TRUE) {
     echo "Notification settings table created successfully<br>";
 } else {
     echo "Error creating notification settings table: " . $conn->error . "<br>";
+}
+
+// Create access logs table
+$sql = "CREATE TABLE IF NOT EXISTS access_logs (
+    id INT(11) AUTO_INCREMENT PRIMARY KEY,
+    booking_id INT(11) NOT NULL,
+    access_datetime DATETIME NOT NULL, 
+    access_result ENUM('granted', 'denied') NOT NULL,
+    ip_address VARCHAR(45),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE
+)";
+
+if ($conn->query($sql) === TRUE) {
+    echo "Access logs table created successfully<br>";
+} else {
+    echo "Error creating access logs table: " . $conn->error . "<br>";
 }
 
 // Check if default admin user exists
@@ -140,17 +166,17 @@ $result = $stmt->get_result();
 if ($result->num_rows == 0) {
     // Insert default rooms
     $rooms = [
-        ['room1', 'Room 1'],
-        ['room2', 'Room 2'],
-        ['room3', 'Room 3'],
-        ['room4', 'Room 4'],
-        ['room5', 'Room 5']
+        ['room1', 'Room 1', 'Standard room with queen bed'],
+        ['room2', 'Room 2', 'Deluxe room with king bed'],
+        ['room3', 'Room 3', 'Suite with kitchenette'],
+        ['room4', 'Room 4', 'Family room with two beds'],
+        ['room5', 'Room 5', 'Executive suite with view']
     ];
     
-    $stmt = $conn->prepare("INSERT INTO rooms (id, name) VALUES (?, ?)");
+    $stmt = $conn->prepare("INSERT INTO rooms (id, name, description) VALUES (?, ?, ?)");
     
     foreach ($rooms as $room) {
-        $stmt->bind_param("ss", $room[0], $room[1]);
+        $stmt->bind_param("sss", $room[0], $room[1], $room[2]);
         if ($stmt->execute()) {
             echo "Room '{$room[1]}' created successfully<br>";
         } else {

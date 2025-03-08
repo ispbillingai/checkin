@@ -12,7 +12,7 @@
 <body class="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4 md:p-8">
   <div class="w-full max-w-3xl mx-auto animate-fade-in">
     <div class="flex items-center justify-between mb-8">
-      <a href="index.html" class="flex items-center gap-1 text-gray-500 hover:text-gray-800">
+      <a href="/" class="flex items-center gap-1 text-gray-500 hover:text-gray-800">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
@@ -35,11 +35,7 @@
               <label for="room" class="block text-sm font-medium text-gray-700">Select Room</label>
               <select id="room" name="room" required class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="" disabled selected>Select a room</option>
-                <option value="room1">Room 1</option>
-                <option value="room2">Room 2</option>
-                <option value="room3">Room 3</option>
-                <option value="room4">Room 4</option>
-                <option value="room5">Room 5</option>
+                <!-- Rooms will be loaded dynamically -->
               </select>
             </div>
             
@@ -153,6 +149,28 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+      // Load rooms from database
+      fetch('/api/get_rooms.php')
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            const roomSelect = document.getElementById('room');
+            data.rooms.forEach(room => {
+              const option = document.createElement('option');
+              option.value = room.id;
+              option.textContent = room.name;
+              roomSelect.appendChild(option);
+            });
+          } else {
+            console.error('Error loading rooms:', data.message);
+            showToast('error', 'Error', 'Failed to load rooms. Please refresh the page.');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          showToast('error', 'Error', 'Failed to load rooms. Please refresh the page.');
+        });
+      
       // Populate time selects
       const timeSelects = [document.getElementById('arrivalTime'), document.getElementById('departureTime')];
       
@@ -195,25 +213,35 @@
         // Collect form data
         const formData = new FormData(this);
         
-        // Simulate API call (replace with actual fetch to PHP backend)
-        setTimeout(() => {
-          const bookingData = {
-            room: formData.get('room'),
-            arrivalDateTime: `${formData.get('arrivalDate')} ${formData.get('arrivalTime')}`,
-            departureDateTime: `${formData.get('departureDate')} ${formData.get('departureTime')}`,
-            name: formData.get('name'),
-            email: formData.get('email'),
-            phone: formData.get('phone'),
-            accessCode: Math.floor(100000 + Math.random() * 900000).toString() // Generate 6-digit code
-          };
-          
-          console.log("Booking data:", bookingData);
-          
-          // Show success toast
-          showToast('success', 'Booking successful!', 'An email with your access code has been sent.');
-          
-          // Reset form and button
-          document.getElementById('bookingForm').reset();
+        // Add combined datetime fields
+        formData.set('arrivalDateTime', `${formData.get('arrivalDate')} ${formData.get('arrivalTime')}`);
+        formData.set('departureDateTime', `${formData.get('departureDate')} ${formData.get('departureTime')}`);
+        
+        // Remove separate date and time fields
+        formData.delete('arrivalDate');
+        formData.delete('arrivalTime');
+        formData.delete('departureDate');
+        formData.delete('departureTime');
+        
+        // Submit form to PHP backend
+        fetch('/api/process_booking.php', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showToast('success', 'Booking successful!', `Your access code is: ${data.data.accessCode}`);
+            document.getElementById('bookingForm').reset();
+          } else {
+            showToast('error', 'Booking failed', data.message || 'Please try again later.');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          showToast('error', 'Booking failed', 'Please try again later.');
+        })
+        .finally(() => {
           submitButton.disabled = false;
           submitButton.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -221,38 +249,7 @@
             </svg>
             Complete Booking
           `;
-          
-          // In real implementation, would submit form to PHP backend
-          // For example:
-          /*
-          fetch('api/create_booking.php', {
-            method: 'POST',
-            body: formData
-          })
-          .then(response => response.json())
-          .then(data => {
-            if (data.success) {
-              showToast('success', 'Booking successful!', 'An email with your access code has been sent.');
-              document.getElementById('bookingForm').reset();
-            } else {
-              showToast('error', 'Booking failed', data.message || 'Please try again later.');
-            }
-          })
-          .catch(error => {
-            console.error('Error:', error);
-            showToast('error', 'Booking failed', 'Please try again later.');
-          })
-          .finally(() => {
-            submitButton.disabled = false;
-            submitButton.innerHTML = `
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              Complete Booking
-            `;
-          });
-          */
-        }, 1500);
+        });
       });
       
       // Toast notification function
