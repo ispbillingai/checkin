@@ -1,3 +1,4 @@
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /
@@ -7,10 +8,10 @@
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^booking$ /src/pages/BookingForm.html [L]
 
-    # For /admin: Serve admin-dashboard.html if /admin is requested.
+    # For /admin: Serve AdminDashboard.html if /admin is requested.
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^admin$ /admin-dashboard.html [L]
+    RewriteRule ^admin$ /src/pages/AdminDashboard.html [L]
 
     # For the root URL: Serve main.html.
     RewriteCond %{REQUEST_FILENAME} !-f

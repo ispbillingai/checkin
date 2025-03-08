@@ -18,6 +18,7 @@ export default defineConfig({
       input: {
         main: path.resolve(__dirname, 'index.html'),
         booking: path.resolve(__dirname, 'src/pages/BookingForm.html'),
+        admin: path.resolve(__dirname, 'src/pages/AdminDashboard.html'),
         notFound: path.resolve(__dirname, 'src/pages/NotFound.html'),
         error: path.resolve(__dirname, 'src/pages/error.html'),
       }
