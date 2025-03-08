@@ -1,25 +1,29 @@
+# .htaccess
 
-# Enable rewriting
-RewriteEngine On
+<IfModule mod_rewrite.c>
+    # Enable rewriting
+    RewriteEngine On
 
-# Set the base
-RewriteBase /
+    # Set the base (adjust if your site is in a subfolder)
+    RewriteBase /
 
-# Don't apply to existing files or directories
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
+    # Don't apply to existing files or directories
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
 
-# For specific routes, handle them explicitly
-RewriteRule ^booking$ /src/pages/BookingForm.html [L]
-RewriteRule ^admin$ /admin-dashboard.html [L]
+    # For specific routes, handle them explicitly
+    RewriteRule ^booking$ /src/pages/BookingForm.html [L]
+    RewriteRule ^admin$ /admin-dashboard.html [L]
 
-# Important: For root URL, serve main.html directly
-RewriteRule ^$ /src/main.html [L]
+    # Important: For root URL, serve main.html directly
+    RewriteRule ^$ /src/main.html [L]
 
-# For all other non-file/directory requests, show NotFound page
-RewriteRule ^(.*)$ /src/pages/NotFound.html [L]
+    # For all other non-file/directory requests, show NotFound page
+    RewriteRule ^(.*)$ /src/pages/NotFound.html [L]
+</IfModule>
 
-# Enable detailed error logging
+# Enable detailed error logging (allowed if PHP is running as an Apache module)
+# Note: Some servers do not allow these directives in .htaccess.
 php_flag display_errors on
 php_value error_reporting E_ALL
 
@@ -32,8 +36,6 @@ ErrorDocument 500 /src/pages/error.html
     Header set Access-Control-Allow-Origin "*"
 </IfModule>
 
-# Add debugging for redirect loops
-<IfModule mod_rewrite.c>
-    # Set environment variable to log rewrite info
-    LogLevel alert rewrite:trace3
-</IfModule>
+# REMOVED: LogLevel directive, since it's not allowed in .htaccess.
+# If you need LogLevel, place it in your main server config or <VirtualHost>.
+
