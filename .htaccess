@@ -1,33 +1,35 @@
-# .htaccess
-
 <IfModule mod_rewrite.c>
-    # Enable rewriting
     RewriteEngine On
-
-    # Set the base (adjust if your site is in a subfolder)
     RewriteBase /
 
-    # Don't apply to existing files or directories
+    # For /booking: Serve BookingForm.html if /booking is requested.
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-
-    # For specific routes, handle them explicitly
     RewriteRule ^booking$ /src/pages/BookingForm.html [L]
+
+    # For /admin: Serve admin-dashboard.html if /admin is requested.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^admin$ /admin-dashboard.html [L]
 
-    # Important: For root URL, serve main.html directly
+    # For the root URL: Serve main.html.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^$ /src/main.html [L]
 
-    # For all other non-file/directory requests, show NotFound page
+    # For all other non-file/directory requests, show NotFound page.
+    # Avoid rewriting if the request is already for /src/pages/NotFound.html.
+    RewriteCond %{REQUEST_URI} !^/src/pages/NotFound\.html$
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^(.*)$ /src/pages/NotFound.html [L]
 </IfModule>
 
-# Enable detailed error logging (allowed if PHP is running as an Apache module)
-# Note: Some servers do not allow these directives in .htaccess.
+# PHP error settings (note: these work only if PHP runs as an Apache module)
 php_flag display_errors on
 php_value error_reporting E_ALL
 
-# Set custom error pages
+# Custom error documents
 ErrorDocument 404 /src/pages/NotFound.html
 ErrorDocument 500 /src/pages/error.html
 
@@ -35,7 +37,3 @@ ErrorDocument 500 /src/pages/error.html
 <IfModule mod_headers.c>
     Header set Access-Control-Allow-Origin "*"
 </IfModule>
-
-# REMOVED: LogLevel directive, since it's not allowed in .htaccess.
-# If you need LogLevel, place it in your main server config or <VirtualHost>.
-
