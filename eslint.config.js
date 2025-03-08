@@ -5,5 +5,9 @@ export default {
     es2020: true
   },
   extends: ['eslint:recommended'],
-  rules: {}
+  rules: {},
+  parserOptions: {
+    ecmaVersion: 'latest',
+    sourceType: 'module'
+  }
 };
