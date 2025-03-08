@@ -16,5 +16,15 @@
     <iframe src="/src/pages/HomePage.html" style="position:fixed; top:0; left:0; bottom:0; right:0; width:100%; height:100%; border:none; margin:0; padding:0; overflow:hidden; z-index:999999;">
       Your browser doesn't support iframes - <a href="/src/pages/HomePage.html">Click here to go to main page</a>
     </iframe>
+    
+    <script>
+      // Check if URL contains /admin and redirect appropriately
+      document.addEventListener('DOMContentLoaded', function() {
+        const path = window.location.pathname;
+        if (path.includes('/admin')) {
+          window.location.href = '/src/pages/AdminDashboard.html';
+        }
+      });
+    </script>
   </body>
 </html>
