@@ -1,8 +1,4 @@
 
-// This file exists to satisfy TypeScript compilation requirements
+// This is a placeholder file to satisfy TypeScript's entry point requirements.
+// It doesn't actually do anything, but it ensures the build system has an entry point.
 console.log("Application initialized");
-
-// Redirect to the main page if accessed directly
-if (window.location.pathname === '/src/index.js') {
-  window.location.href = '/';
-}

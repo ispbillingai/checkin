@@ -1,55 +1,89 @@
 
-// admin-templates-loader.js
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("Templates loader script started");
-    
-    // Function to load template content
-    async function loadTemplate(templatePath, containerId) {
-        try {
-            console.log(`Loading template from ${templatePath} into ${containerId}`);
-            const response = await fetch(templatePath);
-            if (!response.ok) {
-                throw new Error(`Failed to load template: ${response.status} ${response.statusText}`);
-            }
-            const html = await response.text();
-            const container = document.getElementById(containerId);
-            if (container) {
-                container.innerHTML = html;
-                console.log(`Successfully loaded template into ${containerId}`);
-                return true;
-            } else {
-                console.error(`Container not found: ${containerId}`);
-                return false;
-            }
-        } catch (error) {
-            console.error(`Error loading template: ${error.message}`);
-            return false;
-        }
-    }
-    
+// Function to load templates
+async function loadTemplates() {
+  console.log("Loading admin templates...");
+  
+  try {
     // Load sidebar template
-    loadTemplate('../pages/templates/sidebar-template.html', 'sidebar-content')
-        .then(success => {
-            if (success) {
-                // Dispatch a custom event to notify that sidebar is loaded
-                const event = new CustomEvent('sidebarLoaded');
-                document.dispatchEvent(event);
-                console.log("Sidebar template loaded and event dispatched");
-            }
-        });
+    const sidebarResponse = await fetch('../pages/templates/sidebar-template.html');
+    const sidebarTemplate = await sidebarResponse.text();
+    document.getElementById('sidebar-template-container').innerHTML = sidebarTemplate;
+    document.getElementById('sidebar-content').innerHTML = sidebarTemplate;
+    console.log("Sidebar template loaded");
     
-    // Load other templates as needed
-    loadTemplate('../pages/templates/bookings-template.html', 'bookingsSection');
-    loadTemplate('../pages/templates/passcodes-template.html', 'passcodesSection');
-    loadTemplate('../pages/templates/database-template.html', 'databaseSection');
+    // Load bookings template
+    const bookingsResponse = await fetch('../pages/templates/bookings-template.html');
+    const bookingsTemplate = await bookingsResponse.text();
+    document.getElementById('bookings-template-container').innerHTML = bookingsTemplate;
+    document.getElementById('bookingsSection').innerHTML = bookingsTemplate;
+    console.log("Bookings template loaded");
     
-    // Additional listener for the custom event
-    document.addEventListener('sidebarLoaded', function() {
-        console.log("sidebarLoaded event received");
-        
-        // This event will be used to initialize sidebar functionality
-        // after the sidebar template has been loaded
-        const initEvent = new CustomEvent('initializeSidebar');
-        document.dispatchEvent(initEvent);
-    });
-});
+    // Load rooms template
+    const roomsResponse = await fetch('../pages/templates/rooms-template.html');
+    const roomsTemplate = await roomsResponse.text();
+    document.getElementById('rooms-template-container').innerHTML = roomsTemplate;
+    document.getElementById('roomsSection').innerHTML = roomsTemplate;
+    console.log("Rooms template loaded");
+    
+    // Load passcodes template
+    const passcodesResponse = await fetch('../pages/templates/passcodes-template.html');
+    const passcodesTemplate = await passcodesResponse.text();
+    document.getElementById('passcodes-template-container').innerHTML = passcodesTemplate;
+    document.getElementById('passcodesSection').innerHTML = passcodesTemplate;
+    console.log("Passcodes template loaded");
+    
+    // Load database template
+    const databaseResponse = await fetch('../pages/templates/database-template.html');
+    const databaseTemplate = await databaseResponse.text();
+    document.getElementById('database-template-container').innerHTML = databaseTemplate;
+    document.getElementById('databaseSection').innerHTML = databaseTemplate;
+    console.log("Database template loaded");
+    
+    // Load room setting template
+    const roomSettingResponse = await fetch('../pages/templates/room-setting-template.html');
+    const roomSettingTemplate = await roomSettingResponse.text();
+    document.getElementById('room-setting-template-container').innerHTML = roomSettingTemplate;
+    console.log("Room setting template loaded");
+    
+    // Load database table template
+    const databaseTableResponse = await fetch('../pages/templates/database-table-template.html');
+    const databaseTableTemplate = await databaseTableResponse.text();
+    document.getElementById('database-table-template-container').innerHTML = databaseTableTemplate;
+    console.log("Database table template loaded");
+    
+    console.log("All templates loaded successfully");
+    
+    // Initialize all components after templates are loaded
+    initializeComponents();
+  } catch (error) {
+    console.error("Error loading templates:", error);
+  }
+}
+
+// Function to initialize components after templates are loaded
+function initializeComponents() {
+  console.log("Initializing components...");
+  
+  // Initialize bookings functionality if the script is loaded
+  if (typeof initializeBookings === 'function') {
+    initializeBookings();
+  }
+  
+  // Initialize rooms functionality if the script is loaded
+  if (typeof initializeRooms === 'function') {
+    initializeRooms();
+  }
+  
+  // Initialize passcodes functionality if the script is loaded
+  if (typeof initializePasscodes === 'function') {
+    initializePasscodes();
+  }
+  
+  // Initialize database functionality if the script is loaded
+  if (typeof initializeDatabase === 'function') {
+    initializeDatabase();
+  }
+}
+
+// Load templates when the DOM content is loaded
+document.addEventListener('DOMContentLoaded', loadTemplates);

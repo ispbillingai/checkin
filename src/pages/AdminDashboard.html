@@ -45,6 +45,11 @@
             <!-- Content will be loaded here -->
           </div>
           
+          <!-- Rooms section (hidden by default) -->
+          <div id="roomsSection" class="section-content hidden">
+            <!-- Content will be loaded here -->
+          </div>
+          
           <!-- Passcodes section (hidden by default) -->
           <div id="passcodesSection" class="section-content hidden">
             <!-- Content will be loaded here -->
@@ -82,6 +87,32 @@
               </div>
             </div>
           </div>
+          
+          <!-- Email Templates section (hidden by default) -->
+          <div id="emailTemplatesSection" class="section-content hidden">
+            <div class="backdrop-blur-sm bg-white/90 border shadow-lg rounded-lg overflow-hidden mb-8">
+              <div class="bg-blue-50 border-b p-6">
+                <h2 class="text-xl font-semibold">Email Templates</h2>
+                <p class="text-sm text-gray-500 mt-1">Manage email notification templates</p>
+              </div>
+              <div class="p-6">
+                <p>Email template management coming soon.</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- SMS Templates section (hidden by default) -->
+          <div id="smsTemplatesSection" class="section-content hidden">
+            <div class="backdrop-blur-sm bg-white/90 border shadow-lg rounded-lg overflow-hidden mb-8">
+              <div class="bg-blue-50 border-b p-6">
+                <h2 class="text-xl font-semibold">SMS Templates</h2>
+                <p class="text-sm text-gray-500 mt-1">Manage SMS notification templates</p>
+              </div>
+              <div class="p-6">
+                <p>SMS template management coming soon.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -102,6 +133,7 @@
   <div id="templates-container" style="display:none;">
     <div id="sidebar-template-container"></div>
     <div id="bookings-template-container"></div>
+    <div id="rooms-template-container"></div>
     <div id="passcodes-template-container"></div>
     <div id="database-template-container"></div>
     <div id="room-setting-template-container"></div>
@@ -112,6 +144,7 @@
   <script src="../pages/js/admin-templates-loader.js"></script>
   <script src="../pages/js/admin-sidebar.js"></script>
   <script src="../pages/js/admin-bookings.js"></script>
+  <script src="../pages/js/admin-rooms.js"></script>
   <script src="../pages/js/admin-passcodes.js"></script>
   <script src="../pages/js/admin-database.js"></script>
   <script src="../pages/js/admin-utils.js"></script>

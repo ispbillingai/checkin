@@ -1,0 +1,135 @@
+
+<div class="backdrop-blur-sm bg-white/90 border shadow-lg rounded-lg overflow-hidden mb-8">
+  <div class="bg-blue-50 border-b p-6">
+    <h2 class="text-xl font-semibold">Room Management</h2>
+    <p class="text-sm text-gray-500 mt-1">
+      Add, edit, and manage rooms and their configurations
+    </p>
+  </div>
+  <div class="p-6">
+    <div class="flex justify-between mb-6">
+      <div>
+        <h3 class="text-lg font-medium">Rooms List</h3>
+        <p class="text-sm text-gray-500">Manage all rooms in the system</p>
+      </div>
+      <button id="addRoomBtn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        </svg>
+        Add New Room
+      </button>
+    </div>
+    
+    <!-- Rooms Table -->
+    <div class="border rounded-md overflow-hidden">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              ID
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Room Name
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Description
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Fixed Passcode
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Reset Hours
+            </th>
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody id="roomsTableBody" class="bg-white divide-y divide-gray-200">
+          <!-- Room data will be populated here -->
+          <tr class="text-center">
+            <td colspan="6" class="px-6 py-4 text-sm text-gray-500">
+              Loading rooms...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Room Modal -->
+<div id="roomModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-lg w-full max-w-2xl mx-4">
+    <div class="bg-blue-50 border-b p-4 flex justify-between items-center">
+      <h3 id="roomModalTitle" class="text-lg font-semibold">Add New Room</h3>
+      <button id="closeRoomModal" class="text-gray-500 hover:text-gray-700">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    <div class="p-6">
+      <form id="roomForm" class="space-y-4">
+        <input type="hidden" id="roomId">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label for="roomIdInput" class="block text-sm font-medium text-gray-700">Room ID</label>
+            <input type="text" id="roomIdInput" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., room101" required>
+            <p class="text-xs text-gray-500">Unique identifier for the room (cannot be changed later)</p>
+          </div>
+          <div class="space-y-2">
+            <label for="roomName" class="block text-sm font-medium text-gray-700">Room Name</label>
+            <input type="text" id="roomName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Deluxe Suite" required>
+          </div>
+        </div>
+        <div class="space-y-2">
+          <label for="roomDescription" class="block text-sm font-medium text-gray-700">Description</label>
+          <textarea id="roomDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Room description"></textarea>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label for="fixedPasscode" class="block text-sm font-medium text-gray-700">Fixed Passcode (Optional)</label>
+            <input type="text" id="fixedPasscode" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Leave empty for auto-generated">
+            <p class="text-xs text-gray-500">If set, this passcode will be used for all bookings</p>
+          </div>
+          <div class="space-y-2">
+            <label for="resetHours" class="block text-sm font-medium text-gray-700">Reset Hours</label>
+            <input type="number" id="resetHours" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value="2" min="0" required>
+            <p class="text-xs text-gray-500">Hours after checkout before resetting passcode</p>
+          </div>
+        </div>
+        <div class="flex justify-end gap-3 pt-4">
+          <button type="button" id="cancelRoomBtn" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
+            Cancel
+          </button>
+          <button type="submit" id="saveRoomBtn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+            Save Room
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Room Confirmation Modal -->
+<div id="deleteRoomModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-lg w-full max-w-md mx-4">
+    <div class="bg-red-50 border-b p-4">
+      <h3 class="text-lg font-semibold text-red-700">Confirm Deletion</h3>
+    </div>
+    <div class="p-6">
+      <p class="mb-4">Are you sure you want to delete this room? This action cannot be undone.</p>
+      <p class="mb-6 font-medium" id="deleteRoomName"></p>
+      <input type="hidden" id="deleteRoomId">
+      <div class="flex justify-end gap-3">
+        <button id="cancelDeleteBtn" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
+          Cancel
+        </button>
+        <button id="confirmDeleteBtn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+          Delete Room
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
