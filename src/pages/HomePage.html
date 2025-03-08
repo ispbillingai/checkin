@@ -1,0 +1,365 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book Your Stay - Check-in-Simplify</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .animated-bg {
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+      background-image: linear-gradient(-45deg, #F2FCE2, #E5DEFF, #D3E4FD, #FFDEE2);
+    }
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .fade-in {
+      animation: fadeIn 0.8s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="min-h-screen animated-bg">
+  <header class="py-6">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <div class="p-2 rounded-full bg-blue-100 text-blue-600">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <span class="text-xl font-semibold text-gray-800">Check-in-Simplify</span>
+        </div>
+        <div>
+          <a href="/admin" class="text-sm px-4 py-2 rounded-md text-gray-600 hover:bg-gray-100 transition-colors">
+            Admin Portal
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mx-auto px-4 py-10">
+    <div class="max-w-5xl mx-auto">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+        <!-- Left side - Hero text -->
+        <div class="fade-in" style="animation-delay: 0.2s">
+          <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
+            Simple and Quick <span class="text-blue-600">Room Booking</span>
+          </h1>
+          <p class="text-lg text-gray-600 mb-8">
+            Book your stay in just a few steps. No account required. 
+            Your access code will be sent directly to your email.
+          </p>
+          <div class="bg-white/70 backdrop-blur-sm p-6 rounded-lg shadow-lg border border-gray-100">
+            <div class="flex flex-col space-y-4">
+              <div class="flex items-center space-x-3 text-gray-700">
+                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">1</div>
+                <span>Select your room and dates</span>
+              </div>
+              <div class="flex items-center space-x-3 text-gray-700">
+                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">2</div>
+                <span>Enter your contact information</span>
+              </div>
+              <div class="flex items-center space-x-3 text-gray-700">
+                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">3</div>
+                <span>Receive your access code instantly</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Right side - Booking form -->
+        <div class="fade-in" style="animation-delay: 0.4s">
+          <div class="bg-white/90 backdrop-blur-sm rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+            <div class="p-6 bg-blue-50 border-b">
+              <h2 class="text-2xl font-semibold text-gray-800">Book Your Stay</h2>
+              <p class="text-sm text-gray-500 mt-1">Fill out the form below to create your booking</p>
+            </div>
+            <div class="p-6">
+              <form id="bookingForm" class="space-y-4">
+                <!-- Room selection -->
+                <div class="space-y-2">
+                  <label for="room" class="block text-sm font-medium text-gray-700">Select Room</label>
+                  <select 
+                    id="room" 
+                    name="room" 
+                    required
+                    class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select a room</option>
+                    <!-- Room options will be loaded here -->
+                  </select>
+                </div>
+                
+                <!-- Arrival date/time -->
+                <div class="space-y-2">
+                  <label for="arrivalDateTime" class="block text-sm font-medium text-gray-700">Arrival Date & Time</label>
+                  <input 
+                    id="arrivalDateTime" 
+                    name="arrivalDateTime" 
+                    type="datetime-local" 
+                    required
+                    class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <!-- Departure date/time -->
+                <div class="space-y-2">
+                  <label for="departureDateTime" class="block text-sm font-medium text-gray-700">Departure Date & Time</label>
+                  <input 
+                    id="departureDateTime" 
+                    name="departureDateTime" 
+                    type="datetime-local" 
+                    required
+                    class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <!-- Name -->
+                <div class="space-y-2">
+                  <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                  <input 
+                    id="name" 
+                    name="name" 
+                    type="text" 
+                    placeholder="Enter your full name" 
+                    required
+                    class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <!-- Email -->
+                <div class="space-y-2">
+                  <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                  <input 
+                    id="email" 
+                    name="email" 
+                    type="email" 
+                    placeholder="Enter your email" 
+                    required
+                    class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <!-- Phone -->
+                <div class="space-y-2">
+                  <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                  <input 
+                    id="phone" 
+                    name="phone" 
+                    type="tel" 
+                    placeholder="Enter your phone number" 
+                    required
+                    class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <!-- Submit button -->
+                <button 
+                  type="submit" 
+                  id="submitButton"
+                  class="w-full h-11 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                >
+                  Create Booking
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="mt-16 py-8 border-t">
+    <div class="container mx-auto px-4">
+      <div class="text-center text-gray-500 text-sm">
+        <p>© 2023 Check-in-Simplify. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast message for notifications -->
+  <div id="toast" class="fixed top-4 right-4 z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
+    <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 flex items-start max-w-xs">
+      <div id="toastIcon" class="flex-shrink-0 w-5 h-5 mr-3"></div>
+      <div>
+        <p id="toastTitle" class="font-medium text-gray-900 text-sm"></p>
+        <p id="toastMessage" class="text-sm text-gray-500 mt-1"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success modal -->
+  <div id="successModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+    <div class="absolute inset-0 bg-black opacity-50"></div>
+    <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full m-4 p-6 fade-in">
+      <div class="text-center">
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">Booking Successful!</h3>
+        <p class="text-sm text-gray-500 mb-6">Your booking has been created successfully. Check your email for details.</p>
+        <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+          <p class="text-sm text-gray-700 mb-2">Your access code:</p>
+          <p id="accessCode" class="text-2xl font-bold text-blue-600 tracking-wider"></p>
+        </div>
+        <button 
+          id="closeModal" 
+          class="w-full h-10 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log("Home page loaded successfully");
+      
+      // Load rooms from API
+      fetch('/api/get_rooms.php')
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.rooms) {
+            const roomSelect = document.getElementById('room');
+            data.rooms.forEach(room => {
+              const option = document.createElement('option');
+              option.value = room.id;
+              option.textContent = room.name;
+              roomSelect.appendChild(option);
+            });
+          } else {
+            console.error('Failed to load rooms:', data.message);
+            showToast('error', 'Error', 'Failed to load rooms. Please try again later.');
+          }
+        })
+        .catch(error => {
+          console.error('Error loading rooms:', error);
+          showToast('error', 'Error', 'Failed to load rooms. Please try again later.');
+        });
+      
+      // Set min dates for arrival/departure
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      const formatDateTimeForInput = (date) => {
+        return date.toISOString().slice(0, 16);
+      };
+      
+      document.getElementById('arrivalDateTime').min = formatDateTimeForInput(today);
+      document.getElementById('departureDateTime').min = formatDateTimeForInput(tomorrow);
+      
+      // Default values for testing
+      document.getElementById('arrivalDateTime').value = formatDateTimeForInput(today);
+      document.getElementById('departureDateTime').value = formatDateTimeForInput(tomorrow);
+      
+      // Handle booking form submission
+      document.getElementById('bookingForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const submitButton = document.getElementById('submitButton');
+        const formData = new FormData(this);
+        
+        // Validate arrival and departure dates
+        const arrival = new Date(formData.get('arrivalDateTime'));
+        const departure = new Date(formData.get('departureDateTime'));
+        
+        if (departure <= arrival) {
+          showToast('error', 'Invalid Dates', 'Departure date must be after arrival date.');
+          return;
+        }
+        
+        // Disable button and show loading state
+        submitButton.disabled = true;
+        submitButton.innerHTML = `
+          <span class="mr-2">Processing</span>
+          <svg class="inline-block animate-spin h-4 w-4" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        `;
+        
+        // Submit form data to API
+        fetch('/api/process_booking.php', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          submitButton.disabled = false;
+          submitButton.textContent = 'Create Booking';
+          
+          if (data.success) {
+            // Show success modal with access code
+            document.getElementById('accessCode').textContent = data.data.accessCode;
+            document.getElementById('successModal').classList.remove('hidden');
+            
+            // Reset form
+            document.getElementById('bookingForm').reset();
+          } else {
+            showToast('error', 'Booking Failed', data.message || 'There was an error creating your booking. Please try again.');
+          }
+        })
+        .catch(error => {
+          console.error('Error processing booking:', error);
+          submitButton.disabled = false;
+          submitButton.textContent = 'Create Booking';
+          showToast('error', 'Error', 'There was an error processing your request. Please try again.');
+        });
+      });
+      
+      // Close modal button
+      document.getElementById('closeModal').addEventListener('click', function() {
+        document.getElementById('successModal').classList.add('hidden');
+      });
+      
+      // Toast notification function
+      window.showToast = function(type, title, message) {
+        const toast = document.getElementById('toast');
+        const toastTitle = document.getElementById('toastTitle');
+        const toastMessage = document.getElementById('toastMessage');
+        const toastIcon = document.getElementById('toastIcon');
+        
+        // Set content and styles based on type
+        toastTitle.textContent = title;
+        toastMessage.textContent = message;
+        
+        if (type === 'success') {
+          toastIcon.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+          `;
+        } else if (type === 'error') {
+          toastIcon.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          `;
+        }
+        
+        // Show toast
+        toast.classList.remove('translate-x-full');
+        
+        // Hide toast after 5 seconds
+        setTimeout(() => {
+          toast.classList.add('translate-x-full');
+        }, 5000);
+      };
+    });
+  </script>
+</body>
+</html>

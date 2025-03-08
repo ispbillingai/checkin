@@ -3,23 +3,18 @@
     RewriteEngine On
     RewriteBase /
 
-    # For /booking: Serve BookingForm.html if /booking is requested.
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^booking$ /src/pages/BookingForm.html [L]
-
-    # For /admin: Serve AdminDashboard.html if /admin is requested.
+    # For /admin: Serve AdminDashboard.html if /admin is requested
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^admin$ /src/pages/AdminDashboard.html [L]
 
-    # For the root URL: Serve main.html.
+    # For the root URL: Serve HomePage.html
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^$ /src/main.html [L]
+    RewriteRule ^$ /src/pages/HomePage.html [L]
 
-    # For all other non-file/directory requests, show NotFound page.
-    # Avoid rewriting if the request is already for /src/pages/NotFound.html.
+    # For all other non-file/directory requests, show NotFound page
+    # Avoid rewriting if the request is already for /src/pages/NotFound.html
     RewriteCond %{REQUEST_URI} !^/src/pages/NotFound\.html$
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d

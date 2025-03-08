@@ -1,4 +1,11 @@
 
-// This is a placeholder file to satisfy TypeScript's entry point requirements.
-// It doesn't actually do anything, but it ensures the build system has an entry point.
+// Main entry point for the application
 console.log("Application initialized");
+
+// Redirect to the appropriate page based on URL
+window.addEventListener('DOMContentLoaded', () => {
+  const path = window.location.pathname;
+  
+  // Specific redirects can be handled here if needed
+  console.log(`Current path: ${path}`);
+});
