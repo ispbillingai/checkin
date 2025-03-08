@@ -21,6 +21,13 @@ export default defineConfig({
         admin: path.resolve(__dirname, 'src/pages/AdminDashboard.html'),
         notFound: path.resolve(__dirname, 'src/pages/NotFound.html'),
         error: path.resolve(__dirname, 'src/pages/error.html'),
+        // Add template files
+        sidebarTemplate: path.resolve(__dirname, 'src/pages/templates/sidebar-template.html'),
+        bookingsTemplate: path.resolve(__dirname, 'src/pages/templates/bookings-template.html'),
+        passcodesTemplate: path.resolve(__dirname, 'src/pages/templates/passcodes-template.html'),
+        databaseTemplate: path.resolve(__dirname, 'src/pages/templates/database-template.html'),
+        roomSettingTemplate: path.resolve(__dirname, 'src/pages/templates/room-setting-template.html'),
+        databaseTableTemplate: path.resolve(__dirname, 'src/pages/templates/database-table-template.html')
       }
     }
   }

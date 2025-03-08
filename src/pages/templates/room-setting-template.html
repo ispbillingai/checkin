@@ -1,0 +1,19 @@
+
+<div class="border rounded-md overflow-hidden mb-4">
+  <div class="bg-gray-50 py-3 px-4 border-b">
+    <h4 class="text-base font-medium">Room Name</h4>
+  </div>
+  <div class="p-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="space-y-2">
+        <label class="block text-sm font-medium text-gray-700 custom-passcode-label">Custom Fixed Passcode (Optional)</label>
+        <input type="text" class="custom-passcode w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Leave empty for auto-generated">
+        <p class="text-xs text-gray-500">If set, this fixed passcode will be used for all bookings</p>
+      </div>
+      <div class="space-y-2">
+        <label class="block text-sm font-medium text-gray-700 reset-hours-label">Auto Reset (hours after checkout)</label>
+        <input type="number" min="0" value="2" class="reset-hours w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+    </div>
+  </div>
+</div>
