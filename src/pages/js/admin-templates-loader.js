@@ -1,82 +1,55 @@
 
-/**
- * Templates Loader
- * Handles dynamic loading of HTML templates for the admin dashboard
- */
-
+// admin-templates-loader.js
 document.addEventListener('DOMContentLoaded', function() {
-  // Define templates to load
-  const templates = [
-    { id: 'sidebar-template-container', path: '../pages/templates/sidebar-template.html', target: '#sidebar-content' },
-    { id: 'bookings-template-container', path: '../pages/templates/bookings-template.html', template: true, templateId: 'bookingsTemplate' },
-    { id: 'passcodes-template-container', path: '../pages/templates/passcodes-template.html', template: true, templateId: 'passcodesTemplate' },
-    { id: 'database-template-container', path: '../pages/templates/database-template.html', template: true, templateId: 'databaseTemplate' },
-    { id: 'room-setting-template-container', path: '../pages/templates/room-setting-template.html', template: true, templateId: 'roomSettingTemplate' },
-    { id: 'database-table-template-container', path: '../pages/templates/database-table-template.html', template: true, templateId: 'databaseTableTemplate' }
-  ];
-
-  // Load all templates
-  Promise.all(templates.map(template => loadTemplate(template)))
-    .then(() => {
-      console.log('All templates loaded successfully');
-      // Initialize the application after templates are loaded
-      if (window.initAdminSidebar) {
-        window.initAdminSidebar();
-      }
-    })
-    .catch(error => {
-      console.error('Error loading templates:', error);
+    console.log("Templates loader script started");
+    
+    // Function to load template content
+    async function loadTemplate(templatePath, containerId) {
+        try {
+            console.log(`Loading template from ${templatePath} into ${containerId}`);
+            const response = await fetch(templatePath);
+            if (!response.ok) {
+                throw new Error(`Failed to load template: ${response.status} ${response.statusText}`);
+            }
+            const html = await response.text();
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.innerHTML = html;
+                console.log(`Successfully loaded template into ${containerId}`);
+                return true;
+            } else {
+                console.error(`Container not found: ${containerId}`);
+                return false;
+            }
+        } catch (error) {
+            console.error(`Error loading template: ${error.message}`);
+            return false;
+        }
+    }
+    
+    // Load sidebar template
+    loadTemplate('../pages/templates/sidebar-template.html', 'sidebar-content')
+        .then(success => {
+            if (success) {
+                // Dispatch a custom event to notify that sidebar is loaded
+                const event = new CustomEvent('sidebarLoaded');
+                document.dispatchEvent(event);
+                console.log("Sidebar template loaded and event dispatched");
+            }
+        });
+    
+    // Load other templates as needed
+    loadTemplate('../pages/templates/bookings-template.html', 'bookingsSection');
+    loadTemplate('../pages/templates/passcodes-template.html', 'passcodesSection');
+    loadTemplate('../pages/templates/database-template.html', 'databaseSection');
+    
+    // Additional listener for the custom event
+    document.addEventListener('sidebarLoaded', function() {
+        console.log("sidebarLoaded event received");
+        
+        // This event will be used to initialize sidebar functionality
+        // after the sidebar template has been loaded
+        const initEvent = new CustomEvent('initializeSidebar');
+        document.dispatchEvent(initEvent);
     });
 });
-
-/**
- * Loads a template from a given path
- * @param {Object} template Template configuration object
- * @returns {Promise} Promise that resolves when the template is loaded
- */
-function loadTemplate(template) {
-  return new Promise((resolve, reject) => {
-    fetch(template.path)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Failed to load template: ${template.path}`);
-        }
-        return response.text();
-      })
-      .then(html => {
-        const container = document.getElementById(template.id);
-        if (!container) {
-          throw new Error(`Container not found: ${template.id}`);
-        }
-        
-        container.innerHTML = html;
-        
-        // If this is a template that should be added to the document
-        if (template.template) {
-          const templateElement = document.createElement('template');
-          templateElement.id = template.templateId;
-          templateElement.innerHTML = html;
-          document.body.appendChild(templateElement);
-        }
-        
-        // If there's a target element, immediately inject the content
-        if (template.target) {
-          const targetElement = document.querySelector(template.target);
-          if (targetElement) {
-            targetElement.innerHTML = html;
-          }
-        }
-        
-        resolve();
-      })
-      .catch(error => {
-        console.error(`Error loading template ${template.path}:`, error);
-        reject(error);
-      });
-  });
-}
-
-// Export for testing purposes
-if (typeof module !== 'undefined') {
-  module.exports = { loadTemplate };
-}

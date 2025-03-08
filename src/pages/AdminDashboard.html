@@ -54,6 +54,34 @@
           <div id="databaseSection" class="section-content hidden">
             <!-- Content will be loaded here -->
           </div>
+          
+          <!-- Users section (hidden by default) -->
+          <div id="usersSection" class="section-content hidden">
+            <!-- Users content will be loaded here -->
+            <div class="backdrop-blur-sm bg-white/90 border shadow-lg rounded-lg overflow-hidden mb-8">
+              <div class="bg-blue-50 border-b p-6">
+                <h2 class="text-xl font-semibold">User Management</h2>
+                <p class="text-sm text-gray-500 mt-1">Add, edit, or remove users from the system</p>
+              </div>
+              <div class="p-6">
+                <p>User management functionality coming soon.</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Settings section (hidden by default) -->
+          <div id="settingsSection" class="section-content hidden">
+            <!-- Settings content will be loaded here -->
+            <div class="backdrop-blur-sm bg-white/90 border shadow-lg rounded-lg overflow-hidden mb-8">
+              <div class="bg-blue-50 border-b p-6">
+                <h2 class="text-xl font-semibold">System Settings</h2>
+                <p class="text-sm text-gray-500 mt-1">Configure system-wide settings and preferences</p>
+              </div>
+              <div class="p-6">
+                <p>Settings functionality coming soon.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -87,5 +115,79 @@
   <script src="../pages/js/admin-passcodes.js"></script>
   <script src="../pages/js/admin-database.js"></script>
   <script src="../pages/js/admin-utils.js"></script>
+  
+  <!-- Custom script to ensure sidebar functionality -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log("AdminDashboard.html loaded and DOMContentLoaded fired");
+      
+      // Function to handle sidebar section clicks
+      function initializeSidebar() {
+        console.log("Initializing sidebar functionality");
+        
+        // Get all sidebar section buttons
+        const sectionButtons = document.querySelectorAll('[data-section]');
+        console.log("Found section buttons:", sectionButtons.length);
+        
+        // Add click event listeners to each button
+        sectionButtons.forEach(button => {
+          button.addEventListener('click', function() {
+            const sectionName = this.getAttribute('data-section');
+            console.log("Section button clicked:", sectionName);
+            
+            // Remove active class from all buttons
+            sectionButtons.forEach(btn => {
+              btn.classList.remove('bg-blue-100', 'text-blue-600');
+              btn.classList.add('hover:bg-gray-100');
+            });
+            
+            // Add active class to clicked button
+            this.classList.add('bg-blue-100', 'text-blue-600');
+            this.classList.remove('hover:bg-gray-100');
+            
+            // Hide all sections
+            document.querySelectorAll('.section-content').forEach(section => {
+              section.classList.add('hidden');
+            });
+            
+            // Show the selected section
+            const selectedSection = document.getElementById(sectionName + 'Section');
+            if (selectedSection) {
+              selectedSection.classList.remove('hidden');
+              console.log("Showing section:", sectionName);
+            } else {
+              console.error("Section not found:", sectionName + 'Section');
+            }
+          });
+        });
+        
+        // Toggle sidebar functionality
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        
+        if (sidebarToggle && sidebar) {
+          sidebarToggle.addEventListener('click', function() {
+            console.log("Sidebar toggle clicked");
+            sidebar.classList.toggle('w-64');
+            sidebar.classList.toggle('w-0');
+          });
+        }
+      }
+      
+      // Check if templates are loaded, and if not, wait for them
+      function checkAndInitialize() {
+        if (document.querySelector('#sidebar-content').children.length > 0) {
+          console.log("Sidebar content is loaded, initializing sidebar");
+          initializeSidebar();
+        } else {
+          console.log("Waiting for sidebar content to load...");
+          setTimeout(checkAndInitialize, 100);
+        }
+      }
+      
+      // Start checking for template loading
+      checkAndInitialize();
+    });
+  </script>
 </body>
 </html>
