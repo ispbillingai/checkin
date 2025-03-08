@@ -8,9 +8,9 @@ ini_set('error_log', '/var/log/php/error.log'); // Make sure this path exists an
 
 // Database configuration
 $db_host = "localhost";
-$db_user = "your_db_username"; // Replace with your MySQL username
-$db_pass = "your_db_password"; // Replace with your MySQL password
-$db_name = "booking_system";
+$db_user = "checkin"; // Replace with your MySQL username
+$db_pass = "checkin"; // Replace with your MySQL password
+$db_name = "checkin";
 
 // Log database connection attempt
 error_log("Attempting database connection with host: $db_host");

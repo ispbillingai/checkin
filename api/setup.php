@@ -6,8 +6,8 @@ ini_set('display_errors', 1);
 
 // Database configuration
 $db_host = "localhost";
-$db_user = "your_db_username"; // Replace with your MySQL username
-$db_pass = "your_db_password"; // Replace with your MySQL password
+$db_user = "checkin"; // Replace with your MySQL username
+$db_pass = "checkin"; // Replace with your MySQL password
 
 // Create connection
 $conn = new mysqli($db_host, $db_user, $db_pass);
@@ -27,7 +27,7 @@ if ($conn->query($sql) === TRUE) {
 }
 
 // Select the database
-$conn->select_db("booking_system");
+$conn->select_db("checkin");
 
 // Create users table
 $sql = "CREATE TABLE IF NOT EXISTS users (
