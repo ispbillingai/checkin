@@ -17,11 +17,12 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'index.html'),
+        mainPage: path.resolve(__dirname, 'src/main.html'),
         booking: path.resolve(__dirname, 'src/pages/BookingForm.html'),
         admin: path.resolve(__dirname, 'src/pages/AdminDashboard.html'),
         notFound: path.resolve(__dirname, 'src/pages/NotFound.html'),
         error: path.resolve(__dirname, 'src/pages/error.html'),
-        // Add template files
+        // Template files
         sidebarTemplate: path.resolve(__dirname, 'src/pages/templates/sidebar-template.html'),
         bookingsTemplate: path.resolve(__dirname, 'src/pages/templates/bookings-template.html'),
         passcodesTemplate: path.resolve(__dirname, 'src/pages/templates/passcodes-template.html'),

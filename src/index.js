@@ -1,9 +1,8 @@
 
-// This file exists to satisfy TypeScript configuration
+// This file exists to satisfy TypeScript compilation requirements
 console.log("Application initialized");
 
-// Export a simple function to demonstrate this file is loaded
-export function init() {
-  console.log("Init function called");
-  return true;
+// Redirect to the main page if accessed directly
+if (window.location.pathname === '/src/index.js') {
+  window.location.href = '/';
 }

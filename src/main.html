@@ -138,13 +138,13 @@
             
             showToast('success', 'Login successful', 'You have been signed in.');
             
-            // Redirect based on role using relative paths to our HTML files
+            // Redirect based on role using absolute paths to our HTML files
             if (username === 'admin') {
               console.log("Redirecting to admin dashboard");
-              setTimeout(() => { window.location.href = '/pages/AdminDashboard.html'; }, 1000);
+              setTimeout(() => { window.location.href = '/src/pages/AdminDashboard.html'; }, 1000);
             } else {
               console.log("Redirecting to booking page");
-              setTimeout(() => { window.location.href = '/pages/BookingForm.html'; }, 1000);
+              setTimeout(() => { window.location.href = '/src/pages/BookingForm.html'; }, 1000);
             }
           } else {
             showToast('error', 'Login failed', 'Invalid username or password.');
