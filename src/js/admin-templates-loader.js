@@ -1,87 +1,99 @@
 
-// Admin Templates Loader
-console.log("Loading admin-templates-loader.js");
-
-// Function to load all admin templates
+// Admin templates loader
 window.loadAdminTemplates = function() {
-    console.log("Loading admin templates");
+  console.log("Loading admin templates");
+  
+  const templates = [
+    { id: 'sidebar-template', url: '/src/pages/templates/sidebar-template.html', targetId: 'sidebar-content' },
+    { id: 'bookings-template', url: '/src/pages/templates/bookings-template.html', targetId: 'bookingsSection' },
+    { id: 'rooms-template', url: '/src/pages/templates/rooms-template.html', targetId: 'roomsSection' },
+    { id: 'passcodes-template', url: '/src/pages/templates/passcodes-template.html', targetId: 'passcodesSection' },
+    { id: 'database-template', url: '/src/pages/templates/database-template.html', targetId: 'databaseSection' },
+    { id: 'admin-header-template', url: '/src/pages/templates/admin-header-template.html', targetId: 'admin-header' },
+    { id: 'users-template', url: '/src/pages/templates/users-template.html', targetId: 'usersSection' },
+    { id: 'settings-template', url: '/src/pages/templates/settings-template.html', targetId: 'settingsSection' },
+    { id: 'email-templates-template', url: '/src/pages/templates/email-templates-template.html', targetId: 'emailTemplatesSection' },
+    { id: 'sms-templates-template', url: '/src/pages/templates/sms-templates-template.html', targetId: 'smsTemplatesSection' }
+  ];
+  
+  let loadedCount = 0;
+  
+  templates.forEach(template => {
+    loadTemplate(template.id, template.url, template.targetId);
+  });
+  
+  function loadTemplate(templateId, url, targetId) {
+    console.log(`Loading template: ${templateId} from ${url}`);
     
-    // Load templates in sequence
-    loadTemplate('sidebar-template', '/src/pages/templates/sidebar-template.html', 'sidebar-content')
-        .then(() => loadTemplate('bookings-template', '/src/pages/templates/bookings-template.html', 'bookingsSection'))
-        .then(() => loadTemplate('rooms-template', '/src/pages/templates/rooms-template.html', 'roomsSection'))
-        .then(() => loadTemplate('passcodes-template', '/src/pages/templates/passcodes-template.html', 'passcodesSection'))
-        .then(() => loadTemplate('database-template', '/src/pages/templates/database-template.html', 'databaseSection'))
-        .then(() => loadTemplate('admin-header-template', '/src/pages/templates/admin-header-template.html', 'admin-header'))
-        .then(() => loadTemplate('users-template', '/src/pages/templates/users-template.html', 'usersSection'))
-        .then(() => loadTemplate('settings-template', '/src/pages/templates/settings-template.html', 'settingsSection'))
-        .then(() => loadTemplate('email-templates-template', '/src/pages/templates/email-templates-template.html', 'emailTemplatesSection'))
-        .then(() => loadTemplate('sms-templates-template', '/src/pages/templates/sms-templates-template.html', 'smsTemplatesSection'))
-        .then(() => {
-            console.log("All templates loaded successfully");
-            // Initialize sidebar functionality
-            if (window.initializeSidebar) {
-                window.initializeSidebar();
-            }
-        })
-        .catch(error => {
-            console.error("Error loading templates:", error);
-            if (window.errorLogger) {
-                window.errorLogger.logError("Template loading error", error);
-            }
-        });
+    fetch(url, {
+      method: 'GET',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.text();
+    })
+    .then(html => {
+      console.log(`Template ${templateId} loaded successfully`);
+      
+      // Get the target element to insert the template
+      const targetElement = document.getElementById(targetId);
+      
+      if (!targetElement) {
+        console.error(`Target element with ID ${targetId} not found`);
+        return;
+      }
+      
+      // Set the HTML content
+      targetElement.innerHTML = html;
+      
+      // Increment the counter
+      loadedCount++;
+      
+      // Dispatch a custom event to notify that the template has been loaded
+      const event = new CustomEvent('templateLoaded', { 
+        detail: { 
+          templateId: templateId,
+          targetId: targetId
+        },
+        bubbles: true 
+      });
+      console.log(`Template loaded event: ${templateId} loaded into ${targetId}`);
+      document.dispatchEvent(event);
+      
+      // If the template is the sidebar, explicitly initialize it
+      if (templateId === 'sidebar-template') {
+        setTimeout(function() {
+          if (window.attachSidebarEventListeners) {
+            window.attachSidebarEventListeners();
+          } else if (window.initializeSidebar) {
+            window.initializeSidebar();
+          }
+        }, 200);
+      }
+      
+      // Check if all templates have been loaded
+      if (loadedCount === templates.length) {
+        console.log("All templates loaded successfully");
+        
+        // Dispatch a custom event to notify that all templates have been loaded
+        const allLoadedEvent = new CustomEvent('allTemplatesLoaded');
+        document.dispatchEvent(allLoadedEvent);
+      }
+    })
+    .catch(error => {
+      console.error(`Error loading template ${templateId}:`, error);
+    });
+  }
 };
 
-// Function to load a single template
-function loadTemplate(templateName, templateUrl, targetElementId) {
-    return new Promise((resolve, reject) => {
-        console.log(`Loading template: ${templateName} from ${templateUrl}`);
-        
-        const targetElement = document.getElementById(targetElementId);
-        if (!targetElement) {
-            console.warn(`Target element ${targetElementId} not found in the DOM`);
-            resolve(); // Continue even if element not found
-            return;
-        }
-        
-        fetch(templateUrl)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.text();
-            })
-            .then(html => {
-                targetElement.innerHTML = html;
-                console.log(`Template ${templateName} loaded successfully`);
-                
-                // Add class to indicate template is loaded
-                targetElement.classList.add('template-loaded');
-                
-                // Dispatch a custom event to notify that the template has been loaded
-                document.dispatchEvent(new CustomEvent('templateLoaded', {
-                    detail: {
-                        templateName: templateName,
-                        targetElementId: targetElementId
-                    }
-                }));
-                
-                resolve();
-            })
-            .catch(error => {
-                console.error(`Error loading template ${templateName}:`, error);
-                if (window.errorLogger) {
-                    window.errorLogger.logError(`Template loading error: ${templateName}`, error);
-                }
-                reject(error);
-            });
-    });
-}
-
-// Listen for the 'templateLoaded' event for debugging purposes
-document.addEventListener('templateLoaded', function(e) {
-    console.log(`Template loaded event: ${e.detail.templateName} loaded into ${e.detail.targetElementId}`);
-});
-
-// Make loadTemplate function available globally for debugging
-window.loadAdminTemplate = loadTemplate;
+// Export for external use
+window.loadAdminTemplates = window.loadAdminTemplates || function() {
+  console.error("Admin templates loader not properly initialized");
+};

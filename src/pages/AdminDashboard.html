@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -149,7 +148,7 @@
       setInterval(updateDebugInfo, 1000);
       updateDebugInfo();
       
-      // Debug buttons
+      // Debug buttons 
       document.getElementById('debug-refresh')?.addEventListener('click', () => {
         console.log("Manual refresh triggered");
         window.location.reload(true); // Force reload from server
@@ -331,6 +330,18 @@
       
       // Start the verification process
       verifyAccess();
+      
+      // Add explicit call to reinitialize sidebar after templates load
+      window.addEventListener('templateLoaded', function(e) {
+        if (e.detail.templateId === 'sidebar-template') {
+          console.log("Sidebar template loaded, initializing sidebar components");
+          setTimeout(function() {
+            if (window.attachSidebarEventListeners) {
+              window.attachSidebarEventListeners();
+            }
+          }, 200);
+        }
+      });
     });
   </script>
 </body>
