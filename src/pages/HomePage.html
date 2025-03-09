@@ -24,11 +24,47 @@
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    .travel-image {
+      background-size: cover;
+      background-position: center;
+      transition: transform 0.5s ease;
+    }
+    .travel-image:hover {
+      transform: scale(1.03);
+    }
+    .room-card {
+      transition: all 0.3s ease;
+    }
+    .room-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    @media (max-width: 768px) {
+      .hero-container {
+        flex-direction: column-reverse;
+      }
+      .booking-form {
+        margin-top: -2rem;
+        position: relative;
+        z-index: 10;
+      }
+    }
   </style>
 </head>
-<body class="min-h-screen animated-bg">
-  <header class="py-6">
-    <div class="container mx-auto px-4">
+<body class="min-h-screen bg-gray-50">
+  <div class="travel-image bg-cover bg-center h-64 md:h-96 relative" 
+       style="background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')">
+    <div class="absolute inset-0 bg-blue-900 opacity-30"></div>
+    <div class="container mx-auto px-4 h-full flex items-center relative z-10">
+      <div class="text-white max-w-2xl">
+        <h1 class="text-3xl md:text-5xl font-bold mb-2">Experience Comfort and Convenience</h1>
+        <p class="text-lg md:text-xl opacity-90">Book your stay with ease and enjoy a hassle-free check-in experience</p>
+      </div>
+    </div>
+  </div>
+
+  <header class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="container mx-auto px-4 py-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-2">
           <div class="p-2 rounded-full bg-blue-100 text-blue-600">
@@ -47,19 +83,29 @@
     </div>
   </header>
 
-  <main class="container mx-auto px-4 py-10">
-    <div class="max-w-5xl mx-auto">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+  <main class="container mx-auto px-4 py-8 md:py-16">
+    <div class="max-w-6xl mx-auto">
+      <div class="hero-container grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
         <!-- Left side - Hero text -->
         <div class="fade-in" style="animation-delay: 0.2s">
-          <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
+          <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
             Simple and Quick <span class="text-blue-600">Room Booking</span>
-          </h1>
+          </h2>
           <p class="text-lg text-gray-600 mb-8">
             Book your stay in just a few steps. No account required. 
             Your access code will be sent directly to your email.
           </p>
-          <div class="bg-white/70 backdrop-blur-sm p-6 rounded-lg shadow-lg border border-gray-100">
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+            <div class="travel-image rounded-lg overflow-hidden h-48 shadow-md" 
+                style="background-image: url('https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&auto=format&fit=crop&w=720&q=80')">
+            </div>
+            <div class="travel-image rounded-lg overflow-hidden h-48 shadow-md" 
+                style="background-image: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?ixlib=rb-4.0.3&auto=format&fit=crop&w=720&q=80')">
+            </div>
+          </div>
+          
+          <div class="bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg border border-gray-100">
             <div class="flex flex-col space-y-4">
               <div class="flex items-center space-x-3 text-gray-700">
                 <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">1</div>
@@ -78,8 +124,8 @@
         </div>
         
         <!-- Right side - Booking form -->
-        <div class="fade-in" style="animation-delay: 0.4s">
-          <div class="bg-white/90 backdrop-blur-sm rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+        <div class="fade-in booking-form" style="animation-delay: 0.4s">
+          <div class="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
             <div class="p-6 bg-blue-50 border-b">
               <h2 class="text-2xl font-semibold text-gray-800">Book Your Stay</h2>
               <p class="text-sm text-gray-500 mt-1">Fill out the form below to create your booking</p>
@@ -98,6 +144,7 @@
                     <option value="">Select a room</option>
                     <!-- Room options will be loaded here -->
                   </select>
+                  <p id="roomDescription" class="text-sm text-gray-500 italic mt-1 hidden"></p>
                 </div>
                 
                 <!-- Arrival date/time -->
@@ -176,13 +223,24 @@
           </div>
         </div>
       </div>
+      
+      <!-- Featured Rooms Section -->
+      <div class="mt-16">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Our Rooms</h2>
+        <div id="roomsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Rooms will be loaded here -->
+          <div class="col-span-full text-center text-gray-500">
+            Loading available rooms...
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 
-  <footer class="mt-16 py-8 border-t">
+  <footer class="mt-16 py-8 bg-gray-50 border-t">
     <div class="container mx-auto px-4">
       <div class="text-center text-gray-500 text-sm">
-        <p>© 2023 Check-in-Simplify. All rights reserved.</p>
+        <p>© 2025 Check-in-Simplify. All rights reserved.</p>
       </div>
     </div>
   </footer>
@@ -234,12 +292,67 @@
         .then(data => {
           if (data.success && data.rooms) {
             const roomSelect = document.getElementById('room');
+            const roomsContainer = document.getElementById('roomsContainer');
+            
+            // Clear loading message
+            roomsContainer.innerHTML = '';
+            
+            // Store room descriptions for later use
+            const roomDescriptions = {};
+            
             data.rooms.forEach(room => {
+              // Add to dropdown
               const option = document.createElement('option');
               option.value = room.id;
               option.textContent = room.name;
               roomSelect.appendChild(option);
+              
+              // Store description
+              roomDescriptions[room.id] = room.description || '';
+              
+              // Add room card to featured rooms
+              const roomCard = document.createElement('div');
+              roomCard.className = 'bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 room-card';
+              roomCard.innerHTML = `
+                <div class="h-48 bg-gray-200 travel-image" 
+                     style="background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80&random=${Math.random()}')">
+                </div>
+                <div class="p-4">
+                  <h3 class="font-semibold text-lg text-gray-800">${room.name}</h3>
+                  <p class="text-gray-600 text-sm mt-1">${room.description || 'Comfortable accommodation with all the amenities you need.'}</p>
+                  <button 
+                    class="mt-4 w-full py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors text-sm font-medium" 
+                    onclick="selectRoom('${room.id}')">
+                    Select Room
+                  </button>
+                </div>
+              `;
+              roomsContainer.appendChild(roomCard);
             });
+            
+            // Show room description when a room is selected
+            roomSelect.addEventListener('change', function() {
+              const roomId = this.value;
+              const description = roomDescriptions[roomId] || '';
+              const descriptionElement = document.getElementById('roomDescription');
+              
+              if (description) {
+                descriptionElement.textContent = description;
+                descriptionElement.classList.remove('hidden');
+              } else {
+                descriptionElement.classList.add('hidden');
+              }
+            });
+            
+            // Function to select a room from the featured section
+            window.selectRoom = function(roomId) {
+              roomSelect.value = roomId;
+              roomSelect.dispatchEvent(new Event('change'));
+              
+              // Scroll to the booking form
+              document.querySelector('.booking-form').scrollIntoView({ behavior: 'smooth' });
+            };
+            
           } else {
             console.error('Failed to load rooms:', data.message);
             showToast('error', 'Error', 'Failed to load rooms. Please try again later.');
@@ -309,6 +422,13 @@
             
             // Reset form
             document.getElementById('bookingForm').reset();
+            
+            // Set default dates again
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('arrivalDateTime').value = formatDateTimeForInput(today);
+            document.getElementById('departureDateTime').value = formatDateTimeForInput(tomorrow);
           } else {
             showToast('error', 'Booking Failed', data.message || 'There was an error creating your booking. Please try again.');
           }
