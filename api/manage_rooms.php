@@ -19,6 +19,10 @@ if (!isset($_SESSION['user_id']) && !($_SERVER['HTTP_HOST'] == 'localhost' || $_
 // Set content type to JSON
 header('Content-Type: application/json');
 
+// Log POST data for debugging
+error_log("manage_rooms.php - Request received");
+error_log("POST data: " . json_encode($_POST));
+
 // Handle POST request for room management
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Get operation mode (create, update, delete)

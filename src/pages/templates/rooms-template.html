@@ -102,31 +102,32 @@
     </div>
     <div class="p-6">
       <form id="roomForm" class="space-y-4">
-        <input type="hidden" id="roomId">
+        <input type="hidden" id="roomId" name="id">
+        <input type="hidden" id="roomMode" name="mode" value="create">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="space-y-2">
             <label for="roomIdInput" class="block text-sm font-medium text-gray-700">Room ID</label>
-            <input type="text" id="roomIdInput" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., room101" required>
+            <input type="text" id="roomIdInput" name="roomIdInput" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., room101" required>
             <p class="text-xs text-gray-500">Unique identifier for the room (cannot be changed later)</p>
           </div>
           <div class="space-y-2">
             <label for="roomName" class="block text-sm font-medium text-gray-700">Room Name</label>
-            <input type="text" id="roomName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Deluxe Suite" required>
+            <input type="text" id="roomName" name="roomName" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g., Deluxe Suite" required>
           </div>
         </div>
         <div class="space-y-2">
           <label for="roomDescription" class="block text-sm font-medium text-gray-700">Description</label>
-          <textarea id="roomDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Room description"></textarea>
+          <textarea id="roomDescription" name="roomDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Room description"></textarea>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="space-y-2">
             <label for="fixedPasscode" class="block text-sm font-medium text-gray-700">Passcode</label>
-            <input type="text" id="fixedPasscode" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter room passcode">
+            <input type="text" id="fixedPasscode" name="fixedPasscode" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter room passcode">
             <p class="text-xs text-gray-500">Leave empty for auto-generated passcodes</p>
           </div>
           <div class="space-y-2">
             <label for="resetHours" class="block text-sm font-medium text-gray-700">Reset Hours</label>
-            <input type="number" id="resetHours" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="2" value="2" min="1" max="24">
+            <input type="number" id="resetHours" name="resetHours" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="2" value="2" min="1" max="24">
             <p class="text-xs text-gray-500">Hours before auto-generated passcodes reset</p>
           </div>
         </div>
