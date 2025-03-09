@@ -9,6 +9,7 @@ session_start();
 // Check if user is authenticated and is admin
 if (!isset($_SESSION['user_id']) && !($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1')) {
     // Return error for unauthenticated users
+    header('Content-Type: application/json');
     echo json_encode([
         'success' => false,
         'message' => 'Unauthorized access'
@@ -20,6 +21,9 @@ if (!isset($_SESSION['user_id']) && !($_SERVER['HTTP_HOST'] == 'localhost' || $_
 if ($_SERVER["REQUEST_METHOD"] == "GET") {
     // Add debug information
     error_log("get_room.php called - getting specific room");
+    
+    // Set content type to JSON
+    header('Content-Type: application/json');
     
     // Validate room ID parameter
     if (!isset($_GET['id']) || empty($_GET['id'])) {
@@ -90,6 +94,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
     ]);
 } else {
     // Return error for non-GET requests
+    header('Content-Type: application/json');
     echo json_encode([
         'success' => false,
         'message' => 'Invalid request method'
