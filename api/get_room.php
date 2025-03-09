@@ -43,22 +43,19 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
                 'id' => 'demo1',
                 'name' => 'Demo Single Room',
                 'description' => 'A comfortable single room perfect for solo travelers.',
-                'fixed_passcode' => '1234',
-                'reset_hours' => 2
+                'fixed_passcode' => '1234'
             ],
             'demo2' => [
                 'id' => 'demo2',
                 'name' => 'Demo Double Room',
                 'description' => 'Spacious double room with king-size bed.',
-                'fixed_passcode' => '',
-                'reset_hours' => 3
+                'fixed_passcode' => '5678'
             ],
             'demo3' => [
                 'id' => 'demo3',
                 'name' => 'Demo Suite',
                 'description' => 'Luxury suite with separate living area and bedroom.',
-                'fixed_passcode' => '5678',
-                'reset_hours' => 4
+                'fixed_passcode' => '9012'
             ]
         ];
         
@@ -72,7 +69,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
         }
         
         // Prepare SQL statement to get room details
-        $stmt = $conn->prepare("SELECT id, name, description, fixed_passcode, reset_hours FROM rooms WHERE id = ?");
+        $stmt = $conn->prepare("SELECT id, name, description, fixed_passcode FROM rooms WHERE id = ?");
         $stmt->bind_param("s", $room_id);
         $stmt->execute();
         $result = $stmt->get_result();

@@ -35,12 +35,13 @@ try {
     $result = $stmt->get_result();
     $roomData = $result->fetch_assoc();
     
-    // Generate access code or use fixed code if available
+    // Use the room's fixed passcode
     if ($roomData && !empty($roomData['fixed_passcode'])) {
         $accessCode = $roomData['fixed_passcode'];
     } else {
-        // Generate a random 6-digit access code
-        $accessCode = generate_access_code();
+        // If no fixed passcode is set, generate a random 6-digit access code
+        // This is a fallback and shouldn't normally happen with our new system
+        $accessCode = sprintf("%06d", mt_rand(0, 999999));
     }
     
     $roomName = $roomData['name'] ?? $room;

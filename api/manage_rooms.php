@@ -44,8 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $room_id = trim($_POST['roomIdInput']);
         $room_name = trim($_POST['roomName']);
         $description = isset($_POST['roomDescription']) ? trim($_POST['roomDescription']) : '';
-        $fixed_passcode = isset($_POST['fixedPasscode']) ? trim($_POST['fixedPasscode']) : null;
-        $reset_hours = isset($_POST['resetHours']) ? intval($_POST['resetHours']) : 2;
+        $fixed_passcode = isset($_POST['fixedPasscode']) ? trim($_POST['fixedPasscode']) : '';
         
         // Validate room ID format (alphanumeric only)
         if (!preg_match('/^[a-zA-Z0-9_-]+$/', $room_id)) {
@@ -71,8 +70,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         
         // Insert new room
-        $stmt = $conn->prepare("INSERT INTO rooms (id, name, description, fixed_passcode, reset_hours) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssssi", $room_id, $room_name, $description, $fixed_passcode, $reset_hours);
+        $stmt = $conn->prepare("INSERT INTO rooms (id, name, description, fixed_passcode) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssss", $room_id, $room_name, $description, $fixed_passcode);
         
         if ($stmt->execute()) {
             echo json_encode([
@@ -100,12 +99,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $room_id = trim($_POST['id']);
         $room_name = trim($_POST['roomName']);
         $description = isset($_POST['roomDescription']) ? trim($_POST['roomDescription']) : '';
-        $fixed_passcode = isset($_POST['fixedPasscode']) ? trim($_POST['fixedPasscode']) : null;
-        $reset_hours = isset($_POST['resetHours']) ? intval($_POST['resetHours']) : 2;
+        $fixed_passcode = isset($_POST['fixedPasscode']) ? trim($_POST['fixedPasscode']) : '';
         
         // Update room
-        $stmt = $conn->prepare("UPDATE rooms SET name = ?, description = ?, fixed_passcode = ?, reset_hours = ? WHERE id = ?");
-        $stmt->bind_param("sssis", $room_name, $description, $fixed_passcode, $reset_hours, $room_id);
+        $stmt = $conn->prepare("UPDATE rooms SET name = ?, description = ?, fixed_passcode = ? WHERE id = ?");
+        $stmt->bind_param("ssss", $room_name, $description, $fixed_passcode, $room_id);
         
         if ($stmt->execute()) {
             echo json_encode([

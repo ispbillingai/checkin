@@ -66,10 +66,7 @@
               Description
             </th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Fixed Passcode
-            </th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Reset Hours
+              Passcode
             </th>
             <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Actions
@@ -79,7 +76,7 @@
         <tbody id="roomsTableBody" class="bg-white divide-y divide-gray-200">
           <!-- Room data will be populated here -->
           <tr class="text-center">
-            <td colspan="6" class="px-6 py-4 text-sm text-gray-500">
+            <td colspan="5" class="px-6 py-4 text-sm text-gray-500">
               Loading rooms...
             </td>
           </tr>
@@ -118,17 +115,10 @@
           <label for="roomDescription" class="block text-sm font-medium text-gray-700">Description</label>
           <textarea id="roomDescription" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Room description"></textarea>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="space-y-2">
-            <label for="fixedPasscode" class="block text-sm font-medium text-gray-700">Fixed Passcode (Optional)</label>
-            <input type="text" id="fixedPasscode" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Leave empty for auto-generated">
-            <p class="text-xs text-gray-500">If set, this passcode will be used for all bookings</p>
-          </div>
-          <div class="space-y-2">
-            <label for="resetHours" class="block text-sm font-medium text-gray-700">Reset Hours</label>
-            <input type="number" id="resetHours" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" value="2" min="0" required>
-            <p class="text-xs text-gray-500">Hours after checkout before resetting passcode</p>
-          </div>
+        <div class="space-y-2">
+          <label for="fixedPasscode" class="block text-sm font-medium text-gray-700">Passcode</label>
+          <input type="text" id="fixedPasscode" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter room passcode" required>
+          <p class="text-xs text-gray-500">This passcode will be used for all bookings of this room</p>
         </div>
         <div class="flex justify-end gap-3 pt-4">
           <button type="button" id="cancelRoomBtn" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50">
