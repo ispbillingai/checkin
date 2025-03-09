@@ -1,10 +1,3 @@
-
--- Create the booking_system database if it doesn't exist
-CREATE DATABASE IF NOT EXISTS booking_system;
-
--- Use the booking_system database
-USE booking_system;
-
 -- Create users table
 CREATE TABLE IF NOT EXISTS users (
     id INT(11) AUTO_INCREMENT PRIMARY KEY,
