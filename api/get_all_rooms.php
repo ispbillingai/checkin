@@ -26,7 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
     
     try {
         // Prepare SQL statement to get all room information
-        $stmt = $conn->prepare("SELECT id, name, description, fixed_passcode FROM rooms ORDER BY name ASC");
+        $stmt = $conn->prepare("SELECT id, name, description, fixed_passcode, reset_hours FROM rooms ORDER BY name ASC");
         $stmt->execute();
         $result = $stmt->get_result();
         
@@ -36,7 +36,8 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
                 'id' => $row['id'],
                 'name' => $row['name'],
                 'description' => $row['description'],
-                'fixed_passcode' => $row['fixed_passcode']
+                'fixed_passcode' => $row['fixed_passcode'],
+                'reset_hours' => $row['reset_hours']
             ];
         }
         
@@ -48,19 +49,22 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
                     'id' => 'demo1',
                     'name' => 'Demo Single Room',
                     'description' => 'A comfortable single room perfect for solo travelers.',
-                    'fixed_passcode' => '1234'
+                    'fixed_passcode' => '1234',
+                    'reset_hours' => 2
                 ],
                 [
                     'id' => 'demo2',
                     'name' => 'Demo Double Room',
                     'description' => 'Spacious double room with king-size bed.',
-                    'fixed_passcode' => '5678'
+                    'fixed_passcode' => '5678',
+                    'reset_hours' => 2
                 ],
                 [
                     'id' => 'demo3',
                     'name' => 'Demo Suite',
                     'description' => 'Luxury suite with separate living area and bedroom.',
-                    'fixed_passcode' => '9012'
+                    'fixed_passcode' => '9012',
+                    'reset_hours' => 2
                 ]
             ];
         }
