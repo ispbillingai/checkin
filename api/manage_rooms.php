@@ -24,8 +24,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Get operation mode (create, update, delete)
     $mode = isset($_POST['mode']) ? $_POST['mode'] : '';
     
+    // Log request data for debugging
+    error_log("manage_rooms.php - Request received with mode: " . $mode);
+    error_log("POST data: " . json_encode($_POST));
+    
     // Validate mode
     if (!in_array($mode, ['create', 'update', 'delete'])) {
+        error_log("Invalid operation mode: " . $mode);
         echo json_encode([
             'success' => false,
             'message' => 'Invalid operation mode'
@@ -93,6 +98,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Update existing room
         // Validate required fields
         if (!isset($_POST['id']) || !isset($_POST['roomName'])) {
+            error_log("Update room failed: Room ID or Name missing");
             echo json_encode([
                 'success' => false,
                 'message' => 'Room ID and Name are required'
@@ -106,6 +112,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $fixed_passcode = isset($_POST['fixedPasscode']) ? trim($_POST['fixedPasscode']) : '';
         $reset_hours = isset($_POST['resetHours']) ? intval($_POST['resetHours']) : 2;
         
+        error_log("Updating room with ID: " . $room_id);
+        error_log("Room data: " . json_encode([
+            'name' => $room_name,
+            'description' => $description,
+            'fixed_passcode' => $fixed_passcode,
+            'reset_hours' => $reset_hours
+        ]));
+        
         // Update room
         $stmt = $conn->prepare("UPDATE rooms SET name = ?, description = ?, fixed_passcode = ?, reset_hours = ? WHERE id = ?");
         $stmt->bind_param("sssis", $room_name, $description, $fixed_passcode, $reset_hours, $room_id);
@@ -116,6 +130,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 'message' => 'Room updated successfully'
             ]);
         } else {
+            error_log("Room update failed: " . $conn->error);
             echo json_encode([
                 'success' => false,
                 'message' => 'Failed to update room: ' . $conn->error

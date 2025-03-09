@@ -9,7 +9,7 @@
       <!-- Date Selection -->
       <div class="space-y-2">
         <label for="booking-date" class="block text-sm font-medium text-gray-700">Select Date</label>
-        <input type="text" id="booking-date" class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <input type="date" id="booking-date" class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
       </div>
       
       <!-- Room Selection -->
@@ -57,6 +57,9 @@
         </thead>
         <tbody id="bookingsTableBody" class="bg-white divide-y divide-gray-200">
           <!-- Bookings will be populated here by JavaScript -->
+          <tr>
+            <td colspan="7" class="px-4 py-3 text-center text-gray-500">Loading bookings...</td>
+          </tr>
         </tbody>
       </table>
     </div>
