@@ -2,7 +2,7 @@
 <div class="backdrop-blur-sm bg-white/90 border shadow-lg rounded-lg overflow-hidden mb-8">
   <div class="bg-blue-50 border-b p-6">
     <h2 class="text-xl font-semibold">Bookings Summary</h2>
-    <p class="text-sm text-gray-500 mt-1">View manage all bookings for the selected date</p>
+    <p class="text-sm text-gray-500 mt-1">View and manage all bookings for the selected date</p>
   </div>
   <div class="p-6">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -57,9 +57,6 @@
         </thead>
         <tbody id="bookingsTableBody" class="bg-white divide-y divide-gray-200">
           <!-- Bookings will be populated here by JavaScript -->
-          <tr>
-            <td colspan="7" class="px-4 py-3 text-center text-gray-500">Loading bookings...</td>
-          </tr>
         </tbody>
       </table>
     </div>
@@ -91,3 +88,209 @@
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Cache DOM elements
+  const bookingDateInput = document.getElementById('booking-date');
+  const roomFilterSelect = document.getElementById('room-filter');
+  const bookingSearchInput = document.getElementById('booking-search');
+  const refreshButton = document.getElementById('refreshButton');
+  const refreshEmptyButton = document.getElementById('refreshEmptyButton');
+  const bookingsTableBody = document.getElementById('bookingsTableBody');
+  const bookingsContainer = document.getElementById('bookingsContainer');
+  const emptyState = document.getElementById('emptyState');
+  const loadingState = document.getElementById('loadingState');
+  const refreshIcon = document.getElementById('refreshIcon');
+  
+  // Set default date to today
+  const today = new Date();
+  const formattedDate = today.toISOString().split('T')[0];
+  bookingDateInput.value = formattedDate;
+  
+  // Format date for display
+  function formatDate(dateString) {
+    const options = { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    return new Date(dateString).toLocaleString('en-US', options);
+  }
+  
+  // Load rooms for filter
+  function loadRooms() {
+    fetch('/api/get_all_rooms.php')
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          const rooms = data.rooms;
+          roomFilterSelect.innerHTML = '<option value="all">All Rooms</option>';
+          rooms.forEach(room => {
+            const option = document.createElement('option');
+            option.value = room.id;
+            option.textContent = room.name;
+            roomFilterSelect.appendChild(option);
+          });
+        } else {
+          console.error('Error loading rooms:', data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching rooms:', error);
+      });
+  }
+  
+  // Load bookings
+  function loadBookings() {
+    // Show loading state
+    bookingsContainer.classList.add('hidden');
+    emptyState.classList.add('hidden');
+    loadingState.classList.remove('hidden');
+    
+    // Add animation to refresh icon
+    refreshIcon.classList.add('animate-spin');
+    
+    const date = bookingDateInput.value;
+    const roomId = roomFilterSelect.value;
+    
+    // Construct URL with query parameters
+    const url = `/api/get_bookings.php?date=${date}${roomId !== 'all' ? `&room=${roomId}` : ''}`;
+    console.log("Fetching bookings with URL:", url);
+    
+    fetch(url)
+      .then(response => {
+        console.log("Response status:", response.status);
+        return response.json();
+      })
+      .then(data => {
+        console.log("Booking data received:", data);
+        
+        // Stop refresh icon animation
+        refreshIcon.classList.remove('animate-spin');
+        
+        if (data.success) {
+          const bookings = data.bookings;
+          
+          if (bookings.length === 0) {
+            // Show empty state
+            bookingsContainer.classList.add('hidden');
+            loadingState.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+          } else {
+            // Filter bookings if search term is provided
+            const searchTerm = bookingSearchInput.value.toLowerCase();
+            const filteredBookings = searchTerm ? 
+              bookings.filter(booking => 
+                booking.guestName.toLowerCase().includes(searchTerm) || 
+                booking.accessCode.toLowerCase().includes(searchTerm)
+              ) : bookings;
+            
+            // Render bookings
+            renderBookings(filteredBookings);
+            
+            // Show bookings container
+            loadingState.classList.add('hidden');
+            emptyState.classList.add('hidden');
+            bookingsContainer.classList.remove('hidden');
+          }
+        } else {
+          console.error('Error loading bookings:', data.message);
+          // Show empty state with error
+          bookingsContainer.classList.add('hidden');
+          loadingState.classList.add('hidden');
+          emptyState.classList.remove('hidden');
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching bookings:', error);
+        
+        // Stop refresh icon animation
+        refreshIcon.classList.remove('animate-spin');
+        
+        // Show empty state with error
+        bookingsContainer.classList.add('hidden');
+        loadingState.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+      });
+  }
+  
+  // Render bookings to table
+  function renderBookings(bookings) {
+    bookingsTableBody.innerHTML = '';
+    
+    bookings.forEach(booking => {
+      const row = document.createElement('tr');
+      
+      // Create table cells
+      row.innerHTML = `
+        <td class="px-4 py-3 whitespace-nowrap">
+          <div class="text-sm font-medium text-gray-900">${booking.room}</div>
+        </td>
+        <td class="px-4 py-3 whitespace-nowrap">
+          <div class="text-sm font-medium text-gray-900">${booking.guestName}</div>
+        </td>
+        <td class="px-4 py-3 whitespace-nowrap hidden md:table-cell">
+          <div class="text-sm text-gray-500">${booking.email}</div>
+          <div class="text-sm text-gray-500">${booking.phone || 'N/A'}</div>
+        </td>
+        <td class="px-4 py-3 whitespace-nowrap">
+          <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+            ${booking.accessCode}
+          </span>
+        </td>
+        <td class="px-4 py-3 whitespace-nowrap hidden md:table-cell">
+          <div class="text-sm text-gray-500">${formatDate(booking.arrivalDateTime)}</div>
+        </td>
+        <td class="px-4 py-3 whitespace-nowrap hidden md:table-cell">
+          <div class="text-sm text-gray-500">${formatDate(booking.departureDateTime)}</div>
+        </td>
+        <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+          <button data-booking-id="${booking.id}" class="text-blue-600 hover:text-blue-900 mr-2 view-booking">View</button>
+          <button data-booking-id="${booking.id}" class="text-red-600 hover:text-red-900 cancel-booking">Cancel</button>
+        </td>
+      `;
+      
+      bookingsTableBody.appendChild(row);
+    });
+    
+    // Add event listeners to action buttons
+    document.querySelectorAll('.view-booking').forEach(button => {
+      button.addEventListener('click', function() {
+        const bookingId = this.getAttribute('data-booking-id');
+        // Handle view booking action
+        alert(`View booking: ${bookingId}`);
+      });
+    });
+    
+    document.querySelectorAll('.cancel-booking').forEach(button => {
+      button.addEventListener('click', function() {
+        const bookingId = this.getAttribute('data-booking-id');
+        // Handle cancel booking action
+        if (confirm(`Are you sure you want to cancel booking ${bookingId}?`)) {
+          alert(`Booking ${bookingId} cancelled`);
+        }
+      });
+    });
+  }
+  
+  // Event Listeners
+  bookingDateInput.addEventListener('change', loadBookings);
+  roomFilterSelect.addEventListener('change', loadBookings);
+  refreshButton.addEventListener('click', loadBookings);
+  refreshEmptyButton.addEventListener('click', loadBookings);
+  
+  bookingSearchInput.addEventListener('input', function() {
+    // If we have already loaded bookings, just filter them
+    if (!bookingsContainer.classList.contains('hidden')) {
+      loadBookings();
+    }
+  });
+  
+  // Initial load
+  loadRooms();
+  loadBookings();
+});
+</script>
