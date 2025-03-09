@@ -150,9 +150,32 @@
         }
       });
       
-      // Check if templates are loaded, and if not, wait for them
+      // Verify user authentication
+      fetch('/api/verify_access.php')
+        .then(response => response.json())
+        .then(data => {
+          if (!data.success || !data.isAdmin) {
+            // Not authenticated or not an admin, redirect to login
+            window.location.href = '/src/pages/index.html';
+            return;
+          }
+          
+          // User is authenticated and is an admin, proceed with template loading
+          console.log("User authenticated as admin, proceeding with dashboard initialization");
+        })
+        .catch(error => {
+          console.error("Error verifying user access:", error);
+          // Redirect to login on error
+          window.location.href = '/src/pages/index.html';
+        });
+      
+      // Modified check and initialize function with timeout
+      let attemptCount = 0;
+      const MAX_ATTEMPTS = 20; // Reasonable limit to prevent infinite loop
+      
       function checkAndInitialize() {
         const sidebarContent = document.getElementById('sidebar-content');
+        attemptCount++;
         
         if (sidebarContent && sidebarContent.children.length > 0) {
           console.log("Sidebar content is loaded, initializing sidebar");
@@ -161,16 +184,41 @@
           } else {
             console.error("initializeSidebar function not found");
           }
+          return true;
         } else {
-          console.log("Waiting for sidebar content to load...");
+          console.log(`Waiting for sidebar content to load... (Attempt ${attemptCount}/${MAX_ATTEMPTS})`);
           
-          // Check template loading status
-          const templateLoader = document.getElementById('templates-loader-status');
-          if (templateLoader) {
-            console.log("Template loader status: " + templateLoader.textContent);
+          // Check if all templates are loaded
+          const templateStatus = document.getElementById('templates-loader-status');
+          if (templateStatus) {
+            console.log("Template loader status: " + templateStatus.textContent);
           }
           
-          setTimeout(checkAndInitialize, 100);
+          if (attemptCount >= MAX_ATTEMPTS) {
+            console.error("Maximum attempts reached. Falling back to manual initialization.");
+            
+            // Force initialization even if sidebar content is not loaded
+            if (window.initializeSidebar) {
+              window.initializeSidebar();
+            }
+            
+            // Show error message in sidebar
+            if (sidebarContent) {
+              sidebarContent.innerHTML = `
+                <div class="p-4 text-red-600 font-medium">
+                  <p>Failed to load sidebar content.</p>
+                  <button class="mt-2 px-3 py-1 bg-red-100 rounded text-sm" onclick="window.location.reload()">
+                    Retry
+                  </button>
+                </div>
+              `;
+            }
+            return true;
+          }
+          
+          // Try again in 500ms
+          setTimeout(checkAndInitialize, 500);
+          return false;
         }
       }
       

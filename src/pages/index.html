@@ -90,6 +90,28 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+      // Check if user is already logged in
+      const checkSession = async () => {
+        try {
+          const response = await fetch('/api/verify_access.php');
+          const data = await response.json();
+          
+          if (data.success) {
+            // User is already logged in, redirect to appropriate page
+            if (data.isAdmin) {
+              window.location.href = 'AdminDashboard.html';
+            } else {
+              window.location.href = 'BookingForm.html';
+            }
+          }
+        } catch (error) {
+          console.error('Error checking session:', error);
+        }
+      };
+      
+      // Check session on page load
+      checkSession();
+      
       // Login form submission
       document.getElementById('loginForm').addEventListener('submit', function(e) {
         e.preventDefault();
@@ -108,25 +130,37 @@
           </svg>
         `;
         
-        // Simulate authentication (replace with actual PHP backend call)
-        setTimeout(() => {
-          if ((username === 'admin' && password === 'admin') || 
-              (username === 'user' && password === 'user')) {
-            
+        // Send authentication request to server
+        fetch('/api/auth.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
             showToast('success', 'Login successful', 'You have been signed in.');
             
             // Redirect based on role
-            if (username === 'admin') {
+            if (data.isAdmin) {
               setTimeout(() => { window.location.href = 'AdminDashboard.html'; }, 1000);
             } else {
               setTimeout(() => { window.location.href = 'BookingForm.html'; }, 1000);
             }
           } else {
-            showToast('error', 'Login failed', 'Invalid username or password.');
+            showToast('error', 'Login failed', data.message || 'Invalid username or password.');
             loginButton.disabled = false;
             loginButton.textContent = 'Sign In';
           }
-        }, 1000);
+        })
+        .catch(error => {
+          console.error('Error during login:', error);
+          showToast('error', 'Login failed', 'A server error occurred. Please try again.');
+          loginButton.disabled = false;
+          loginButton.textContent = 'Sign In';
+        });
       });
       
       // Toast notification function
