@@ -1,335 +1,415 @@
 
-// Admin Rooms Management JS
-console.log("Loading admin-rooms.js");
-
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("DOM loaded in admin-rooms.js");
-    // Initialize rooms functionality if we're on the admin dashboard
-    if (document.getElementById('roomsSection')) {
-        initRoomsManagement();
-    }
-});
-
-// Main initialization function for rooms management
-function initRoomsManagement() {
-    console.log("Initializing rooms management");
-    
-    // Load rooms data
-    loadRooms();
-    
-    // Set up event listeners for room actions
-    setupRoomEventListeners();
-}
-
-// Load rooms data from the API
-function loadRooms() {
-    console.log("Loading rooms data");
-    
-    fetch('/api/get_all_rooms.php')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log("Rooms data received:", data);
-            if (data.success) {
-                // Update stats
-                updateRoomStats(data.stats);
-                
-                // Populate rooms table
-                populateRoomsTable(data.rooms);
-            } else {
-                showError('Failed to load rooms: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching rooms:', error);
-            showError('Error loading rooms. Please try again.');
-        });
-}
-
-// Update room statistics display
-function updateRoomStats(stats) {
-    console.log("Updating room stats:", stats);
-    
-    document.getElementById('totalRoomsCount').textContent = stats.total_rooms;
-    document.getElementById('fixedPasscodeCount').textContent = stats.fixed_passcode_count;
-    document.getElementById('activeBookingsCount').textContent = stats.active_bookings;
-}
-
-// Populate the rooms table with data
-function populateRoomsTable(rooms) {
-    console.log("Populating rooms table with", rooms.length, "rooms");
-    
-    const tableBody = document.getElementById('roomsTableBody');
-    
-    // Clear existing content
-    tableBody.innerHTML = '';
-    
-    if (rooms.length === 0) {
-        // Display no rooms message
-        tableBody.innerHTML = `
-            <tr class="text-center">
-                <td colspan="6" class="px-6 py-4 text-sm text-gray-500">
-                    No rooms found. Add a new room to get started.
-                </td>
-            </tr>
-        `;
+// Room management functionality
+(function() {
+    // Check if we're on the admin dashboard
+    if (!document.getElementById('roomsSection')) {
+        console.log('Not on admin dashboard, rooms functionality not initialized');
         return;
     }
-    
-    // Add each room to the table
-    rooms.forEach(room => {
-        const row = document.createElement('tr');
-        
-        row.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                ${room.id}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                ${room.name}
-            </td>
-            <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
-                ${room.description || '-'}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                ${room.fixed_passcode ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Fixed: ${room.fixed_passcode}
-                </span>` : '-'}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                ${room.reset_hours} hours
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <button class="text-blue-600 hover:text-blue-900 mr-3 edit-room-btn" data-room-id="${room.id}">
-                    Edit
-                </button>
-                <button class="text-red-600 hover:text-red-900 delete-room-btn" data-room-id="${room.id}" data-room-name="${room.name}">
-                    Delete
-                </button>
-            </td>
-        `;
-        
-        tableBody.appendChild(row);
-    });
-}
 
-// Set up event listeners for room management actions
-function setupRoomEventListeners() {
-    console.log("Setting up room event listeners");
-    
-    // Add Room button
-    document.getElementById('addRoomBtn').addEventListener('click', () => {
-        resetRoomForm();
-        document.getElementById('roomModalTitle').textContent = 'Add New Room';
-        document.getElementById('roomIdInput').disabled = false;
+    // Initialize when document is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Initializing rooms management');
+        initRoomsManagement();
+    });
+
+    // Wait for template to load before initializing
+    document.addEventListener('template-loaded', function(e) {
+        if (e.detail && e.detail.template === 'rooms-template') {
+            console.log('Rooms template loaded, initializing rooms management');
+            initRoomsManagement();
+        }
+    });
+
+    function initRoomsManagement() {
+        console.log('Loading rooms data');
+        loadRooms();
+        setupRoomEventListeners();
+    }
+
+    // Function to fetch and load all rooms
+    function loadRooms() {
+        fetch('/api/get_all_rooms.php')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Rooms data loaded:', data);
+                if (data.success) {
+                    displayRooms(data.rooms);
+                    updateRoomStats(data.stats);
+                } else {
+                    showError(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching rooms:', error);
+                showError('Error loading rooms. Please try again.');
+            });
+    }
+
+    // Function to display rooms in the table
+    function displayRooms(rooms) {
+        const tableBody = document.getElementById('roomsTableBody');
+        if (!tableBody) {
+            console.error('roomsTableBody element not found');
+            return;
+        }
+
+        // Clear existing content
+        tableBody.innerHTML = '';
+
+        if (rooms.length === 0) {
+            tableBody.innerHTML = `
+                <tr class="text-center">
+                    <td colspan="6" class="px-6 py-4 text-sm text-gray-500">
+                        No rooms found. Click "Add New Room" to create one.
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        // Add rooms to table
+        rooms.forEach(room => {
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-gray-50';
+            
+            row.innerHTML = `
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    ${room.id}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    ${room.name}
+                </td>
+                <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
+                    ${room.description || '-'}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    ${room.fixed_passcode ? `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">${room.fixed_passcode}</span>` : '-'}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    ${room.reset_hours} hours
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <div class="flex space-x-2">
+                        <button data-room-id="${room.id}" class="edit-room-btn text-blue-600 hover:text-blue-900">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                        </button>
+                        <button data-room-id="${room.id}" data-room-name="${room.name}" class="delete-room-btn text-red-600 hover:text-red-900">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                </td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
+
+        // Add event listeners to the newly created buttons
+        setupRoomButtonListeners();
+    }
+
+    // Function to update room stats
+    function updateRoomStats(stats) {
+        if (!stats) return;
+        
+        const totalRoomsCount = document.getElementById('totalRoomsCount');
+        const fixedPasscodeCount = document.getElementById('fixedPasscodeCount');
+        const activeBookingsCount = document.getElementById('activeBookingsCount');
+        
+        if (totalRoomsCount) totalRoomsCount.textContent = stats.total_rooms || 0;
+        if (fixedPasscodeCount) fixedPasscodeCount.textContent = stats.fixed_passcode_count || 0;
+        if (activeBookingsCount) activeBookingsCount.textContent = stats.active_bookings || 0;
+    }
+
+    // Setup event listeners for room management buttons
+    function setupRoomEventListeners() {
+        console.log('Setting up room event listeners');
+        
+        // Add Room button
+        const addRoomBtn = document.getElementById('addRoomBtn');
+        if (addRoomBtn) {
+            addRoomBtn.addEventListener('click', showAddRoomModal);
+        } else {
+            console.error('addRoomBtn element not found');
+        }
+        
+        // Room form
+        const roomForm = document.getElementById('roomForm');
+        if (roomForm) {
+            roomForm.addEventListener('submit', handleRoomFormSubmit);
+        } else {
+            console.error('roomForm element not found');
+        }
+        
+        // Close modal buttons
+        const closeRoomModal = document.getElementById('closeRoomModal');
+        if (closeRoomModal) {
+            closeRoomModal.addEventListener('click', hideRoomModal);
+        } else {
+            console.error('closeRoomModal element not found');
+        }
+        
+        const cancelRoomBtn = document.getElementById('cancelRoomBtn');
+        if (cancelRoomBtn) {
+            cancelRoomBtn.addEventListener('click', hideRoomModal);
+        } else {
+            console.error('cancelRoomBtn element not found');
+        }
+        
+        // Delete room modal buttons
+        const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+        if (cancelDeleteBtn) {
+            cancelDeleteBtn.addEventListener('click', hideDeleteModal);
+        } else {
+            console.error('cancelDeleteBtn element not found');
+        }
+        
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        if (confirmDeleteBtn) {
+            confirmDeleteBtn.addEventListener('click', deleteRoom);
+        } else {
+            console.error('confirmDeleteBtn element not found');
+        }
+    }
+
+    // Setup event listeners for dynamic room buttons (edit/delete)
+    function setupRoomButtonListeners() {
+        // Edit room buttons
+        document.querySelectorAll('.edit-room-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const roomId = this.getAttribute('data-room-id');
+                editRoom(roomId);
+            });
+        });
+        
+        // Delete room buttons
+        document.querySelectorAll('.delete-room-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const roomId = this.getAttribute('data-room-id');
+                const roomName = this.getAttribute('data-room-name');
+                showDeleteModal(roomId, roomName);
+            });
+        });
+    }
+
+    // Show Add Room modal
+    function showAddRoomModal() {
+        const roomModal = document.getElementById('roomModal');
+        const modalTitle = document.getElementById('roomModalTitle');
+        const roomForm = document.getElementById('roomForm');
+        const roomIdInput = document.getElementById('roomIdInput');
+        
+        if (!roomModal || !modalTitle || !roomForm || !roomIdInput) {
+            console.error('Some modal elements not found');
+            return;
+        }
+        
+        // Set modal for adding new room
+        modalTitle.textContent = 'Add New Room';
+        roomForm.reset();
+        
+        // Clear hidden ID field
         document.getElementById('roomId').value = '';
-        document.getElementById('roomModal').classList.remove('hidden');
-    });
-    
-    // Close modal buttons
-    document.getElementById('closeRoomModal').addEventListener('click', () => {
-        document.getElementById('roomModal').classList.add('hidden');
-    });
-    
-    document.getElementById('cancelRoomBtn').addEventListener('click', () => {
-        document.getElementById('roomModal').classList.add('hidden');
-    });
-    
-    // Delete modal close button
-    document.getElementById('cancelDeleteBtn').addEventListener('click', () => {
-        document.getElementById('deleteRoomModal').classList.add('hidden');
-    });
-    
-    // Room form submission
-    document.getElementById('roomForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        saveRoom();
-    });
-    
-    // Confirm delete button
-    document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-        deleteRoom();
-    });
-    
-    // Set up delegation for edit and delete buttons (these buttons are dynamically created)
-    document.getElementById('roomsTableBody').addEventListener('click', function(e) {
-        // Edit room button
-        if (e.target.classList.contains('edit-room-btn')) {
-            const roomId = e.target.getAttribute('data-room-id');
-            editRoom(roomId);
+        
+        // Enable room ID input for new rooms
+        roomIdInput.removeAttribute('disabled');
+        roomIdInput.classList.remove('bg-gray-100');
+        
+        // Show the modal
+        roomModal.classList.remove('hidden');
+    }
+
+    // Hide Room modal
+    function hideRoomModal() {
+        const roomModal = document.getElementById('roomModal');
+        if (roomModal) {
+            roomModal.classList.add('hidden');
+        }
+    }
+
+    // Show Delete confirmation modal
+    function showDeleteModal(roomId, roomName) {
+        const deleteModal = document.getElementById('deleteRoomModal');
+        const deleteRoomId = document.getElementById('deleteRoomId');
+        const deleteRoomName = document.getElementById('deleteRoomName');
+        
+        if (!deleteModal || !deleteRoomId || !deleteRoomName) {
+            console.error('Delete modal elements not found');
+            return;
         }
         
-        // Delete room button
-        if (e.target.classList.contains('delete-room-btn')) {
-            const roomId = e.target.getAttribute('data-room-id');
-            const roomName = e.target.getAttribute('data-room-name');
-            confirmDeleteRoom(roomId, roomName);
+        deleteRoomId.value = roomId;
+        deleteRoomName.textContent = `Room: ${roomName}`;
+        deleteModal.classList.remove('hidden');
+    }
+
+    // Hide Delete modal
+    function hideDeleteModal() {
+        const deleteModal = document.getElementById('deleteRoomModal');
+        if (deleteModal) {
+            deleteModal.classList.add('hidden');
         }
-    });
-}
+    }
 
-// Reset the room form
-function resetRoomForm() {
-    document.getElementById('roomForm').reset();
-    document.getElementById('roomId').value = '';
-    document.getElementById('roomIdInput').value = '';
-    document.getElementById('roomName').value = '';
-    document.getElementById('roomDescription').value = '';
-    document.getElementById('fixedPasscode').value = '';
-    document.getElementById('resetHours').value = '2';
-}
-
-// Edit room - fetch and populate form
-function editRoom(roomId) {
-    console.log("Editing room:", roomId);
-    
-    fetch(`/api/get_room.php?id=${roomId}`)
+    // Handle room form submission
+    function handleRoomFormSubmit(e) {
+        e.preventDefault();
+        
+        const roomId = document.getElementById('roomId').value;
+        const mode = roomId ? 'update' : 'create';
+        
+        // Get form data
+        const formData = new FormData(document.getElementById('roomForm'));
+        formData.append('mode', mode);
+        
+        if (mode === 'update') {
+            formData.append('id', roomId);
+        }
+        
+        // Send request to server
+        fetch('/api/manage_rooms.php', {
+            method: 'POST',
+            body: formData
+        })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                const room = data.room;
-                
-                // Set form fields
-                document.getElementById('roomId').value = room.id;
-                document.getElementById('roomIdInput').value = room.id;
-                document.getElementById('roomIdInput').disabled = true;
-                document.getElementById('roomName').value = room.name;
-                document.getElementById('roomDescription').value = room.description || '';
-                document.getElementById('fixedPasscode').value = room.fixed_passcode || '';
-                document.getElementById('resetHours').value = room.reset_hours;
-                
-                // Update modal title
-                document.getElementById('roomModalTitle').textContent = 'Edit Room';
-                
-                // Show the modal
-                document.getElementById('roomModal').classList.remove('hidden');
+                showSuccess(data.message);
+                hideRoomModal();
+                loadRooms(); // Reload rooms list
             } else {
-                showError('Failed to load room details: ' + data.message);
+                showError(`Error: ${data.message}`);
             }
         })
         .catch(error => {
-            console.error('Error fetching room details:', error);
-            showError('Error loading room details. Please try again.');
+            console.error('Error saving room:', error);
+            showError('An error occurred. Please try again.');
         });
-}
-
-// Show delete confirmation
-function confirmDeleteRoom(roomId, roomName) {
-    console.log("Confirming delete for room:", roomId);
-    
-    document.getElementById('deleteRoomId').value = roomId;
-    document.getElementById('deleteRoomName').textContent = roomName;
-    document.getElementById('deleteRoomModal').classList.remove('hidden');
-}
-
-// Save room (create or update)
-function saveRoom() {
-    console.log("Saving room");
-    
-    const roomId = document.getElementById('roomId').value;
-    const mode = roomId ? 'update' : 'create';
-    const roomIdInput = document.getElementById('roomIdInput').value;
-    
-    const formData = new FormData();
-    formData.append('mode', mode);
-    formData.append('id', roomId || roomIdInput);
-    formData.append('roomIdInput', roomIdInput);
-    formData.append('roomName', document.getElementById('roomName').value);
-    formData.append('roomDescription', document.getElementById('roomDescription').value);
-    formData.append('fixedPasscode', document.getElementById('fixedPasscode').value);
-    formData.append('resetHours', document.getElementById('resetHours').value);
-    
-    fetch('/api/manage_rooms.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Close modal and refresh
-            document.getElementById('roomModal').classList.add('hidden');
-            
-            // Show success notification
-            showSuccess(mode === 'create' ? 'Room created successfully' : 'Room updated successfully');
-            
-            // Reload rooms
-            loadRooms();
-        } else {
-            showError('Failed to save room: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error saving room:', error);
-        showError('Error saving room. Please try again.');
-    });
-}
-
-// Delete room
-function deleteRoom() {
-    console.log("Deleting room");
-    
-    const roomId = document.getElementById('deleteRoomId').value;
-    
-    const formData = new FormData();
-    formData.append('mode', 'delete');
-    formData.append('id', roomId);
-    
-    fetch('/api/manage_rooms.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Close modal
-            document.getElementById('deleteRoomModal').classList.add('hidden');
-            
-            // Show success notification
-            showSuccess('Room deleted successfully');
-            
-            // Reload rooms
-            loadRooms();
-        } else {
-            document.getElementById('deleteRoomModal').classList.add('hidden');
-            showError('Failed to delete room: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error deleting room:', error);
-        document.getElementById('deleteRoomModal').classList.add('hidden');
-        showError('Error deleting room. Please try again.');
-    });
-}
-
-// Show success message
-function showSuccess(message) {
-    console.log("Success:", message);
-    
-    if (window.showToast) {
-        window.showToast(message, 'success');
-    } else {
-        alert(message);
     }
-}
 
-// Show error message
-function showError(message) {
-    console.error("Error:", message);
-    
-    if (window.showToast) {
-        window.showToast(message, 'error');
-    } else {
-        alert(message);
+    // Edit room
+    function editRoom(roomId) {
+        fetch(`/api/get_room.php?id=${roomId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showEditRoomModal(data.room);
+                } else {
+                    showError(`Error: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching room details:', error);
+                showError('Failed to load room details.');
+            });
     }
-}
 
-// Expose functions to global scope (for debugging)
-window.adminRooms = {
-    loadRooms,
-    editRoom,
-    deleteRoom,
-    saveRoom
-};
+    // Show Edit Room modal with room data
+    function showEditRoomModal(room) {
+        const roomModal = document.getElementById('roomModal');
+        const modalTitle = document.getElementById('roomModalTitle');
+        const roomIdInput = document.getElementById('roomIdInput');
+        const roomNameInput = document.getElementById('roomName');
+        const roomDescriptionInput = document.getElementById('roomDescription');
+        const fixedPasscodeInput = document.getElementById('fixedPasscode');
+        const resetHoursInput = document.getElementById('resetHours');
+        const roomIdHidden = document.getElementById('roomId');
+        
+        if (!roomModal || !modalTitle || !roomIdInput || !roomNameInput || 
+            !roomDescriptionInput || !fixedPasscodeInput || !resetHoursInput || !roomIdHidden) {
+            console.error('Some modal elements not found for editing');
+            return;
+        }
+        
+        // Set modal for editing
+        modalTitle.textContent = `Edit Room: ${room.name}`;
+        
+        // Fill form with room data
+        roomIdInput.value = room.id;
+        roomNameInput.value = room.name;
+        roomDescriptionInput.value = room.description || '';
+        fixedPasscodeInput.value = room.fixed_passcode || '';
+        resetHoursInput.value = room.reset_hours || 2;
+        roomIdHidden.value = room.id;
+        
+        // Disable room ID for existing rooms
+        roomIdInput.setAttribute('disabled', 'disabled');
+        roomIdInput.classList.add('bg-gray-100');
+        
+        // Show the modal
+        roomModal.classList.remove('hidden');
+    }
+
+    // Delete room
+    function deleteRoom() {
+        const roomId = document.getElementById('deleteRoomId').value;
+        
+        if (!roomId) {
+            showError('Room ID is missing.');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('mode', 'delete');
+        formData.append('id', roomId);
+        
+        fetch('/api/manage_rooms.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showSuccess(data.message);
+                hideDeleteModal();
+                loadRooms(); // Reload rooms list
+            } else {
+                showError(`Error: ${data.message}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting room:', error);
+            showError('An error occurred while deleting the room.');
+        });
+    }
+
+    // Helper function to show success message
+    function showSuccess(message) {
+        // Check if toast functionality exists
+        if (typeof showToast === 'function') {
+            showToast(message, 'success');
+        } else {
+            // Fallback to alert
+            alert(message);
+        }
+    }
+
+    // Helper function to show error message
+    function showError(message) {
+        // Check if toast functionality exists
+        if (typeof showToast === 'function') {
+            showToast(message, 'error');
+        } else {
+            // Fallback to console and alert
+            console.error(message);
+            alert(message);
+        }
+    }
+
+    // Make functions available in global scope if needed
+    window.roomsModule = {
+        loadRooms,
+        addRoom: showAddRoomModal,
+        editRoom,
+        deleteRoom
+    };
+})();

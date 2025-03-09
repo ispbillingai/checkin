@@ -6,6 +6,9 @@ require_once 'db_config.php';
 // Start session
 session_start();
 
+// Set content type to JSON first
+header('Content-Type: application/json');
+
 // For development/testing purposes - provide dummy data for unauthenticated users
 // This helps prevent the "Failed to load rooms" error on the home page
 if (!isset($_SESSION['user_id'])) {
@@ -33,24 +36,33 @@ if (!isset($_SESSION['user_id'])) {
 
 // Handle get rooms request
 if ($_SERVER["REQUEST_METHOD"] == "GET") {
-    // Prepare SQL statement
-    $stmt = $conn->prepare("SELECT id, name FROM rooms ORDER BY name ASC");
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    $rooms = [];
-    while ($row = $result->fetch_assoc()) {
-        $rooms[] = [
-            'id' => $row['id'],
-            'name' => $row['name']
-        ];
+    try {
+        // Prepare SQL statement
+        $stmt = $conn->prepare("SELECT id, name FROM rooms ORDER BY name ASC");
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $rooms = [];
+        while ($row = $result->fetch_assoc()) {
+            $rooms[] = [
+                'id' => $row['id'],
+                'name' => $row['name']
+            ];
+        }
+        
+        // Return rooms as JSON
+        echo json_encode([
+            'success' => true,
+            'rooms' => $rooms
+        ]);
+    } catch (Exception $e) {
+        // Log the error and return an error response
+        error_log("Error in get_rooms.php: " . $e->getMessage());
+        echo json_encode([
+            'success' => false,
+            'message' => 'Error fetching rooms: ' . $e->getMessage()
+        ]);
     }
-    
-    // Return rooms as JSON
-    echo json_encode([
-        'success' => true,
-        'rooms' => $rooms
-    ]);
 } else {
     // Return error for non-GET requests
     echo json_encode([
