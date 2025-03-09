@@ -33,6 +33,9 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
         $date = isset($_GET['date']) ? secure_input($_GET['date']) : date('Y-m-d');
         $room_id = isset($_GET['room']) ? secure_input($_GET['room']) : null;
         
+        // Debug received parameters
+        error_log("Received parameters: date = $date, room_id = " . ($room_id ?: "all"));
+        
         // Base SQL query
         $sql = "SELECT b.id, r.name as room_name, b.room_id, b.guest_name, b.email, b.phone, 
                  b.arrival_datetime, b.departure_datetime, b.access_code, b.status, b.created_at 
@@ -78,6 +81,8 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
                 'createdAt' => $row['created_at']
             ];
         }
+        
+        error_log("Found " . count($bookings) . " bookings for date: $date");
         
         // If in demo mode (localhost) and no bookings found, add some sample bookings
         if (($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1') && count($bookings) === 0) {
@@ -130,6 +135,8 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
                     'createdAt' => date('Y-m-d H:i:s')
                 ]
             ];
+            
+            error_log("Generated demo bookings for testing");
         }
         
         // Return bookings as JSON
