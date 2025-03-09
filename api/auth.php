@@ -23,13 +23,15 @@ if (isset($_POST['username']) &&
     $_SESSION['user_id'] = ($_POST['username'] === 'admin') ? 1 : 2;
     $_SESSION['username'] = $_POST['username'];
     $_SESSION['is_admin'] = ($_POST['username'] === 'admin') ? 1 : 0;
+    $_SESSION['demo_user'] = true;
     
     // Return success JSON
     echo json_encode([
         'success' => true,
         'isAdmin' => ($_POST['username'] === 'admin'),
         'message' => 'Login successful',
-        'demo' => true
+        'demo' => true,
+        'sessionId' => session_id() // Include session ID for debugging
     ]);
     exit;
 }
@@ -73,7 +75,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 echo json_encode([
                     'success' => true,
                     'isAdmin' => (bool)$user['is_admin'],
-                    'message' => 'Login successful'
+                    'message' => 'Login successful',
+                    'sessionId' => session_id() // Include session ID for debugging
                 ]);
                 exit;
             }

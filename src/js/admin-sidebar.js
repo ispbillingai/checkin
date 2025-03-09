@@ -1,11 +1,9 @@
 
-console.log("Admin sidebar JS loaded");
-
-// Global variable to track if sidebar has been initialized
+// Global variable to track sidebar initialization
 window.sidebarInitialized = false;
 
-// Initialize the sidebar functionality
-window.initializeSidebar = function() {
+// Initialize sidebar functionality
+function initializeSidebar() {
   // Prevent multiple initializations
   if (window.sidebarInitialized) {
     console.log("Sidebar already initialized, skipping");
@@ -14,93 +12,102 @@ window.initializeSidebar = function() {
   
   console.log("Initializing sidebar");
   
-  // Mark as initialized
-  window.sidebarInitialized = true;
-  
-  // Get sidebar element
-  const sidebar = document.getElementById('sidebar');
-  const sidebarContent = document.getElementById('sidebar-content');
-  
-  if (!sidebar || !sidebarContent) {
-    console.error("Sidebar elements not found");
-    return;
+  // Update username in header if available
+  const usernameElement = document.getElementById('admin-username');
+  if (usernameElement) {
+    // Try to get username from session
+    fetch('/api/verify_access.php')
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && data.username) {
+          usernameElement.textContent = data.username;
+        }
+      })
+      .catch(error => console.error("Error fetching username:", error));
   }
   
-  // Get all section links
-  const sectionLinks = sidebarContent.querySelectorAll('.section-link');
+  // Toggle sidebar
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  const sidebar = document.getElementById('sidebar');
   
-  // Default active section
-  let activeSection = "bookingsSection";
-  
-  // Function to show a section and hide others
-  const showSection = function(sectionId) {
-    console.log("Showing section:", sectionId);
-    
-    // Update active section
-    activeSection = sectionId;
-    
-    // Hide all sections
-    document.querySelectorAll('.section-content').forEach(section => {
-      section.classList.add('hidden');
-    });
-    
-    // Show the selected section
-    const selectedSection = document.getElementById(sectionId);
-    if (selectedSection) {
-      selectedSection.classList.remove('hidden');
-    } else {
-      console.error("Section not found:", sectionId);
-    }
-    
-    // Update active link styles
-    sectionLinks.forEach(link => {
-      const linkSectionId = link.getAttribute('data-section');
+  if (sidebarToggle && sidebar) {
+    sidebarToggle.addEventListener('click', function() {
+      sidebar.classList.toggle('w-64');
+      sidebar.classList.toggle('w-20');
       
-      if (linkSectionId === sectionId) {
-        link.classList.add('bg-blue-100', 'text-blue-800');
-        link.classList.remove('hover:bg-gray-100');
-      } else {
-        link.classList.remove('bg-blue-100', 'text-blue-800');
-        link.classList.add('hover:bg-gray-100');
-      }
+      // Toggle text visibility
+      const textElements = sidebar.querySelectorAll('span');
+      textElements.forEach(el => {
+        el.classList.toggle('hidden');
+      });
     });
-  };
+  }
   
-  // Add click handlers to section links
-  sectionLinks.forEach(link => {
-    const sectionId = link.getAttribute('data-section');
+  // Handle section navigation
+  const sectionButtons = document.querySelectorAll('[data-section]');
+  
+  if (sectionButtons.length > 0) {
+    // Show first section by default
+    const firstSection = sectionButtons[0].getAttribute('data-section');
+    showSection(firstSection + 'Section');
     
-    link.addEventListener('click', (e) => {
-      e.preventDefault();
-      showSection(sectionId);
+    // Add click event listeners to all section buttons
+    sectionButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const sectionId = this.getAttribute('data-section') + 'Section';
+        showSection(sectionId);
+        
+        // Update active button styling
+        sectionButtons.forEach(btn => {
+          btn.classList.remove('bg-blue-100', 'text-blue-600');
+          btn.classList.add('hover:bg-gray-100');
+        });
+        
+        this.classList.add('bg-blue-100', 'text-blue-600');
+        this.classList.remove('hover:bg-gray-100');
+      });
     });
+  } else {
+    console.warn("No section buttons found in sidebar");
+  }
+  
+  // Mark sidebar as initialized
+  window.sidebarInitialized = true;
+  console.log("Sidebar initialization complete");
+}
+
+// Function to show a specific section and hide others
+function showSection(sectionId) {
+  console.log("Showing section:", sectionId);
+  
+  const sections = document.querySelectorAll('.section-content');
+  sections.forEach(section => {
+    section.classList.add('hidden');
   });
   
-  // Initialize the default section
-  showSection(activeSection);
-  
-  console.log("Sidebar initialization complete");
-};
+  const activeSection = document.getElementById(sectionId);
+  if (activeSection) {
+    activeSection.classList.remove('hidden');
+  } else {
+    console.error(`Section not found: ${sectionId}`);
+  }
+}
 
-// Set up a MutationObserver to watch for sidebar content changes
-document.addEventListener('DOMContentLoaded', function() {
+// Use MutationObserver to detect when sidebar content is loaded
+function setupSidebarObserver() {
   const sidebarContent = document.getElementById('sidebar-content');
   
   if (sidebarContent) {
-    // Check if sidebar content already has children (templates might be loaded)
-    if (sidebarContent.children.length > 0) {
-      console.log("Sidebar content already populated, initializing now");
-      window.initializeSidebar();
-      return;
-    }
-    
-    // Set up observer to watch for changes
-    const observer = new MutationObserver(function(mutations) {
-      mutations.forEach(function(mutation) {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
         if (mutation.type === 'childList' && sidebarContent.children.length > 0) {
           console.log("Sidebar content populated via MutationObserver");
-          window.initializeSidebar();
-          observer.disconnect(); // Stop observing once initialized
+          
+          // Once content is loaded, initialize the sidebar
+          setTimeout(initializeSidebar, 100);
+          
+          // Disconnect observer once content is loaded
+          observer.disconnect();
         }
       });
     });
@@ -111,4 +118,23 @@ document.addEventListener('DOMContentLoaded', function() {
   } else {
     console.error("Sidebar content element not found");
   }
+}
+
+// Initialize on DOM load
+document.addEventListener('DOMContentLoaded', function() {
+  console.log("Admin sidebar JS loaded");
+  
+  // Set up the observer to detect when content loads
+  setupSidebarObserver();
+  
+  // Expose the initialization function globally
+  window.initializeSidebar = initializeSidebar;
+  
+  // Attempt to initialize after a delay as a fallback
+  setTimeout(function() {
+    if (!window.sidebarInitialized) {
+      console.log("Fallback sidebar initialization");
+      initializeSidebar();
+    }
+  }, 1000);
 });

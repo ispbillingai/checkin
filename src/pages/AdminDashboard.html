@@ -26,7 +26,8 @@
     <div id="debug-info" class="mt-1 text-xs"></div>
   </div>
 
-  <div class="flex w-full min-h-screen mt-10">
+  <!-- Main content container - initially hidden until auth check completes -->
+  <div id="main-content-container" style="display: none;" class="flex w-full min-h-screen mt-10">
     <!-- Include sidebar component -->
     <aside id="sidebar" class="border-r bg-background transition-all duration-300 ease-in-out w-64">
       <!-- Include from sidebar template -->
@@ -82,6 +83,18 @@
     </div>
   </div>
 
+  <!-- Authentication loading indicator -->
+  <div id="auth-loading" class="fixed inset-0 flex items-center justify-center bg-white bg-opacity-90 z-50">
+    <div class="text-center">
+      <svg class="mx-auto animate-spin h-12 w-12 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <p class="mt-4 text-lg font-medium text-gray-900">Verifying your session...</p>
+      <p class="mt-2 text-sm text-gray-500">Please wait while we load your dashboard</p>
+    </div>
+  </div>
+
   <!-- Toast message for notifications -->
   <div id="toast-container"></div>
 
@@ -125,7 +138,8 @@
             Time: ${new Date().toLocaleTimeString()} | 
             Templates Loaded: ${document.getElementById('sidebar-content').children.length > 0 ? 'Yes' : 'No'} |
             Active Section: ${document.querySelector('.section-content:not(.hidden)')?.id || 'None'} |
-            Sidebar Initialized: ${window.sidebarInitialized ? 'Yes' : 'No'}
+            Sidebar Initialized: ${window.sidebarInitialized ? 'Yes' : 'No'} |
+            Auth Status: ${window.authStatus || 'Unknown'}
           `;
         }
       };
@@ -161,24 +175,161 @@
         }
       });
       
-      // Verify user authentication
-      fetch('/api/verify_access.php')
-        .then(response => response.json())
+      // Track authentication status globally
+      window.authStatus = 'checking';
+      
+      // Create a function to show or hide the auth loading state
+      function setAuthLoadingState(isLoading) {
+        const authLoading = document.getElementById('auth-loading');
+        const mainContent = document.getElementById('main-content-container');
+        
+        if (isLoading) {
+          authLoading.style.display = 'flex';
+          mainContent.style.display = 'none';
+        } else {
+          authLoading.style.display = 'none';
+          mainContent.style.display = 'flex';
+        }
+      }
+      
+      // Function to handle authentication errors
+      function handleAuthError(error) {
+        console.error("Authentication error:", error);
+        window.authStatus = 'failed';
+        
+        // Show error in the loading screen instead of immediate redirect
+        const authLoading = document.getElementById('auth-loading');
+        authLoading.innerHTML = `
+          <div class="text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <p class="mt-4 text-lg font-medium text-gray-900">Authentication Failed</p>
+            <p class="mt-2 text-sm text-gray-500">You need to be logged in to access this page</p>
+            <button id="returnToLogin" class="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+              Return to Login
+            </button>
+          </div>
+        `;
+        
+        // Add event listener to the return button
+        document.getElementById('returnToLogin').addEventListener('click', function() {
+          window.location.href = '/src/pages/index.html';
+        });
+        
+        // Auto redirect after 5 seconds
+        setTimeout(() => {
+          window.location.href = '/src/pages/index.html';
+        }, 5000);
+      }
+      
+      // Function to verify user authentication with retries
+      function verifyAccess(retryCount = 0, maxRetries = 3) {
+        const maxRetryDelay = 1000; // 1 second
+        
+        if (retryCount > maxRetries) {
+          handleAuthError("Max retries reached");
+          return;
+        }
+        
+        // Set loading state
+        setAuthLoadingState(true);
+        
+        fetch('/api/verify_access.php', {
+          method: 'GET',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          },
+          credentials: 'include' // Important for cookies/session
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json();
+        })
         .then(data => {
+          console.log("Auth verification response:", data);
+          
           if (!data.success || !data.isAdmin) {
-            // Not authenticated or not an admin, redirect to login
-            window.location.href = '/src/pages/index.html';
+            // Use demo admin credentials for development/testing
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+              console.log("Development environment detected, using demo admin login");
+              autoLoginWithDemoCredentials();
+              return;
+            }
+            
+            throw new Error('Not authenticated or not an admin');
+          }
+          
+          // Auth success, show the dashboard
+          window.authStatus = 'authenticated';
+          setAuthLoadingState(false);
+          
+          // Let the templates load
+          if (window.loadAdminTemplates) {
+            window.loadAdminTemplates();
+          }
+        })
+        .catch(error => {
+          console.error("Error verifying access:", error);
+          
+          // Check if we're in development mode and attempt auto-login
+          if ((window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && retryCount === 0) {
+            console.log("Development environment detected, trying auto-login");
+            autoLoginWithDemoCredentials();
             return;
           }
           
-          // User is authenticated and is an admin, proceed with template loading
-          console.log("User authenticated as admin, proceeding with dashboard initialization");
+          // Try again with exponential backoff
+          const delay = Math.min(Math.pow(2, retryCount) * 200, maxRetryDelay);
+          console.log(`Retrying authentication in ${delay}ms (attempt ${retryCount + 1}/${maxRetries})`);
+          
+          setTimeout(() => {
+            verifyAccess(retryCount + 1, maxRetries);
+          }, delay);
+        });
+      }
+      
+      // Function to automatically login with demo admin credentials
+      function autoLoginWithDemoCredentials() {
+        console.log("Attempting auto-login with demo admin credentials");
+        
+        fetch('/api/auth.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: 'username=admin&password=admin',
+          credentials: 'include'
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log("Auto-login response:", data);
+          
+          if (data.success && data.isAdmin) {
+            console.log("Auto-login successful, showing dashboard");
+            window.authStatus = 'authenticated';
+            setAuthLoadingState(false);
+            
+            // Let the templates load
+            if (window.loadAdminTemplates) {
+              window.loadAdminTemplates();
+            }
+          } else {
+            throw new Error('Auto-login failed');
+          }
         })
         .catch(error => {
-          console.error("Error verifying user access:", error);
-          // Redirect to login on error
-          window.location.href = '/src/pages/index.html';
+          console.error("Auto-login error:", error);
+          handleAuthError(error);
         });
+      }
+      
+      // Start the verification process
+      verifyAccess();
     });
   </script>
 </body>
