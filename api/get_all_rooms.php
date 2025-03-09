@@ -18,6 +18,9 @@ if (!isset($_SESSION['user_id']) && !($_SERVER['HTTP_HOST'] == 'localhost' || $_
 
 // Handle GET request for all room details
 if ($_SERVER["REQUEST_METHOD"] == "GET") {
+    // Add debug information
+    error_log("get_all_rooms.php called - getting all rooms");
+    
     // Prepare SQL statement to get all room information
     $stmt = $conn->prepare("SELECT id, name, description, fixed_passcode, reset_hours FROM rooms ORDER BY name ASC");
     $stmt->execute();
@@ -31,6 +34,34 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
             'description' => $row['description'],
             'fixed_passcode' => $row['fixed_passcode'],
             'reset_hours' => $row['reset_hours']
+        ];
+    }
+    
+    // If on localhost with no rooms, provide demo data
+    if (($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1') && count($rooms) === 0) {
+        error_log("No rooms found in database, providing demo data");
+        $rooms = [
+            [
+                'id' => 'demo1',
+                'name' => 'Demo Single Room',
+                'description' => 'A comfortable single room perfect for solo travelers.',
+                'fixed_passcode' => '1234',
+                'reset_hours' => 2
+            ],
+            [
+                'id' => 'demo2',
+                'name' => 'Demo Double Room',
+                'description' => 'Spacious double room with king-size bed.',
+                'fixed_passcode' => '',
+                'reset_hours' => 3
+            ],
+            [
+                'id' => 'demo3',
+                'name' => 'Demo Suite',
+                'description' => 'Luxury suite with separate living area and bedroom.',
+                'fixed_passcode' => '5678',
+                'reset_hours' => 4
+            ]
         ];
     }
     
@@ -52,6 +83,11 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
     if ($active_result) {
         $active_row = $active_result->fetch_assoc();
         $active_bookings = $active_row['count'];
+    }
+    
+    // If on localhost with no actual bookings, provide a demo count
+    if (($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1') && $active_bookings === 0) {
+        $active_bookings = 2; // Demo value
     }
     
     // Return rooms and stats as JSON
