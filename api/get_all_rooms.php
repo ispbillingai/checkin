@@ -79,7 +79,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
             }
         }
         
-        // Get active bookings count with correct column names
+        // Get active bookings count
         $active_bookings = 0;
         $bookings_stmt = $conn->prepare("SELECT COUNT(*) as count FROM bookings WHERE status = 'active'");
         

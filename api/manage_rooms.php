@@ -16,6 +16,9 @@ if (!isset($_SESSION['user_id']) && !($_SERVER['HTTP_HOST'] == 'localhost' || $_
     exit;
 }
 
+// Set content type to JSON
+header('Content-Type: application/json');
+
 // Handle POST request for room management
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Get operation mode (create, update, delete)
