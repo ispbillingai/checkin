@@ -1,99 +1,145 @@
 
 /**
- * Error Logger
- * Captures client-side errors and sends them to the server
+ * Basic error logger for the admin dashboard
  */
-(function() {
-    console.log("Error logger initialized");
+window.errorLogger = {
+    logs: [],
+    /**
+     * Log an info message
+     * @param {string} message - The message to log
+     * @param {object} context - Additional context for the log
+     */
+    info: function(message, context = {}) {
+        this.logMessage('info', message, context);
+    },
     
-    // Function to send error logs to the server
-    function logError(message, level = "error", details = null) {
-        console.log(`Logging ${level}: ${message}`);
-        
-        // Create the error payload
-        const errorData = {
-            message: message,
-            level: level,
-            details: details,
+    /**
+     * Log a warning message
+     * @param {string} message - The message to log
+     * @param {object} context - Additional context for the log
+     */
+    warn: function(message, context = {}) {
+        this.logMessage('warning', message, context);
+    },
+    
+    /**
+     * Log an error message
+     * @param {string} message - The message to log
+     * @param {object} context - Additional context for the log
+     */
+    error: function(message, context = {}) {
+        this.logMessage('error', message, context);
+        console.error(message, context);
+    },
+    
+    /**
+     * Log a message with specified level
+     * @param {string} level - The log level (info, warning, error)
+     * @param {string} message - The message to log
+     * @param {object} context - Additional context for the log
+     */
+    logMessage: function(level, message, context = {}) {
+        const entry = {
             timestamp: new Date().toISOString(),
-            url: window.location.href,
-            userAgent: navigator.userAgent
+            level: level,
+            message: message,
+            context: context
         };
         
-        // Send to server
-        fetch('/api/log_client_error.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(errorData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log("Error logged to server:", data);
-        })
-        .catch(err => {
-            console.error("Failed to log error to server:", err);
+        this.logs.push(entry);
+        this.updateLogDisplay();
+        
+        // Send error to server if it's an error
+        if (level === 'error') {
+            this.sendToServer(entry);
+        }
+    },
+    
+    /**
+     * Update the log display if the container exists
+     */
+    updateLogDisplay: function() {
+        const container = document.getElementById('log-entries');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        this.logs.slice(-50).forEach(log => {
+            const logItem = document.createElement('div');
+            logItem.className = 'mb-2 p-2 border-l-4 text-sm';
+            
+            // Set color based on log level
+            if (log.level === 'error') {
+                logItem.className += ' border-red-500 bg-red-50';
+            } else if (log.level === 'warning') {
+                logItem.className += ' border-yellow-500 bg-yellow-50';
+            } else {
+                logItem.className += ' border-blue-500 bg-blue-50';
+            }
+            
+            // Format timestamp
+            const time = new Date(log.timestamp).toLocaleTimeString();
+            
+            // Create log content
+            logItem.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span class="font-medium">${log.level.toUpperCase()}</span>
+                    <span class="text-xs text-gray-500">${time}</span>
+                </div>
+                <div>${log.message}</div>
+                ${Object.keys(log.context).length ? `<pre class="text-xs mt-1 bg-gray-100 p-1 rounded">${JSON.stringify(log.context, null, 2)}</pre>` : ''}
+            `;
+            
+            container.appendChild(logItem);
+        });
+    },
+    
+    /**
+     * Send a log entry to the server
+     * @param {object} entry - The log entry to send
+     */
+    sendToServer: function(entry) {
+        // Only if we're in a real browser environment
+        if (typeof fetch !== 'undefined') {
+            fetch('/api/log_client_error.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(entry)
+            }).catch(err => {
+                console.error('Failed to send log to server:', err);
+            });
+        }
+    },
+    
+    /**
+     * Download logs as a JSON file
+     */
+    downloadLogs: function() {
+        const data = JSON.stringify(this.logs, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'admin-dashboard-logs.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+};
+
+// Set up global error handler
+window.addEventListener('error', function(event) {
+    if (window.errorLogger) {
+        window.errorLogger.error('Uncaught JavaScript error: ' + event.message, {
+            filename: event.filename,
+            line: event.lineno,
+            column: event.colno,
+            stack: event.error ? event.error.stack : ''
         });
     }
-    
-    // Add global error handler
-    window.addEventListener('error', function(event) {
-        logError(
-            `${event.message} (${event.filename}:${event.lineno}:${event.colno})`,
-            "error",
-            {
-                stack: event.error ? event.error.stack : null,
-                filename: event.filename,
-                lineNumber: event.lineno,
-                columnNumber: event.colno
-            }
-        );
-    });
-    
-    // Add global promise rejection handler
-    window.addEventListener('unhandledrejection', function(event) {
-        logError(
-            `Unhandled Promise Rejection: ${event.reason}`,
-            "error",
-            {
-                reason: event.reason ? event.reason.toString() : null,
-                stack: event.reason && event.reason.stack ? event.reason.stack : null
-            }
-        );
-    });
-    
-    // Add global console error override
-    const originalConsoleError = console.error;
-    console.error = function() {
-        // Call original console.error
-        originalConsoleError.apply(console, arguments);
-        
-        // Log to server
-        const args = Array.from(arguments).map(arg => 
-            typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-        ).join(' ');
-        
-        logError(args, "error");
-    };
-    
-    // Add global console warn override
-    const originalConsoleWarn = console.warn;
-    console.warn = function() {
-        // Call original console.warn
-        originalConsoleWarn.apply(console, arguments);
-        
-        // Log to server
-        const args = Array.from(arguments).map(arg => 
-            typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-        ).join(' ');
-        
-        logError(args, "warning");
-    };
-    
-    // Expose the logError function globally
-    window.logClientError = logError;
-    
-    // Log successful initialization
-    console.log("Error logger setup complete");
-})();
+});
+
+console.log("Error logger initialized");

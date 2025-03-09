@@ -20,7 +20,10 @@ document.addEventListener('DOMContentLoaded', function() {
   
   try {
     // Handle admin routes
-    if (path.includes('/admin')) {
+    if (path.includes('/admin-debug')) {
+      console.log("Admin debug path detected, redirecting to admin debug dashboard");
+      window.location.href = '/src/pages/AdminDashboardDebug.html';
+    } else if (path.includes('/admin')) {
       console.log("Admin path detected, redirecting to admin dashboard");
       window.location.href = '/src/pages/AdminDashboard.html';
     } else if (path === '/' || path === '') {
@@ -63,6 +66,8 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
           .then(response => {
             if (!response.ok) {
               console.error(`Script not found: ${src}`);
+            } else {
+              console.log(`Script found: ${src}`);
             }
           })
           .catch(error => {
@@ -75,3 +80,19 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
   // Run the check after a delay to ensure page has loaded
   setTimeout(checkScriptLoading, 1000);
 }
+
+// Debug info for the admin dashboard
+window.getDashboardDebugInfo = function() {
+  return {
+    url: window.location.href,
+    userAgent: navigator.userAgent,
+    loadedScripts: Array.from(document.getElementsByTagName('script'))
+      .filter(s => s.src)
+      .map(s => s.src),
+    templates: {
+      sidebarContent: document.getElementById('sidebar-content')?.children.length || 0,
+      bookingsSection: document.getElementById('bookingsSection')?.innerHTML.length || 0,
+      adminHeader: document.getElementById('admin-header')?.innerHTML.length || 0
+    }
+  };
+};

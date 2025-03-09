@@ -1,93 +1,162 @@
 
 /**
  * Admin Templates Loader
- * Loads HTML templates dynamically into the admin panel
+ * Loads templates for the admin dashboard
  */
-(function() {
+document.addEventListener('DOMContentLoaded', function() {
     console.log("Admin templates loader initialized");
     
-    // Function to load a template into a container
-    function loadTemplate(templateId, containerId) {
-        console.log(`Loading template ${templateId} into ${containerId}`);
+    // Track loading status
+    const loadingStatus = document.createElement('div');
+    loadingStatus.id = 'templates-loader-status';
+    loadingStatus.style.display = 'none';
+    document.body.appendChild(loadingStatus);
+    
+    // Template files to load
+    const templates = [
+        { id: 'sidebar-template-container', file: '/src/pages/templates/sidebar-template.html' },
+        { id: 'bookings-template-container', file: '/src/pages/templates/bookings-template.html' },
+        { id: 'passcodes-template-container', file: '/src/pages/templates/passcodes-template.html' },
+        { id: 'database-template-container', file: '/src/pages/templates/database-template.html' },
+        { id: 'room-setting-template-container', file: '/src/pages/templates/room-setting-template.html' },
+        { id: 'database-table-template-container', file: '/src/pages/templates/database-table-template.html' },
+        { id: 'admin-header-template-container', file: '/src/pages/templates/admin-header-template.html' },
+        { id: 'users-template-container', file: '/src/pages/templates/users-template.html' },
+        { id: 'settings-template-container', file: '/src/pages/templates/settings-template.html' },
+        { id: 'toast-template-container', file: '/src/pages/templates/toast-template.html' },
+        { id: 'email-templates-template-container', file: '/src/pages/templates/email-templates-template.html' },
+        { id: 'sms-templates-template-container', file: '/src/pages/templates/sms-templates-template.html' }
+    ];
+    
+    // Load status tracking
+    let loaded = 0;
+    let failed = 0;
+    
+    function updateStatus() {
+        const total = templates.length;
+        const complete = loaded + failed;
+        loadingStatus.textContent = `Templates: ${loaded}/${total} loaded, ${failed} failed`;
         
-        try {
-            // Get the template element
-            const template = document.getElementById(templateId);
-            if (!template) {
-                console.error(`Template not found: ${templateId}`);
-                if (window.logClientError) {
-                    window.logClientError(`Template not found: ${templateId}`, "error");
-                }
-                return false;
+        if (complete === total) {
+            console.log(`All templates processed. Loaded: ${loaded}, Failed: ${failed}`);
+            if (window.errorLogger) {
+                window.errorLogger.info(`All templates processed. Loaded: ${loaded}, Failed: ${failed}`);
             }
             
-            // Get the container element
-            const container = document.getElementById(containerId);
-            if (!container) {
-                console.error(`Container not found: ${containerId}`);
-                if (window.logClientError) {
-                    window.logClientError(`Container not found: ${containerId}`, "error");
-                }
-                return false;
+            // Trigger sidebar initialization if it exists
+            if (window.initializeSidebar) {
+                window.initializeSidebar();
             }
-            
-            // Clone the template content and add it to the container
-            const content = template.content.cloneNode(true);
-            container.innerHTML = '';
-            container.appendChild(content);
-            
-            console.log(`Successfully loaded template ${templateId} into ${containerId}`);
-            return true;
-        } catch (error) {
-            console.error(`Error loading template ${templateId} into ${containerId}:`, error);
-            if (window.logClientError) {
-                window.logClientError(`Error loading template: ${error.message}`, "error", {
-                    templateId,
-                    containerId,
-                    stack: error.stack
-                });
-            }
-            return false;
         }
     }
     
-    // Load all templates
-    function loadAllTemplates() {
-        console.log("Loading all admin templates");
-        
-        // Map of template IDs to container IDs
-        const templateMappings = {
-            'bookingsTemplate': 'bookingsSection',
-            'roomsTemplate': 'roomsSection',
-            'passcodesTemplate': 'passcodesSection',
-            'databaseTemplate': 'databaseSection',
-            'emailTemplatesTemplate': 'emailTemplatesSection',
-            'smsTemplatesTemplate': 'smsTemplatesSection'
-        };
-        
-        // Load each template
-        let loadedCount = 0;
-        for (const [templateId, containerId] of Object.entries(templateMappings)) {
-            if (loadTemplate(templateId, containerId)) {
-                loadedCount++;
+    // Load each template
+    templates.forEach(template => {
+        const container = document.getElementById(template.id);
+        if (!container) {
+            console.error(`Container not found: ${template.id}`);
+            if (window.errorLogger) {
+                window.errorLogger.error(`Template container not found: ${template.id}`);
             }
+            failed++;
+            updateStatus();
+            return;
         }
         
-        console.log(`Loaded ${loadedCount}/${Object.keys(templateMappings).length} templates`);
-        return loadedCount;
-    }
-    
-    // Expose functions globally
-    window.adminTemplates = {
-        loadTemplate,
-        loadAllTemplates
-    };
-    
-    // Initialize when DOM is loaded
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log("DOM loaded, initializing admin templates");
-        setTimeout(loadAllTemplates, 100); // Small delay to ensure templates are available
+        fetch(template.file)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(html => {
+                container.innerHTML = html;
+                
+                // Extract content from template and insert into the main section
+                const templateId = template.id.replace('-container', '');
+                const templateContent = container.querySelector('template')?.innerHTML;
+                
+                if (templateContent) {
+                    // For sidebar, put directly into sidebar-content
+                    if (templateId === 'sidebar-template') {
+                        const sidebarContent = document.getElementById('sidebar-content');
+                        if (sidebarContent) {
+                            sidebarContent.innerHTML = templateContent;
+                            console.log("Sidebar template loaded");
+                            if (window.errorLogger) {
+                                window.errorLogger.info("Sidebar template loaded");
+                            }
+                        } else {
+                            console.error("Sidebar content container not found");
+                            if (window.errorLogger) {
+                                window.errorLogger.error("Sidebar content container not found");
+                            }
+                        }
+                    } 
+                    // For admin header, put into admin-header
+                    else if (templateId === 'admin-header-template') {
+                        const adminHeader = document.getElementById('admin-header');
+                        if (adminHeader) {
+                            adminHeader.innerHTML = templateContent;
+                            console.log("Admin header template loaded");
+                            if (window.errorLogger) {
+                                window.errorLogger.info("Admin header template loaded");
+                            }
+                        } else {
+                            console.error("Admin header container not found");
+                            if (window.errorLogger) {
+                                window.errorLogger.error("Admin header container not found");
+                            }
+                        }
+                    }
+                    // For all other templates, put into their corresponding sections
+                    else {
+                        const sectionId = templateId.replace('-template', 'Section');
+                        const section = document.getElementById(sectionId);
+                        
+                        if (section) {
+                            section.innerHTML = templateContent;
+                            console.log(`${templateId} loaded into ${sectionId}`);
+                            if (window.errorLogger) {
+                                window.errorLogger.info(`${templateId} loaded into ${sectionId}`);
+                            }
+                        } else {
+                            console.error(`Section not found: ${sectionId}`);
+                            if (window.errorLogger) {
+                                window.errorLogger.error(`Section container not found: ${sectionId}`);
+                            }
+                        }
+                    }
+                } else {
+                    console.error(`No template content found in ${template.file}`);
+                    if (window.errorLogger) {
+                        window.errorLogger.error(`No template content found in ${template.file}`);
+                    }
+                    failed++;
+                    updateStatus();
+                    return;
+                }
+                
+                loaded++;
+                updateStatus();
+            })
+            .catch(error => {
+                console.error(`Failed to load template ${template.file}:`, error);
+                if (window.errorLogger) {
+                    window.errorLogger.error(`Failed to load template: ${template.file}`, {
+                        error: error.message,
+                        stack: error.stack
+                    });
+                }
+                
+                // If there's a global handler for template errors, call it
+                if (window.handleTemplateLoadError) {
+                    window.handleTemplateLoadError(template.id.replace('-container', ''), error);
+                }
+                
+                failed++;
+                updateStatus();
+            });
     });
-    
-    console.log("Admin templates loader setup complete");
-})();
+});

@@ -48,6 +48,11 @@ ErrorDocument 500 /src/pages/error.html
     AddType text/html .html
 </IfModule>
 
+# Force correct MIME types for JS files to prevent "Unexpected token '<'" errors
+<FilesMatch "\.js$">
+    ForceType application/javascript
+</FilesMatch>
+
 # Add proper caching headers for development (disable caching)
 <IfModule mod_headers.c>
     <FilesMatch "\.(js|css|html)$">

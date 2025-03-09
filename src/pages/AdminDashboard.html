@@ -8,6 +8,8 @@
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+  <!-- Load error logger first -->
+  <script src="/src/js/error-logger.js"></script>
 </head>
 <body class="min-h-screen bg-gradient-to-b from-blue-50 to-white">
   <!-- Debug Toolbar -->
@@ -86,7 +88,6 @@
   <div id="templates-container" style="display:none;">
     <div id="sidebar-template-container"></div>
     <div id="bookings-template-container"></div>
-    <div id="rooms-template-container"></div>
     <div id="passcodes-template-container"></div>
     <div id="database-template-container"></div>
     <div id="room-setting-template-container"></div>
@@ -95,6 +96,8 @@
     <div id="users-template-container"></div>
     <div id="settings-template-container"></div>
     <div id="toast-template-container"></div>
+    <div id="email-templates-template-container"></div>
+    <div id="sms-templates-template-container"></div>
   </div>
 
   <!-- Log container for viewing logs -->
@@ -104,23 +107,13 @@
   </div>
 
   <!-- Scripts -->
-  <script src="../js/error-logger.js"></script>
-  <script src="../js/admin-templates-loader.js"></script>
-  <script src="../js/admin-sidebar.js"></script>
-  <script src="../js/admin-bookings.js"></script>
-  <script src="../js/admin-rooms.js"></script>
-  <script src="../js/admin-passcodes.js"></script>
-  <script src="../js/admin-database.js"></script>
-  <script src="../js/admin-utils.js"></script>
+  <script src="/src/js/error-logger.js"></script>
+  <script src="/src/js/admin-templates-loader.js"></script>
+  <script src="/src/js/admin-sidebar.js"></script>
   
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       console.log("AdminDashboard.html loaded and DOMContentLoaded fired");
-      
-      // Log this event
-      if (window.errorLogger) {
-        window.errorLogger.info("AdminDashboard.html loaded and DOMContentLoaded fired");
-      }
       
       // Debug toolbar functionality
       const debugInfo = document.getElementById('debug-info');
@@ -141,7 +134,7 @@
       
       // Debug buttons
       document.getElementById('debug-refresh')?.addEventListener('click', () => {
-        if (window.errorLogger) window.errorLogger.info("Manual refresh triggered");
+        console.log("Manual refresh triggered");
         window.location.reload(true); // Force reload from server
       });
       
@@ -157,125 +150,28 @@
         }
       });
       
-      // Make initializeSidebar function global
-      window.initializeSidebar = function() {
-        console.log("Initializing sidebar functionality");
-        if (window.errorLogger) window.errorLogger.info("Initializing sidebar functionality");
-        
-        // Check if sidebar content exists
-        const sidebarContent = document.getElementById('sidebar-content');
-        if (!sidebarContent || sidebarContent.children.length === 0) {
-          console.error("Sidebar content not found or empty");
-          if (window.errorLogger) window.errorLogger.error("Sidebar content not found or empty", {
-            sidebarContentExists: !!sidebarContent,
-            childrenCount: sidebarContent ? sidebarContent.children.length : 0
-          });
-          return;
-        }
-        
-        // Get all sidebar section buttons
-        const sectionButtons = document.querySelectorAll('[data-section]');
-        console.log("Found section buttons:", sectionButtons.length);
-        if (window.errorLogger) window.errorLogger.info(`Found ${sectionButtons.length} section buttons`);
-        
-        if (sectionButtons.length === 0) {
-          console.error("No section buttons found with [data-section] attribute");
-          if (window.errorLogger) window.errorLogger.error("No section buttons found", {
-            sidebarHTML: sidebarContent.innerHTML
-          });
-        }
-        
-        // Add click event listeners to each button
-        sectionButtons.forEach(button => {
-          button.addEventListener('click', function() {
-            const sectionName = this.getAttribute('data-section');
-            console.log("Section button clicked:", sectionName);
-            if (window.errorLogger) window.errorLogger.info(`Section button clicked: ${sectionName}`);
-            
-            // Remove active class from all buttons
-            sectionButtons.forEach(btn => {
-              btn.classList.remove('bg-blue-100', 'text-blue-600');
-              btn.classList.add('hover:bg-gray-100');
-            });
-            
-            // Add active class to clicked button
-            this.classList.add('bg-blue-100', 'text-blue-600');
-            this.classList.remove('hover:bg-gray-100');
-            
-            // Hide all sections
-            document.querySelectorAll('.section-content').forEach(section => {
-              section.classList.add('hidden');
-            });
-            
-            // Show the selected section
-            const selectedSection = document.getElementById(sectionName + 'Section');
-            if (selectedSection) {
-              selectedSection.classList.remove('hidden');
-              console.log("Showing section:", sectionName);
-              if (window.errorLogger) window.errorLogger.info(`Showing section: ${sectionName}`);
-            } else {
-              console.error("Section not found:", sectionName + 'Section');
-              if (window.errorLogger) window.errorLogger.error(`Section not found: ${sectionName}Section`, {
-                availableSections: Array.from(document.querySelectorAll('.section-content')).map(el => el.id)
-              });
-            }
-          });
-        });
-        
-        // Toggle sidebar functionality
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const sidebar = document.getElementById('sidebar');
-        
-        if (sidebarToggle && sidebar) {
-          sidebarToggle.addEventListener('click', function() {
-            console.log("Sidebar toggle clicked");
-            if (window.errorLogger) window.errorLogger.info("Sidebar toggle clicked");
-            sidebar.classList.toggle('w-64');
-            sidebar.classList.toggle('w-0');
-          });
-        } else {
-          console.error("Sidebar toggle or sidebar element not found");
-          if (window.errorLogger) window.errorLogger.error("Sidebar toggle or sidebar element not found", {
-            sidebarToggleExists: !!sidebarToggle,
-            sidebarExists: !!sidebar
-          });
-        }
-      };
-      
       // Check if templates are loaded, and if not, wait for them
       function checkAndInitialize() {
         const sidebarContent = document.getElementById('sidebar-content');
         
         if (sidebarContent && sidebarContent.children.length > 0) {
           console.log("Sidebar content is loaded, initializing sidebar");
-          if (window.errorLogger) window.errorLogger.info("Sidebar content is loaded, initializing sidebar");
-          initializeSidebar();
+          if (window.initializeSidebar) {
+            window.initializeSidebar();
+          } else {
+            console.error("initializeSidebar function not found");
+          }
         } else {
           console.log("Waiting for sidebar content to load...");
-          if (window.errorLogger) window.errorLogger.info("Waiting for sidebar content to load...", {
-            sidebarContentExists: !!sidebarContent,
-            childrenCount: sidebarContent ? sidebarContent.children.length : 0,
-            templateContainerContents: document.getElementById('templates-container').innerHTML
-          });
           
           // Check template loading status
           const templateLoader = document.getElementById('templates-loader-status');
           if (templateLoader) {
-            if (window.errorLogger) window.errorLogger.info("Template loader status: " + templateLoader.textContent);
+            console.log("Template loader status: " + templateLoader.textContent);
           }
           
           setTimeout(checkAndInitialize, 100);
         }
-      }
-      
-      // Log page load details
-      if (window.errorLogger) {
-        window.errorLogger.info("Admin dashboard page load details", {
-          url: window.location.href,
-          templateContainerExists: !!document.getElementById('templates-container'),
-          sidebarContentExists: !!document.getElementById('sidebar-content'),
-          adminHeaderExists: !!document.getElementById('admin-header')
-        });
       }
       
       // Start checking for template loading
@@ -285,12 +181,6 @@
     // Add error handler for template loading
     window.handleTemplateLoadError = function(templateName, error) {
       console.error(`Failed to load template: ${templateName}`, error);
-      if (window.errorLogger) {
-        window.errorLogger.error(`Failed to load template: ${templateName}`, {
-          error: error.message || error,
-          stack: error.stack
-        });
-      }
       
       // Try to show the error in the UI
       const section = document.getElementById(templateName.replace('-template', '') + 'Section');
