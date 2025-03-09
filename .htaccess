@@ -8,6 +8,12 @@
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^admin$ /src/pages/AdminDashboard.html [L]
     RewriteRule ^admin/$ /src/pages/AdminDashboard.html [L]
+    
+    # For /admin-debug: Serve AdminDashboardDebug.html
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^admin-debug$ /src/pages/AdminDashboardDebug.html [L]
+    RewriteRule ^admin-debug/$ /src/pages/AdminDashboardDebug.html [L]
 
     # For the root URL: Serve HomePage.html
     RewriteCond %{REQUEST_FILENAME} !-f
@@ -33,4 +39,20 @@ ErrorDocument 500 /src/pages/error.html
 # Enable CORS if needed
 <IfModule mod_headers.c>
     Header set Access-Control-Allow-Origin "*"
+</IfModule>
+
+# Ensure JavaScript files have the correct MIME type
+<IfModule mod_mime.c>
+    AddType application/javascript .js
+    AddType text/css .css
+    AddType text/html .html
+</IfModule>
+
+# Add proper caching headers for development (disable caching)
+<IfModule mod_headers.c>
+    <FilesMatch "\.(js|css|html)$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "0"
+    </FilesMatch>
 </IfModule>

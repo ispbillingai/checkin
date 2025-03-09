@@ -9,7 +9,12 @@
     <meta name="author" content="Lovable" />
     <meta property="og:image" content="/og-image.png" />
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script type="module" src="/src/index.js"></script>
+    <!-- Load error logging first -->
+    <script src="/src/js/error-logger.js"></script>
+    <!-- Then load the main application script -->
+    <script src="/src/index.js"></script>
+    <!-- Debug tools for development -->
+    <script src="/src/js/debug.js"></script>
   </head>
 
   <body>
@@ -21,10 +26,18 @@
     <script>
       // Check if URL contains /admin and redirect appropriately
       document.addEventListener('DOMContentLoaded', function() {
+        console.log("index.html DOM loaded, checking for redirects");
+        
         const path = window.location.pathname;
+        console.log("Current path:", path);
+        
         if (path.includes('/admin')) {
+          console.log("Admin path detected, redirecting");
           window.location.href = '/src/pages/AdminDashboard.html';
         }
+        
+        // Log successful page load
+        console.log("index.html fully loaded");
       });
     </script>
   </body>

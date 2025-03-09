@@ -1,0 +1,206 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard Debug - Booking System</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+  
+  <!-- Error logger first -->
+  <script src="/src/js/error-logger.js"></script>
+  <!-- Debug utilities -->
+  <script src="/src/js/debug.js"></script>
+</head>
+<body class="min-h-screen bg-white">
+  <div class="p-8">
+    <h1 class="text-2xl font-bold mb-6">Admin Dashboard Debug Mode</h1>
+    
+    <div class="grid gap-6">
+      <!-- Resource Loading Test -->
+      <div class="border rounded-lg p-4">
+        <h2 class="text-lg font-medium mb-4">Resource Loading Test</h2>
+        <div class="space-y-2">
+          <button id="test-templates-loader" class="px-4 py-2 bg-blue-600 text-white rounded">
+            Test Templates Loader
+          </button>
+          <button id="test-sidebar" class="px-4 py-2 bg-blue-600 text-white rounded">
+            Test Sidebar Script
+          </button>
+          <button id="test-bookings" class="px-4 py-2 bg-blue-600 text-white rounded">
+            Test Bookings Script
+          </button>
+        </div>
+        <div class="mt-4 p-4 bg-gray-100 rounded overflow-auto h-40" id="test-results">
+          <div class="text-gray-500">Test results will appear here...</div>
+        </div>
+      </div>
+      
+      <!-- Template Test -->
+      <div class="border rounded-lg p-4">
+        <h2 class="text-lg font-medium mb-4">Template Test</h2>
+        <div class="space-y-2">
+          <button id="test-load-template" class="px-4 py-2 bg-green-600 text-white rounded">
+            Test Template Loading
+          </button>
+        </div>
+        <div class="mt-4 border rounded p-4" id="template-container">
+          Template will load here...
+        </div>
+      </div>
+      
+      <!-- Template Content Check -->
+      <div class="border rounded-lg p-4">
+        <h2 class="text-lg font-medium mb-4">Available Templates</h2>
+        <div id="template-list" class="space-y-2">
+          Loading templates...
+        </div>
+      </div>
+      
+      <!-- Environment Info -->
+      <div class="border rounded-lg p-4">
+        <h2 class="text-lg font-medium mb-4">Environment Information</h2>
+        <div id="env-info" class="space-y-1">
+          <div>URL: <span id="current-url"></span></div>
+          <div>Path: <span id="current-path"></span></div>
+          <div>User Agent: <span id="user-agent"></span></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="mt-6">
+      <a href="/src/pages/AdminDashboard.html" class="text-blue-600 hover:underline">
+        Return to Admin Dashboard
+      </a>
+    </div>
+  </div>
+  
+  <!-- Simple template for testing -->
+  <template id="test-template">
+    <div class="p-4 bg-green-100 rounded">
+      <h3 class="font-medium">Test Template Loaded Successfully!</h3>
+      <p class="text-gray-700">This is a test template that was loaded dynamically.</p>
+    </div>
+  </template>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log("AdminDashboardDebug loaded");
+      
+      // Set environment info
+      document.getElementById('current-url').textContent = window.location.href;
+      document.getElementById('current-path').textContent = window.location.pathname;
+      document.getElementById('user-agent').textContent = navigator.userAgent;
+      
+      // Test function for resources
+      function testResource(url, name) {
+        console.log(`Testing resource: ${name} (${url})`);
+        const results = document.getElementById('test-results');
+        const resultItem = document.createElement('div');
+        resultItem.className = 'py-1 border-b';
+        resultItem.innerHTML = `Testing ${name}... <span class="loading">⏳</span>`;
+        results.appendChild(resultItem);
+        
+        fetch(url)
+          .then(response => {
+            if (response.ok) {
+              resultItem.innerHTML = `${name}: <span class="text-green-600">✅ Loaded successfully</span>`;
+              return response.text();
+            } else {
+              resultItem.innerHTML = `${name}: <span class="text-red-600">❌ Failed (${response.status})</span>`;
+              throw new Error(`HTTP error ${response.status}`);
+            }
+          })
+          .then(text => {
+            console.log(`${name} content (first 100 chars):`, text.substring(0, 100));
+            
+            // Add detailed info for JavaScript files
+            if (url.endsWith('.js')) {
+              const detailItem = document.createElement('div');
+              detailItem.className = 'ml-4 text-xs text-gray-500';
+              detailItem.textContent = `First 100 chars: ${text.substring(0, 100).replace(/\n/g, '⏎')}`;
+              results.appendChild(detailItem);
+              
+              // Test if it's valid JS by trying to parse it
+              try {
+                Function(`"use strict"; ${text}`);
+                const validItem = document.createElement('div');
+                validItem.className = 'ml-4 text-xs text-green-600';
+                validItem.textContent = 'Syntax: Valid JavaScript';
+                results.appendChild(validItem);
+              } catch (e) {
+                const invalidItem = document.createElement('div');
+                invalidItem.className = 'ml-4 text-xs text-red-600';
+                invalidItem.textContent = `Syntax Error: ${e.message}`;
+                results.appendChild(invalidItem);
+              }
+            }
+          })
+          .catch(error => {
+            console.error(`Error testing ${name}:`, error);
+            const errorItem = document.createElement('div');
+            errorItem.className = 'ml-4 text-xs text-red-600';
+            errorItem.textContent = `Error: ${error.message}`;
+            results.appendChild(errorItem);
+          });
+      }
+      
+      // Button handlers
+      document.getElementById('test-templates-loader').addEventListener('click', function() {
+        document.getElementById('test-results').innerHTML = '';
+        testResource('/src/js/admin-templates-loader.js', 'Templates Loader Script');
+      });
+      
+      document.getElementById('test-sidebar').addEventListener('click', function() {
+        document.getElementById('test-results').innerHTML = '';
+        testResource('/src/js/admin-sidebar.js', 'Sidebar Script');
+      });
+      
+      document.getElementById('test-bookings').addEventListener('click', function() {
+        document.getElementById('test-results').innerHTML = '';
+        testResource('/src/js/admin-bookings.js', 'Bookings Script');
+      });
+      
+      document.getElementById('test-load-template').addEventListener('click', function() {
+        const templateContainer = document.getElementById('template-container');
+        const template = document.getElementById('test-template');
+        
+        if (template) {
+          templateContainer.innerHTML = '';
+          const content = template.content.cloneNode(true);
+          templateContainer.appendChild(content);
+        } else {
+          templateContainer.innerHTML = '<div class="text-red-600">Template not found!</div>';
+        }
+      });
+      
+      // Check for templates
+      function checkTemplates() {
+        const templateList = document.getElementById('template-list');
+        templateList.innerHTML = '';
+        
+        const templates = document.querySelectorAll('template');
+        
+        if (templates.length === 0) {
+          templateList.innerHTML = '<div class="text-red-600">No templates found in the document!</div>';
+        } else {
+          templates.forEach(template => {
+            const templateItem = document.createElement('div');
+            templateItem.className = 'border p-2 rounded';
+            templateItem.innerHTML = `
+              <div class="font-medium">${template.id || 'unnamed template'}</div>
+              <div class="text-xs text-gray-500">Content nodes: ${template.content.childNodes.length}</div>
+            `;
+            templateList.appendChild(templateItem);
+          });
+        }
+      }
+      
+      // Run template check
+      checkTemplates();
+    });
+  </script>
+</body>
+</html>
