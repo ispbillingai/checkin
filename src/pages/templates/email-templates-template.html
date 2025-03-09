@@ -1,0 +1,58 @@
+
+<div class="backdrop-blur-sm bg-white/90 border shadow-lg rounded-lg overflow-hidden mb-8">
+  <div class="bg-blue-50 border-b p-6">
+    <h2 class="text-xl font-semibold">Email Templates</h2>
+    <p class="text-sm text-gray-500 mt-1">Manage email notification templates</p>
+  </div>
+  <div class="p-6">
+    <div class="space-y-6">
+      <div class="border rounded-lg overflow-hidden">
+        <div class="bg-gray-50 px-4 py-3 border-b">
+          <h3 class="text-base font-medium">Booking Confirmation Email</h3>
+        </div>
+        <div class="p-4">
+          <div class="space-y-4">
+            <div>
+              <label for="emailSubject" class="block text-sm font-medium text-gray-700">Email Subject</label>
+              <input type="text" id="emailSubject" value="Your Room Booking Confirmation" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+              <label for="emailTemplate" class="block text-sm font-medium text-gray-700">Email Template</label>
+              <div class="mt-1 border border-gray-300 rounded-md overflow-hidden">
+                <div class="bg-gray-50 px-3 py-2 border-b flex space-x-2">
+                  <button class="px-2 py-1 border border-gray-300 rounded hover:bg-white" title="Bold">B</button>
+                  <button class="px-2 py-1 border border-gray-300 rounded hover:bg-white" title="Italic"><i>I</i></button>
+                  <button class="px-2 py-1 border border-gray-300 rounded hover:bg-white" title="Underline"><u>U</u></button>
+                  <div class="border-l border-gray-300 mx-1"></div>
+                  <button class="px-2 py-1 border border-gray-300 rounded hover:bg-white" title="Insert Variable">+Variable</button>
+                </div>
+                <textarea id="emailTemplate" rows="10" class="block w-full px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500" 
+                >Dear {guest_name},
+
+Thank you for your booking at our facility.
+
+Booking Details:
+- Room: {room_name}
+- Check-in: {check_in_date} at {check_in_time}
+- Check-out: {check_out_date} at {check_out_time}
+
+Your access code is: {access_code}
+
+Please use this code to access your room during your stay.
+
+If you have any questions, please don't hesitate to contact us.
+
+Best regards,
+The Booking Team</textarea>
+              </div>
+              <p class="mt-1 text-sm text-gray-500">Available variables: {guest_name}, {room_name}, {check_in_date}, {check_in_time}, {check_out_date}, {check_out_time}, {access_code}</p>
+            </div>
+          </div>
+          <div class="mt-4 flex justify-end">
+            <button id="saveEmailTemplate" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save Template</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -19,117 +19,57 @@
 
     <!-- Main content -->
     <div class="flex-1">
-      <div class="p-4 md:p-8">
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-8">
-          <div class="flex items-center gap-2">
-            <button id="sidebarToggle" class="p-2 rounded-md hover:bg-gray-100">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            <h1 class="text-2xl font-medium">Admin Dashboard</h1>
-          </div>
-          <a href="/" class="flex items-center gap-1 px-3 py-2 rounded-md text-gray-500 hover:bg-gray-100">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Sign Out
-          </a>
+      <div id="admin-header"></div>
+      
+      <!-- Content sections -->
+      <div class="max-w-7xl mx-auto">
+        <!-- Bookings section -->
+        <div id="bookingsSection" class="section-content">
+          <!-- Content will be loaded here -->
         </div>
         
-        <!-- Content sections -->
-        <div class="max-w-7xl mx-auto">
-          <!-- Bookings section -->
-          <div id="bookingsSection" class="section-content">
-            <!-- Content will be loaded here -->
-          </div>
-          
-          <!-- Rooms section (hidden by default) -->
-          <div id="roomsSection" class="section-content hidden">
-            <!-- Content will be loaded here -->
-          </div>
-          
-          <!-- Passcodes section (hidden by default) -->
-          <div id="passcodesSection" class="section-content hidden">
-            <!-- Content will be loaded here -->
-          </div>
-          
-          <!-- Database section (hidden by default) -->
-          <div id="databaseSection" class="section-content hidden">
-            <!-- Content will be loaded here -->
-          </div>
-          
-          <!-- Users section (hidden by default) -->
-          <div id="usersSection" class="section-content hidden">
-            <!-- Users content will be loaded here -->
-            <div class="backdrop-blur-sm bg-white/90 border shadow-lg rounded-lg overflow-hidden mb-8">
-              <div class="bg-blue-50 border-b p-6">
-                <h2 class="text-xl font-semibold">User Management</h2>
-                <p class="text-sm text-gray-500 mt-1">Add, edit, or remove users from the system</p>
-              </div>
-              <div class="p-6">
-                <p>User management functionality coming soon.</p>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Settings section (hidden by default) -->
-          <div id="settingsSection" class="section-content hidden">
-            <!-- Settings content will be loaded here -->
-            <div class="backdrop-blur-sm bg-white/90 border shadow-lg rounded-lg overflow-hidden mb-8">
-              <div class="bg-blue-50 border-b p-6">
-                <h2 class="text-xl font-semibold">System Settings</h2>
-                <p class="text-sm text-gray-500 mt-1">Configure system-wide settings and preferences</p>
-              </div>
-              <div class="p-6">
-                <p>Settings functionality coming soon.</p>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Email Templates section (hidden by default) -->
-          <div id="emailTemplatesSection" class="section-content hidden">
-            <div class="backdrop-blur-sm bg-white/90 border shadow-lg rounded-lg overflow-hidden mb-8">
-              <div class="bg-blue-50 border-b p-6">
-                <h2 class="text-xl font-semibold">Email Templates</h2>
-                <p class="text-sm text-gray-500 mt-1">Manage email notification templates</p>
-              </div>
-              <div class="p-6">
-                <p>Email template management coming soon.</p>
-              </div>
-            </div>
-          </div>
-          
-          <!-- SMS Templates section (hidden by default) -->
-          <div id="smsTemplatesSection" class="section-content hidden">
-            <div class="backdrop-blur-sm bg-white/90 border shadow-lg rounded-lg overflow-hidden mb-8">
-              <div class="bg-blue-50 border-b p-6">
-                <h2 class="text-xl font-semibold">SMS Templates</h2>
-                <p class="text-sm text-gray-500 mt-1">Manage SMS notification templates</p>
-              </div>
-              <div class="p-6">
-                <p>SMS template management coming soon.</p>
-              </div>
-            </div>
-          </div>
+        <!-- Rooms section (hidden by default) -->
+        <div id="roomsSection" class="section-content hidden">
+          <!-- Content will be loaded here -->
+        </div>
+        
+        <!-- Passcodes section (hidden by default) -->
+        <div id="passcodesSection" class="section-content hidden">
+          <!-- Content will be loaded here -->
+        </div>
+        
+        <!-- Database section (hidden by default) -->
+        <div id="databaseSection" class="section-content hidden">
+          <!-- Content will be loaded here -->
+        </div>
+        
+        <!-- Users section (hidden by default) -->
+        <div id="usersSection" class="section-content hidden">
+          <!-- Users content will be loaded here -->
+        </div>
+        
+        <!-- Settings section (hidden by default) -->
+        <div id="settingsSection" class="section-content hidden">
+          <!-- Settings content will be loaded here -->
+        </div>
+        
+        <!-- Email Templates section (hidden by default) -->
+        <div id="emailTemplatesSection" class="section-content hidden">
+          <!-- Email Templates content will be loaded here -->
+        </div>
+        
+        <!-- SMS Templates section (hidden by default) -->
+        <div id="smsTemplatesSection" class="section-content hidden">
+          <!-- SMS Templates content will be loaded here -->
         </div>
       </div>
     </div>
   </div>
 
   <!-- Toast message for notifications -->
-  <div id="toast" class="fixed top-4 right-4 z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
-    <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 flex items-start max-w-xs">
-      <div id="toastIcon" class="flex-shrink-0 w-5 h-5 mr-3"></div>
-      <div>
-        <p id="toastTitle" class="font-medium text-gray-900 text-sm"></p>
-        <p id="toastMessage" class="text-sm text-gray-500 mt-1"></p>
-      </div>
-    </div>
-  </div>
+  <div id="toast-container"></div>
 
-  <!-- Include template files -->
+  <!-- Templates container for loading components -->
   <div id="templates-container" style="display:none;">
     <div id="sidebar-template-container"></div>
     <div id="bookings-template-container"></div>
@@ -138,6 +78,10 @@
     <div id="database-template-container"></div>
     <div id="room-setting-template-container"></div>
     <div id="database-table-template-container"></div>
+    <div id="admin-header-template-container"></div>
+    <div id="users-template-container"></div>
+    <div id="settings-template-container"></div>
+    <div id="toast-template-container"></div>
   </div>
 
   <!-- Scripts -->
@@ -149,13 +93,12 @@
   <script src="../js/admin-database.js"></script>
   <script src="../js/admin-utils.js"></script>
   
-  <!-- Custom script to ensure sidebar functionality -->
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       console.log("AdminDashboard.html loaded and DOMContentLoaded fired");
       
-      // Function to handle sidebar section clicks
-      function initializeSidebar() {
+      // Make initializeSidebar function global
+      window.initializeSidebar = function() {
         console.log("Initializing sidebar functionality");
         
         // Get all sidebar section buttons
@@ -205,10 +148,7 @@
             sidebar.classList.toggle('w-0');
           });
         }
-      }
-      
-      // Make initializeSidebar function global
-      window.initializeSidebar = initializeSidebar;
+      };
       
       // Check if templates are loaded, and if not, wait for them
       function checkAndInitialize() {
