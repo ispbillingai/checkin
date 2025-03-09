@@ -75,9 +75,14 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
             }
         }
         
-        // Get active bookings count using a safe query that doesn't reference arrival_date
-        // This avoids the "Unknown column 'arrival_date'" error
+        // Get active bookings count with correct column names
         $active_bookings = 0;
+        $bookings_stmt = $conn->prepare("SELECT COUNT(*) as count FROM bookings WHERE status = 'active'");
+        
+        if ($bookings_stmt && $bookings_stmt->execute()) {
+            $bookings_result = $bookings_stmt->get_result();
+            $active_bookings = $bookings_result->fetch_assoc()['count'];
+        }
         
         // If on localhost, provide a demo count
         if ($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1') {
