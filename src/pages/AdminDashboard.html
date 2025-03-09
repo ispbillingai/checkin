@@ -20,6 +20,7 @@
         <button id="debug-refresh" class="px-2 py-1 bg-red-700 rounded text-xs">Force Refresh</button>
         <button id="debug-download-logs" class="px-2 py-1 bg-red-700 rounded text-xs">Download Logs</button>
         <button id="debug-toggle-logs" class="px-2 py-1 bg-red-700 rounded text-xs">Show/Hide Logs</button>
+        <button id="debug-init-sidebar" class="px-2 py-1 bg-red-700 rounded text-xs">Force Init Sidebar</button>
       </div>
     </div>
     <div id="debug-info" class="mt-1 text-xs"></div>
@@ -123,7 +124,8 @@
             URL: ${window.location.href} | 
             Time: ${new Date().toLocaleTimeString()} | 
             Templates Loaded: ${document.getElementById('sidebar-content').children.length > 0 ? 'Yes' : 'No'} |
-            Active Section: ${document.querySelector('.section-content:not(.hidden)')?.id || 'None'}
+            Active Section: ${document.querySelector('.section-content:not(.hidden)')?.id || 'None'} |
+            Sidebar Initialized: ${window.sidebarInitialized ? 'Yes' : 'No'}
           `;
         }
       };
@@ -150,6 +152,15 @@
         }
       });
       
+      document.getElementById('debug-init-sidebar')?.addEventListener('click', () => {
+        console.log("Manual sidebar initialization triggered");
+        if (window.initializeSidebar) {
+          window.initializeSidebar();
+        } else {
+          console.error("initializeSidebar function not found");
+        }
+      });
+      
       // Verify user authentication
       fetch('/api/verify_access.php')
         .then(response => response.json())
@@ -168,80 +179,7 @@
           // Redirect to login on error
           window.location.href = '/src/pages/index.html';
         });
-      
-      // Modified check and initialize function with timeout
-      let attemptCount = 0;
-      const MAX_ATTEMPTS = 20; // Reasonable limit to prevent infinite loop
-      
-      function checkAndInitialize() {
-        const sidebarContent = document.getElementById('sidebar-content');
-        attemptCount++;
-        
-        if (sidebarContent && sidebarContent.children.length > 0) {
-          console.log("Sidebar content is loaded, initializing sidebar");
-          if (window.initializeSidebar) {
-            window.initializeSidebar();
-          } else {
-            console.error("initializeSidebar function not found");
-          }
-          return true;
-        } else {
-          console.log(`Waiting for sidebar content to load... (Attempt ${attemptCount}/${MAX_ATTEMPTS})`);
-          
-          // Check if all templates are loaded
-          const templateStatus = document.getElementById('templates-loader-status');
-          if (templateStatus) {
-            console.log("Template loader status: " + templateStatus.textContent);
-          }
-          
-          if (attemptCount >= MAX_ATTEMPTS) {
-            console.error("Maximum attempts reached. Falling back to manual initialization.");
-            
-            // Force initialization even if sidebar content is not loaded
-            if (window.initializeSidebar) {
-              window.initializeSidebar();
-            }
-            
-            // Show error message in sidebar
-            if (sidebarContent) {
-              sidebarContent.innerHTML = `
-                <div class="p-4 text-red-600 font-medium">
-                  <p>Failed to load sidebar content.</p>
-                  <button class="mt-2 px-3 py-1 bg-red-100 rounded text-sm" onclick="window.location.reload()">
-                    Retry
-                  </button>
-                </div>
-              `;
-            }
-            return true;
-          }
-          
-          // Try again in 500ms
-          setTimeout(checkAndInitialize, 500);
-          return false;
-        }
-      }
-      
-      // Start checking for template loading
-      checkAndInitialize();
     });
-    
-    // Add error handler for template loading
-    window.handleTemplateLoadError = function(templateName, error) {
-      console.error(`Failed to load template: ${templateName}`, error);
-      
-      // Try to show the error in the UI
-      const section = document.getElementById(templateName.replace('-template', '') + 'Section');
-      if (section) {
-        section.innerHTML = `
-          <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 m-4">
-            <p class="font-bold">Template Load Error</p>
-            <p>Failed to load template: ${templateName}</p>
-            <p class="text-sm mt-2">${error.message || error}</p>
-          </div>
-        `;
-      }
-    };
   </script>
 </body>
 </html>
