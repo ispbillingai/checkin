@@ -86,11 +86,64 @@
         <p class="text-gray-500">Loading bookings...</p>
       </div>
     </div>
+    
+    <!-- Debug Panel -->
+    <div id="debugPanel" class="mt-8 p-4 bg-gray-100 rounded-lg border border-gray-300 hidden">
+      <h3 class="text-md font-medium mb-2 flex items-center justify-between">
+        Debug Information
+        <button id="clearDebugBtn" class="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded">Clear</button>
+      </h3>
+      <div id="debugContent" class="text-xs font-mono bg-gray-800 text-green-400 p-3 rounded overflow-auto max-h-40">
+        <!-- Debug logs will appear here -->
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+  // Debug functionality
+  const debugPanel = document.getElementById('debugPanel');
+  const debugContent = document.getElementById('debugContent');
+  const clearDebugBtn = document.getElementById('clearDebugBtn');
+  
+  // Show debug panel with keyboard shortcut (Ctrl+Shift+D)
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+      debugPanel.classList.toggle('hidden');
+      e.preventDefault();
+    }
+  });
+  
+  // Clear debug logs
+  clearDebugBtn.addEventListener('click', function() {
+    debugContent.innerHTML = '';
+  });
+  
+  // Debug log function that only logs to our debug panel, not to console
+  function debugLog(message, type = 'info') {
+    const timestamp = new Date().toLocaleTimeString();
+    const logElement = document.createElement('div');
+    logElement.className = 'py-1';
+    
+    // Set color based on type
+    let color = 'text-green-400'; // Default for info
+    if (type === 'error') color = 'text-red-400';
+    if (type === 'warn') color = 'text-yellow-400';
+    
+    logElement.innerHTML = `<span class="text-gray-500">[${timestamp}]</span> <span class="${color}">${message}</span>`;
+    debugContent.appendChild(logElement);
+    debugContent.scrollTop = debugContent.scrollHeight; // Auto-scroll to bottom
+  }
+  
+  // Override console methods to add to debug panel but not log to console
+  const originalConsoleError = console.error;
+  console.error = function() {
+    const args = Array.from(arguments).join(' ');
+    debugLog(args, 'error');
+    // We don't call the original console.error anymore
+  };
+  
   // Cache DOM elements
   const bookingDateInput = document.getElementById('booking-date');
   const roomFilterSelect = document.getElementById('room-filter');
@@ -103,10 +156,13 @@ document.addEventListener('DOMContentLoaded', function() {
   const loadingState = document.getElementById('loadingState');
   const refreshIcon = document.getElementById('refreshIcon');
   
+  debugLog('Bookings template script initialized');
+  
   // Set default date to today
   const today = new Date();
   const formattedDate = today.toISOString().split('T')[0];
   bookingDateInput.value = formattedDate;
+  debugLog(`Set default date to: ${formattedDate}`);
   
   // Format date for display
   function formatDate(dateString) {
@@ -122,12 +178,20 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Load rooms for filter
   function loadRooms() {
+    debugLog('Loading rooms for filter...');
     fetch('/api/get_all_rooms.php')
-      .then(response => response.json())
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error ${response.status}`);
+        }
+        return response.json();
+      })
       .then(data => {
         if (data.success) {
           const rooms = data.rooms;
           roomFilterSelect.innerHTML = '<option value="all">All Rooms</option>';
+          debugLog(`Loaded ${rooms.length} rooms`);
+          
           rooms.forEach(room => {
             const option = document.createElement('option');
             option.value = room.id;
@@ -135,11 +199,11 @@ document.addEventListener('DOMContentLoaded', function() {
             roomFilterSelect.appendChild(option);
           });
         } else {
-          console.error('Error loading rooms:', data.message);
+          throw new Error(data.message || 'Failed to load rooms');
         }
       })
       .catch(error => {
-        console.error('Error fetching rooms:', error);
+        debugLog(`Error loading rooms: ${error.message}`, 'error');
       });
   }
   
@@ -158,35 +222,42 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Construct URL with query parameters
     const url = `/api/get_bookings.php?date=${date}${roomId !== 'all' ? `&room=${roomId}` : ''}`;
-    console.log("Fetching bookings with URL:", url);
+    debugLog(`Fetching bookings from: ${url}`);
     
     fetch(url)
       .then(response => {
-        console.log("Response status:", response.status);
+        if (!response.ok) {
+          throw new Error(`HTTP error ${response.status}`);
+        }
+        debugLog(`Response status: ${response.status}`);
         return response.json();
       })
       .then(data => {
-        console.log("Booking data received:", data);
-        
         // Stop refresh icon animation
         refreshIcon.classList.remove('animate-spin');
         
         if (data.success) {
           const bookings = data.bookings;
+          debugLog(`Received ${bookings.length} bookings`);
           
           if (bookings.length === 0) {
             // Show empty state
             bookingsContainer.classList.add('hidden');
             loadingState.classList.add('hidden');
             emptyState.classList.remove('hidden');
+            debugLog('No bookings found, showing empty state');
           } else {
             // Filter bookings if search term is provided
             const searchTerm = bookingSearchInput.value.toLowerCase();
-            const filteredBookings = searchTerm ? 
-              bookings.filter(booking => 
+            let filteredBookings = bookings;
+            
+            if (searchTerm) {
+              filteredBookings = bookings.filter(booking => 
                 booking.guestName.toLowerCase().includes(searchTerm) || 
                 booking.accessCode.toLowerCase().includes(searchTerm)
-              ) : bookings;
+              );
+              debugLog(`Filter applied: "${searchTerm}" - ${filteredBookings.length} bookings match`);
+            }
             
             // Render bookings
             renderBookings(filteredBookings);
@@ -197,15 +268,11 @@ document.addEventListener('DOMContentLoaded', function() {
             bookingsContainer.classList.remove('hidden');
           }
         } else {
-          console.error('Error loading bookings:', data.message);
-          // Show empty state with error
-          bookingsContainer.classList.add('hidden');
-          loadingState.classList.add('hidden');
-          emptyState.classList.remove('hidden');
+          throw new Error(data.message || 'Failed to load bookings');
         }
       })
       .catch(error => {
-        console.error('Error fetching bookings:', error);
+        debugLog(`Error fetching bookings: ${error.message}`, 'error');
         
         // Stop refresh icon animation
         refreshIcon.classList.remove('animate-spin');
@@ -220,6 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Render bookings to table
   function renderBookings(bookings) {
     bookingsTableBody.innerHTML = '';
+    debugLog(`Rendering ${bookings.length} bookings to table`);
     
     bookings.forEach(booking => {
       const row = document.createElement('tr');
@@ -260,7 +328,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.view-booking').forEach(button => {
       button.addEventListener('click', function() {
         const bookingId = this.getAttribute('data-booking-id');
-        // Handle view booking action
+        debugLog(`View booking clicked: ID ${bookingId}`);
         alert(`View booking: ${bookingId}`);
       });
     });
@@ -268,8 +336,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.cancel-booking').forEach(button => {
       button.addEventListener('click', function() {
         const bookingId = this.getAttribute('data-booking-id');
-        // Handle cancel booking action
+        debugLog(`Cancel booking clicked: ID ${bookingId}`);
         if (confirm(`Are you sure you want to cancel booking ${bookingId}?`)) {
+          debugLog(`Confirming cancellation of booking ID ${bookingId}`);
           alert(`Booking ${bookingId} cancelled`);
         }
       });
@@ -277,12 +346,28 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // Event Listeners
-  bookingDateInput.addEventListener('change', loadBookings);
-  roomFilterSelect.addEventListener('change', loadBookings);
-  refreshButton.addEventListener('click', loadBookings);
-  refreshEmptyButton.addEventListener('click', loadBookings);
+  bookingDateInput.addEventListener('change', function() {
+    debugLog(`Date filter changed to: ${this.value}`);
+    loadBookings();
+  });
+  
+  roomFilterSelect.addEventListener('change', function() {
+    debugLog(`Room filter changed to: ${this.options[this.selectedIndex].text} (ID: ${this.value})`);
+    loadBookings();
+  });
+  
+  refreshButton.addEventListener('click', function() {
+    debugLog('Manual refresh triggered');
+    loadBookings();
+  });
+  
+  refreshEmptyButton.addEventListener('click', function() {
+    debugLog('Empty state refresh triggered');
+    loadBookings();
+  });
   
   bookingSearchInput.addEventListener('input', function() {
+    debugLog(`Search term changed to: "${this.value}"`);
     // If we have already loaded bookings, just filter them
     if (!bookingsContainer.classList.contains('hidden')) {
       loadBookings();
@@ -290,6 +375,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   
   // Initial load
+  debugLog('Performing initial data load');
   loadRooms();
   loadBookings();
 });
