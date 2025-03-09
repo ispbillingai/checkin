@@ -2,9 +2,95 @@
 <div class="backdrop-blur-sm bg-white/90 border shadow-lg rounded-lg overflow-hidden mb-8">
   <div class="bg-blue-50 border-b p-6">
     <h2 class="text-xl font-semibold">System Settings</h2>
-    <p class="text-sm text-gray-500 mt-1">Configure system-wide settings and preferences</p>
+    <p class="text-sm text-gray-500 mt-1">
+      Configure global system settings
+    </p>
   </div>
   <div class="p-6">
-    <p>Settings functionality coming soon.</p>
+    <div class="space-y-6">
+      <div class="grid gap-4">
+        <h3 class="text-lg font-medium">General Settings</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label for="site-name" class="block text-sm font-medium text-gray-700">Site Name</label>
+            <input type="text" id="site-name" value="Room Booking System" class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div class="space-y-2">
+            <label for="site-desc" class="block text-sm font-medium text-gray-700">Site Description</label>
+            <input type="text" id="site-desc" value="Room booking and access management system" class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+        </div>
+      </div>
+      
+      <div class="grid gap-4">
+        <h3 class="text-lg font-medium">Contact Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label for="contact-email" class="block text-sm font-medium text-gray-700">Contact Email</label>
+            <input type="email" id="contact-email" value="contact@example.com" class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div class="space-y-2">
+            <label for="contact-phone" class="block text-sm font-medium text-gray-700">Contact Phone</label>
+            <input type="tel" id="contact-phone" value="(555) 123-4567" class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+        </div>
+      </div>
+      
+      <div class="grid gap-4">
+        <h3 class="text-lg font-medium">Time & Date Settings</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label for="timezone" class="block text-sm font-medium text-gray-700">Timezone</label>
+            <select id="timezone" class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="UTC">UTC</option>
+              <option value="America/New_York" selected>Eastern Time (ET)</option>
+              <option value="America/Chicago">Central Time (CT)</option>
+              <option value="America/Denver">Mountain Time (MT)</option>
+              <option value="America/Los_Angeles">Pacific Time (PT)</option>
+              <option value="Europe/London">London</option>
+            </select>
+          </div>
+          <div class="space-y-2">
+            <label for="date-format" class="block text-sm font-medium text-gray-700">Date Format</label>
+            <select id="date-format" class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="MM/DD/YYYY" selected>MM/DD/YYYY</option>
+              <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+              <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      <div class="grid gap-4">
+        <h3 class="text-lg font-medium">Email Configuration</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="space-y-2">
+            <label for="smtp-host" class="block text-sm font-medium text-gray-700">SMTP Host</label>
+            <input type="text" id="smtp-host" value="smtp.example.com" class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div class="space-y-2">
+            <label for="smtp-port" class="block text-sm font-medium text-gray-700">SMTP Port</label>
+            <input type="number" id="smtp-port" value="587" class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div class="space-y-2">
+            <label for="smtp-user" class="block text-sm font-medium text-gray-700">SMTP Username</label>
+            <input type="text" id="smtp-user" value="noreply@example.com" class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div class="space-y-2">
+            <label for="smtp-pass" class="block text-sm font-medium text-gray-700">SMTP Password</label>
+            <input type="password" id="smtp-pass" value="********" class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex justify-end">
+        <button id="saveSettings" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          Save Settings
+        </button>
+      </div>
+    </div>
   </div>
 </div>

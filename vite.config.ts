@@ -27,14 +27,14 @@ export default defineConfig({
         bookingsTemplate: path.resolve(__dirname, 'src/pages/templates/bookings-template.html'),
         passcodesTemplate: path.resolve(__dirname, 'src/pages/templates/passcodes-template.html'),
         databaseTemplate: path.resolve(__dirname, 'src/pages/templates/database-template.html'),
-        roomSettingTemplate: path.resolve(__dirname, 'src/pages/templates/room-setting-template.html'),
         databaseTableTemplate: path.resolve(__dirname, 'src/pages/templates/database-table-template.html'),
         adminHeaderTemplate: path.resolve(__dirname, 'src/pages/templates/admin-header-template.html'),
+        emailTemplatesTemplate: path.resolve(__dirname, 'src/pages/templates/email-templates-template.html'),
+        smsTemplatesTemplate: path.resolve(__dirname, 'src/pages/templates/sms-templates-template.html'),
+        roomSettingTemplate: path.resolve(__dirname, 'src/pages/templates/room-setting-template.html'),
         usersTemplate: path.resolve(__dirname, 'src/pages/templates/users-template.html'),
         settingsTemplate: path.resolve(__dirname, 'src/pages/templates/settings-template.html'),
-        toastTemplate: path.resolve(__dirname, 'src/pages/templates/toast-template.html'),
-        emailTemplatesTemplate: path.resolve(__dirname, 'src/pages/templates/email-templates-template.html'),
-        smsTemplatesTemplate: path.resolve(__dirname, 'src/pages/templates/sms-templates-template.html')
+        toastTemplate: path.resolve(__dirname, 'src/pages/templates/toast-template.html')
       }
     }
   }

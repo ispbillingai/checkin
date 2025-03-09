@@ -53,6 +53,11 @@ ErrorDocument 500 /src/pages/error.html
     ForceType application/javascript
 </FilesMatch>
 
+# Force correct MIME types for HTML template files
+<FilesMatch "\.html$">
+    ForceType text/html
+</FilesMatch>
+
 # Add proper caching headers for development (disable caching)
 <IfModule mod_headers.c>
     <FilesMatch "\.(js|css|html)$">
