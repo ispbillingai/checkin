@@ -25,8 +25,13 @@ error_log("POST data: " . json_encode($_POST));
 
 // Handle POST request for room management
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Get operation mode (create, update, delete)
+    // Get operation mode (create, update, delete) - check both mode and action fields
     $mode = isset($_POST['mode']) ? $_POST['mode'] : '';
+    
+    // If mode is empty, try to get it from 'action' parameter
+    if (empty($mode) && isset($_POST['action'])) {
+        $mode = $_POST['action'];
+    }
     
     // Log request data for debugging
     error_log("manage_rooms.php - Request received with mode: " . $mode);
@@ -45,7 +50,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if ($mode == 'create') {
         // Create new room
         // Validate required fields
-        if (!isset($_POST['roomIdInput']) || !isset($_POST['roomName'])) {
+        if ((!isset($_POST['roomIdInput']) && !isset($_POST['id'])) || (!isset($_POST['roomName']) && !isset($_POST['name']))) {
             echo json_encode([
                 'success' => false,
                 'message' => 'Room ID and Name are required'
@@ -53,11 +58,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit;
         }
         
-        $room_id = trim($_POST['roomIdInput']);
-        $room_name = trim($_POST['roomName']);
-        $description = isset($_POST['roomDescription']) ? trim($_POST['roomDescription']) : '';
-        $fixed_passcode = isset($_POST['fixedPasscode']) ? trim($_POST['fixedPasscode']) : '';
-        $reset_hours = isset($_POST['resetHours']) ? intval($_POST['resetHours']) : 2;
+        // Get room ID from either roomIdInput or id field
+        $room_id = isset($_POST['roomIdInput']) ? trim($_POST['roomIdInput']) : trim($_POST['id']);
+        
+        // Get other fields with fallbacks
+        $room_name = isset($_POST['roomName']) ? trim($_POST['roomName']) : trim($_POST['name']);
+        $description = isset($_POST['roomDescription']) ? trim($_POST['roomDescription']) : 
+                      (isset($_POST['description']) ? trim($_POST['description']) : '');
+        $fixed_passcode = isset($_POST['fixedPasscode']) ? trim($_POST['fixedPasscode']) : 
+                         (isset($_POST['fixed_passcode']) ? trim($_POST['fixed_passcode']) : '');
+        $reset_hours = isset($_POST['resetHours']) ? intval($_POST['resetHours']) : 
+                      (isset($_POST['reset_hours']) ? intval($_POST['reset_hours']) : 2);
         
         // Validate room ID format (alphanumeric only)
         if (!preg_match('/^[a-zA-Z0-9_-]+$/', $room_id)) {
@@ -101,7 +112,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     } elseif ($mode == 'update') {
         // Update existing room
         // Validate required fields
-        if (!isset($_POST['id']) || !isset($_POST['roomName'])) {
+        if (!isset($_POST['id']) || (!isset($_POST['roomName']) && !isset($_POST['name']))) {
             error_log("Update room failed: Room ID or Name missing");
             echo json_encode([
                 'success' => false,
@@ -111,10 +122,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         
         $room_id = trim($_POST['id']);
-        $room_name = trim($_POST['roomName']);
-        $description = isset($_POST['roomDescription']) ? trim($_POST['roomDescription']) : '';
-        $fixed_passcode = isset($_POST['fixedPasscode']) ? trim($_POST['fixedPasscode']) : '';
-        $reset_hours = isset($_POST['resetHours']) ? intval($_POST['resetHours']) : 2;
+        $room_name = isset($_POST['roomName']) ? trim($_POST['roomName']) : trim($_POST['name']);
+        $description = isset($_POST['roomDescription']) ? trim($_POST['roomDescription']) : 
+                      (isset($_POST['description']) ? trim($_POST['description']) : '');
+        $fixed_passcode = isset($_POST['fixedPasscode']) ? trim($_POST['fixedPasscode']) : 
+                         (isset($_POST['fixed_passcode']) ? trim($_POST['fixed_passcode']) : '');
+        $reset_hours = isset($_POST['resetHours']) ? intval($_POST['resetHours']) : 
+                      (isset($_POST['reset_hours']) ? intval($_POST['reset_hours']) : 2);
         
         error_log("Updating room with ID: " . $room_id);
         error_log("Room data: " . json_encode([
