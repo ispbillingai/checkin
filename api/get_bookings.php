@@ -18,6 +18,11 @@ if (!isset($_SESSION['user_id']) && !($_SERVER['HTTP_HOST'] == 'localhost' || $_
     exit;
 }
 
+// Helper function to sanitize input
+function secure_input($data) {
+    return htmlspecialchars(strip_tags(trim($data)));
+}
+
 // Handle get bookings request
 if ($_SERVER["REQUEST_METHOD"] == "GET") {
     // Add debug information
