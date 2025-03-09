@@ -207,6 +207,9 @@
         }
       }
       
+      // Make initializeSidebar function global
+      window.initializeSidebar = initializeSidebar;
+      
       // Check if templates are loaded, and if not, wait for them
       function checkAndInitialize() {
         if (document.querySelector('#sidebar-content').children.length > 0) {
