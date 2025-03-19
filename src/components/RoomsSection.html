@@ -9,20 +9,70 @@
 </div>
 
 <script>
-  // Initialize rooms section once this component is loaded
-  if (window.initRoomsSection) {
-    window.initRoomsSection();
+  // Function to safely initialize rooms section
+  function safeInitRoomsSection() {
+    try {
+      if (window.initRoomsSection) {
+        console.log("Calling initRoomsSection from RoomsSection.html");
+        window.initRoomsSection();
+      } else {
+        console.log("initRoomsSection not available yet, will retry");
+        setTimeout(safeInitRoomsSection, 300);
+      }
+    } catch (err) {
+      console.error("Error initializing rooms section:", err);
+      // Load fallback demo data directly if we encounter an error
+      const container = document.getElementById('roomsContainer');
+      if (container) {
+        const demoRooms = [
+          {
+            id: 'demo1',
+            name: 'Demo Single Room',
+            description: 'A comfortable single room perfect for solo travelers.'
+          },
+          {
+            id: 'demo2',
+            name: 'Demo Double Room',
+            description: 'Spacious double room with king-size bed.'
+          },
+          {
+            id: 'demo3',
+            name: 'Demo Suite',
+            description: 'Luxury suite with separate living area and bedroom.'
+          }
+        ];
+        
+        container.innerHTML = '';
+        
+        demoRooms.forEach(room => {
+          const roomCard = document.createElement('div');
+          roomCard.className = "bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg hover:-translate-y-1";
+          
+          roomCard.innerHTML = `
+            <div class="p-6">
+              <h3 class="text-lg font-semibold text-gray-800 mb-2">${room.name}</h3>
+              <p class="text-gray-600 mb-4">${room.description}</p>
+              <button 
+                class="book-room-btn bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors w-full" 
+                data-room-id="${room.id}" 
+                data-room-name="${room.name}"
+              >
+                Book Now
+              </button>
+            </div>
+          `;
+          
+          container.appendChild(roomCard);
+        });
+      }
+    }
+  }
+
+  // Initialize when this component loads
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', safeInitRoomsSection);
   } else {
-    // If rooms-data.js hasn't loaded yet, wait for it
-    document.addEventListener('DOMContentLoaded', function() {
-      setTimeout(function checkRoomsInit() {
-        if (window.initRoomsSection) {
-          window.initRoomsSection();
-        } else {
-          // Try again after a short delay
-          setTimeout(checkRoomsInit, 100);
-        }
-      }, 100);
-    });
+    // If DOMContentLoaded already fired, initialize immediately
+    safeInitRoomsSection();
   }
 </script>

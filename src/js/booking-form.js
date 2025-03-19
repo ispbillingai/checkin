@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Set up event listeners
     setupEventListeners();
-  }, 500); // Give components time to load
+  }, 1000); // Give components more time to load
 });
 
 function initializeDateInputs() {
@@ -41,13 +41,15 @@ function loadRooms() {
   const roomsContainer = document.getElementById('roomsContainer');
   const roomSelect = document.getElementById('room');
   
-  if (!roomsContainer) {
-    console.error("Rooms container element not found");
+  if (!roomSelect) {
+    console.log("Room select element not found, will try again later");
+    setTimeout(loadRooms, 500);
     return;
   }
   
-  if (!roomSelect) {
-    console.error("Room select element not found");
+  // Use the populateRoomSelects function from rooms-data.js if available
+  if (typeof window.populateRoomSelects === 'function') {
+    window.populateRoomSelects();
     return;
   }
   
@@ -62,8 +64,10 @@ function loadRooms() {
           if (window.showToastMessage) {
             window.showToastMessage('error', 'Failed to load rooms. Please try again later.');
           }
-          roomsContainer.innerHTML = 
-            '<div class="col-span-full text-center text-red-500">Failed to load rooms. Please refresh the page.</div>';
+          if (roomsContainer) {
+            roomsContainer.innerHTML = 
+              '<div class="col-span-full text-center text-red-500">Failed to load rooms. Please refresh the page.</div>';
+          }
         }
       })
       .catch(error => {
@@ -71,8 +75,31 @@ function loadRooms() {
         if (window.showToastMessage) {
           window.showToastMessage('error', 'Failed to load rooms. Please try again later.');
         }
-        roomsContainer.innerHTML = 
-          '<div class="col-span-full text-center text-red-500">Failed to load rooms. Please refresh the page.</div>';
+        if (roomsContainer) {
+          roomsContainer.innerHTML = 
+            '<div class="col-span-full text-center text-red-500">Failed to load rooms. Please refresh the page.</div>';
+        }
+        
+        // Provide fallback demo room data
+        const fallbackRooms = [
+          {
+            id: 'demo1',
+            name: 'Demo Single Room',
+            description: 'A comfortable single room perfect for solo travelers.'
+          },
+          {
+            id: 'demo2',
+            name: 'Demo Double Room',
+            description: 'Spacious double room with king-size bed.'
+          },
+          {
+            id: 'demo3',
+            name: 'Demo Suite',
+            description: 'Luxury suite with separate living area and bedroom.'
+          }
+        ];
+        
+        populateRooms(fallbackRooms);
       });
   } else {
     // Fallback to direct API call if fetchRoomsData is not available
@@ -82,7 +109,14 @@ function loadRooms() {
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        return response.json();
+        return response.text().then(text => {
+          try {
+            return JSON.parse(text);
+          } catch (e) {
+            console.error("Invalid JSON response:", text);
+            throw new Error("Server returned invalid JSON response");
+          }
+        });
       })
       .then(data => {
         console.log("Room API data:", data);
@@ -93,8 +127,10 @@ function loadRooms() {
           if (window.showToastMessage) {
             window.showToastMessage('error', 'Failed to load rooms. Please try again later.');
           }
-          roomsContainer.innerHTML = 
-            '<div class="col-span-full text-center text-red-500">Failed to load rooms. Please refresh the page.</div>';
+          if (roomsContainer) {
+            roomsContainer.innerHTML = 
+              '<div class="col-span-full text-center text-red-500">Failed to load rooms. Please refresh the page.</div>';
+          }
         }
       })
       .catch(error => {
@@ -102,8 +138,10 @@ function loadRooms() {
         if (window.showToastMessage) {
           window.showToastMessage('error', 'Failed to load rooms. Please try again later.');
         }
-        roomsContainer.innerHTML = 
-          '<div class="col-span-full text-center text-red-500">Failed to load rooms. Please refresh the page.</div>';
+        if (roomsContainer) {
+          roomsContainer.innerHTML = 
+            '<div class="col-span-full text-center text-red-500">Failed to load rooms. Please refresh the page.</div>';
+        }
         
         // Provide fallback demo room data
         const fallbackRooms = [
@@ -133,10 +171,20 @@ function populateRooms(rooms) {
   const roomSelect = document.getElementById('room');
   const roomsContainer = document.getElementById('roomsContainer');
   
-  roomsContainer.innerHTML = '';
+  if (!roomSelect) {
+    console.error("Room select element not found for populating rooms");
+    return;
+  }
+  
+  // Clear any existing options except the first placeholder
+  while (roomSelect.options.length > 1) {
+    roomSelect.remove(1);
+  }
   
   if (rooms.length === 0) {
-    roomsContainer.innerHTML = '<div class="col-span-full text-center text-gray-500">No rooms available at the moment.</div>';
+    if (roomsContainer) {
+      roomsContainer.innerHTML = '<div class="col-span-full text-center text-gray-500">No rooms available at the moment.</div>';
+    }
     return;
   }
   
@@ -150,25 +198,6 @@ function populateRooms(rooms) {
     roomSelect.appendChild(option);
     
     roomDescriptions[room.id] = room.description || '';
-    
-    // Create room card
-    const roomCard = document.createElement('div');
-    roomCard.className = 'bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 room-card';
-    roomCard.innerHTML = `
-      <div class="h-48 bg-gray-200 travel-image" 
-            style="background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80&random=${Math.random()}')">
-      </div>
-      <div class="p-4">
-        <h3 class="font-semibold text-lg text-gray-800">${room.name}</h3>
-        <p class="text-gray-600 text-sm mt-1">${room.description || 'Comfortable accommodation with all the amenities you need.'}</p>
-        <button 
-          class="mt-4 w-full py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors text-sm font-medium" 
-          onclick="selectRoom('${room.id}')">
-          Select Room
-        </button>
-      </div>
-    `;
-    roomsContainer.appendChild(roomCard);
   });
   
   // Add room selection handler
@@ -181,7 +210,10 @@ function populateRooms(rooms) {
     roomSelect.value = roomId;
     roomSelect.dispatchEvent(new Event('change'));
     
-    document.querySelector('.booking-form').scrollIntoView({ behavior: 'smooth' });
+    const bookingForm = document.querySelector('.booking-form');
+    if (bookingForm) {
+      bookingForm.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 }
 

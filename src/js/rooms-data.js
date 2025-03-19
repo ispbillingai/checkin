@@ -3,50 +3,103 @@
  * Room data fetching and rendering utility
  */
 
+// Store rooms data globally to share between components
+window.roomsData = window.roomsData || {
+  rooms: null,
+  isLoading: false,
+  hasLoaded: false,
+  error: null
+};
+
 // Function to fetch rooms data with enhanced error handling
 function fetchRoomsData() {
   console.log("Fetching rooms data...");
   
-  return fetch('/api/get_all_rooms.php')
+  // If we're already loading, return the existing promise
+  if (window.roomsData.isLoading) {
+    console.log("Already fetching rooms data, waiting for existing request");
+    return new Promise((resolve) => {
+      const checkInterval = setInterval(() => {
+        if (!window.roomsData.isLoading) {
+          clearInterval(checkInterval);
+          resolve(window.roomsData.rooms || getDemoRooms());
+        }
+      }, 100);
+    });
+  }
+  
+  // If we already have rooms data, return it
+  if (window.roomsData.hasLoaded && window.roomsData.rooms) {
+    console.log("Using cached rooms data");
+    return Promise.resolve(window.roomsData.rooms);
+  }
+  
+  // Set loading state
+  window.roomsData.isLoading = true;
+  
+  return fetch('/api/get_rooms.php')
     .then(response => {
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      return response.json();
+      return response.text();
     })
-    .then(data => {
-      console.log("Rooms data response:", data);
-      if (data.success) {
-        return data.rooms;
-      } else {
-        // If API returns an error message
-        console.error("API Error:", data.message);
-        throw new Error(data.message || 'Failed to load rooms data');
+    .then(text => {
+      try {
+        // Try to parse as JSON
+        const data = JSON.parse(text);
+        console.log("Rooms data response:", data);
+        if (data.success) {
+          window.roomsData.rooms = data.rooms;
+          window.roomsData.hasLoaded = true;
+          return data.rooms;
+        } else {
+          // If API returns an error message
+          console.error("API Error:", data.message);
+          throw new Error(data.message || 'Failed to load rooms data');
+        }
+      } catch (e) {
+        // If parsing fails, log the response text and throw an error
+        console.error("Invalid JSON response:", text);
+        throw new Error("Server returned invalid JSON response");
       }
     })
     .catch(error => {
       console.error("Error fetching rooms:", error);
+      window.roomsData.error = error.message;
       
       // Return demo data as fallback
+      const demoRooms = getDemoRooms();
+      window.roomsData.rooms = demoRooms;
+      window.roomsData.hasLoaded = true;
+      
       console.log("Using fallback demo room data");
-      return [
-        {
-          id: 'demo1',
-          name: 'Demo Single Room',
-          description: 'A comfortable single room perfect for solo travelers.'
-        },
-        {
-          id: 'demo2',
-          name: 'Demo Double Room',
-          description: 'Spacious double room with king-size bed.'
-        },
-        {
-          id: 'demo3',
-          name: 'Demo Suite',
-          description: 'Luxury suite with separate living area and bedroom.'
-        }
-      ];
+      return demoRooms;
+    })
+    .finally(() => {
+      window.roomsData.isLoading = false;
     });
+}
+
+// Function to get demo rooms data
+function getDemoRooms() {
+  return [
+    {
+      id: 'demo1',
+      name: 'Demo Single Room',
+      description: 'A comfortable single room perfect for solo travelers.'
+    },
+    {
+      id: 'demo2',
+      name: 'Demo Double Room',
+      description: 'Spacious double room with king-size bed.'
+    },
+    {
+      id: 'demo3',
+      name: 'Demo Suite',
+      description: 'Luxury suite with separate living area and bedroom.'
+    }
+  ];
 }
 
 // Function to render rooms into the container
@@ -54,15 +107,28 @@ function renderRooms(rooms) {
   const roomsContainer = document.getElementById('roomsContainer');
   if (!roomsContainer) {
     console.error("Rooms container element not found");
+    
+    // Try again after a short delay if possible
+    setTimeout(() => {
+      const retryContainer = document.getElementById('roomsContainer');
+      if (retryContainer) {
+        console.log("Found rooms container on retry");
+        renderRoomsToContainer(retryContainer, rooms);
+      }
+    }, 500);
     return;
   }
   
+  renderRoomsToContainer(roomsContainer, rooms);
+}
+
+function renderRoomsToContainer(container, rooms) {
   if (!rooms || rooms.length === 0) {
-    roomsContainer.innerHTML = '<div class="col-span-full text-center text-gray-500">No rooms available at the moment.</div>';
+    container.innerHTML = '<div class="col-span-full text-center text-gray-500">No rooms available at the moment.</div>';
     return;
   }
   
-  roomsContainer.innerHTML = '';
+  container.innerHTML = '';
   
   rooms.forEach(room => {
     const roomCard = document.createElement('div');
@@ -82,7 +148,7 @@ function renderRooms(rooms) {
       </div>
     `;
     
-    roomsContainer.appendChild(roomCard);
+    container.appendChild(roomCard);
   });
   
   // Add event listeners to book now buttons
@@ -108,7 +174,9 @@ function renderRooms(rooms) {
       }
       
       // Show toast notification
-      if (window.showToastMessage) {
+      if (window.showToast) {
+        window.showToast('success', 'Room Selected', `${roomName} selected. Please complete the booking form.`);
+      } else if (window.showToastMessage) {
         window.showToastMessage('success', `${roomName} selected. Please complete the booking form.`);
       }
     });
@@ -126,10 +194,44 @@ function initRoomsSection() {
     });
 }
 
+// Populate room select dropdowns from cached data
+function populateRoomSelects() {
+  const roomSelects = document.querySelectorAll('select[id="room"]');
+  if (!roomSelects.length) {
+    console.log("No room select elements found");
+    return;
+  }
+  
+  // Use cached rooms data or fetch new data
+  const getRooms = window.roomsData.hasLoaded 
+    ? Promise.resolve(window.roomsData.rooms || getDemoRooms())
+    : fetchRoomsData();
+  
+  getRooms.then(rooms => {
+    roomSelects.forEach(select => {
+      // Clear any existing options except the first placeholder
+      while (select.options.length > 1) {
+        select.remove(1);
+      }
+      
+      // Add room options
+      rooms.forEach(room => {
+        const option = document.createElement('option');
+        option.value = room.id;
+        option.textContent = room.name;
+        select.appendChild(option);
+      });
+      
+      console.log(`Populated ${rooms.length} rooms in select dropdown`);
+    });
+  });
+}
+
 // Export functions
 window.initRoomsSection = initRoomsSection;
 window.fetchRoomsData = fetchRoomsData;
 window.renderRooms = renderRooms;
+window.populateRoomSelects = populateRoomSelects;
 
 // Initialize on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', function() {
@@ -137,4 +239,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (document.getElementById('roomsContainer')) {
     initRoomsSection();
   }
+  
+  // Check for and populate room select dropdowns
+  populateRoomSelects();
 });
