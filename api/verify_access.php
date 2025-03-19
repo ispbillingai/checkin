@@ -36,8 +36,9 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['entry']) && isset($_GET[
     // Get and log parameters
     $entry_point_id = isset($_GET['entry']) ? secure_input($_GET['entry']) : '';
     $code = isset($_GET['code']) ? secure_input($_GET['code']) : '';
+    $position = isset($_GET['position']) ? intval($_GET['position']) : null;
     
-    error_log("Verifying entry access - Entry ID: $entry_point_id, Code length: " . strlen($code));
+    error_log("Verifying entry access - Entry ID: $entry_point_id, Code length: " . strlen($code) . ", Position: " . ($position !== null ? $position : "Not specified"));
     
     if (empty($entry_point_id) || empty($code)) {
         error_log("Missing parameters - Entry ID or Code");
@@ -53,26 +54,78 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['entry']) && isset($_GET[
         $now = date('Y-m-d H:i:s');
         error_log("Checking access for current time: $now");
         
-        // Prepare SQL statement
-        $stmt = $conn->prepare("SELECT b.*, r.name as room_name, e.name as entry_name 
-                               FROM bookings b 
-                               JOIN rooms r ON b.room_id = r.id 
-                               JOIN entry_points e ON b.entry_point_id = e.id 
-                               WHERE b.entry_point_id = ? AND b.access_code = ? 
-                               AND b.arrival_date_time <= ? AND b.departure_date_time >= ?");
+        // First, check if there's a direct match in the entry_point_pins table
+        if ($position !== null) {
+            // If position is specified, check that specific position
+            $stmt = $conn->prepare("
+                SELECT ep.pin_code, b.*, r.name as room_name, e.name as entry_name 
+                FROM entry_point_pins ep
+                JOIN bookings b ON ep.booking_id = b.id
+                JOIN rooms r ON b.room_id = r.id
+                JOIN entry_points e ON ep.entry_point_id = e.id
+                WHERE ep.entry_point_id = ? 
+                AND ep.position = ?
+                AND ep.pin_code = ?
+                AND b.arrival_date_time <= ? 
+                AND b.departure_date_time >= ?
+            ");
+            $stmt->bind_param("sisss", $entry_point_id, $position, $code, $now, $now);
+        } else {
+            // If position is not specified, check all positions
+            $stmt = $conn->prepare("
+                SELECT ep.pin_code, b.*, r.name as room_name, e.name as entry_name 
+                FROM entry_point_pins ep
+                JOIN bookings b ON ep.booking_id = b.id
+                JOIN rooms r ON b.room_id = r.id
+                JOIN entry_points e ON ep.entry_point_id = e.id
+                WHERE ep.entry_point_id = ? 
+                AND ep.pin_code = ?
+                AND b.arrival_date_time <= ? 
+                AND b.departure_date_time >= ?
+            ");
+            $stmt->bind_param("ssss", $entry_point_id, $code, $now, $now);
+        }
+        
         if (!$stmt) {
-            error_log("Failed to prepare statement: " . $conn->error);
+            error_log("Failed to prepare pin statement: " . $conn->error);
             throw new Exception("Database prepare failed");
         }
         
-        $stmt->bind_param("ssss", $entry_point_id, $code, $now, $now);
         if (!$stmt->execute()) {
-            error_log("Failed to execute statement: " . $stmt->error);
+            error_log("Failed to execute pin statement: " . $stmt->error);
             throw new Exception("Database execute failed");
         }
         
         $result = $stmt->get_result();
-        error_log("Query executed. Found matches: " . $result->num_rows);
+        error_log("Pin query executed. Found matches: " . $result->num_rows);
+        
+        // If no results found with the pin check, fallback to the original booking check
+        if ($result->num_rows === 0) {
+            error_log("No pins found, checking bookings table as fallback");
+            
+            // Prepare the original SQL statement
+            $stmt = $conn->prepare("SELECT b.*, r.name as room_name, e.name as entry_name 
+                                   FROM bookings b 
+                                   JOIN rooms r ON b.room_id = r.id 
+                                   JOIN entry_points e ON b.entry_point_id = e.id 
+                                   WHERE b.entry_point_id = ? AND b.access_code = ? 
+                                   AND b.arrival_date_time <= ? AND b.departure_date_time >= ?");
+            
+            if (!$stmt) {
+                error_log("Failed to prepare booking statement: " . $conn->error);
+                throw new Exception("Database prepare failed");
+            }
+            
+            $stmt->bind_param("ssss", $entry_point_id, $code, $now, $now);
+            
+            if (!$stmt->execute()) {
+                error_log("Failed to execute booking statement: " . $stmt->error);
+                throw new Exception("Database execute failed");
+            }
+            
+            $result = $stmt->get_result();
+            error_log("Booking query executed. Found matches: " . $result->num_rows);
+        }
         
         if ($result->num_rows > 0) {
             $booking = $result->fetch_assoc();
@@ -97,7 +150,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['entry']) && isset($_GET[
                 ]
             ]);
         } else {
-            error_log("Access denied - No valid booking found for Entry: $entry_point_id, Code: $code");
+            error_log("Access denied - No valid booking or pin found for Entry: $entry_point_id, Code: $code");
             
             // Log the failed access attempt
             $access_log_stmt = $conn->prepare("INSERT INTO access_logs (booking_id, entry_point_id, access_datetime, access_result, ip_address) 

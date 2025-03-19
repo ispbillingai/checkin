@@ -76,6 +76,63 @@ function generate_access_code() {
     return str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
 }
 
+// Function to assign PIN code to entry points at a specific position
+function assign_pin_to_entry_points($booking_id, $entry_point_ids, $pin_code, $position = null) {
+    global $conn;
+    
+    // If no position is provided, find the first available position
+    if ($position === null) {
+        // Get the highest position currently in use for any entry point
+        $stmt = $conn->prepare("SELECT MAX(position) as max_position FROM entry_point_pins");
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $row = $result->fetch_assoc();
+        
+        // Start with position 1 or increment from highest position
+        $position = ($row['max_position'] === null) ? 1 : min($row['max_position'] + 1, 64);
+        
+        // If we've reached the maximum, reuse position 1
+        if ($position > 64) {
+            $position = 1;
+        }
+    }
+    
+    // Validate position is between 1 and 64
+    $position = max(1, min(64, intval($position)));
+    
+    // Loop through each entry point and assign the PIN
+    foreach ($entry_point_ids as $entry_point_id) {
+        // Check if there's already a PIN at this position for this entry point
+        $stmt = $conn->prepare("SELECT id FROM entry_point_pins WHERE entry_point_id = ? AND position = ?");
+        $stmt->bind_param("si", $entry_point_id, $position);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows > 0) {
+            // Update existing PIN at this position
+            $row = $result->fetch_assoc();
+            $stmt = $conn->prepare("UPDATE entry_point_pins SET pin_code = ?, booking_id = ? WHERE id = ?");
+            $stmt->bind_param("sii", $pin_code, $booking_id, $row['id']);
+        } else {
+            // Insert new PIN at this position
+            $stmt = $conn->prepare("INSERT INTO entry_point_pins (entry_point_id, position, pin_code, booking_id) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("sisi", $entry_point_id, $position, $pin_code, $booking_id);
+        }
+        
+        if (!$stmt->execute()) {
+            log_error("Error assigning PIN to entry point: " . $stmt->error, [
+                'booking_id' => $booking_id,
+                'entry_point_id' => $entry_point_id,
+                'position' => $position,
+                'pin_code' => $pin_code
+            ]);
+            return false;
+        }
+    }
+    
+    return true;
+}
+
 // Setup entry points if they don't exist already
 function setup_entry_points() {
     global $conn;
@@ -120,6 +177,31 @@ function setup_entry_points() {
         }
         
         log_error("Created room_entry_points table");
+    }
+    
+    // Check if we need to create entry_point_pins table
+    $result = $conn->query("SHOW TABLES LIKE 'entry_point_pins'");
+    if ($result->num_rows == 0) {
+        // Create entry_point_pins table
+        $sql = "CREATE TABLE IF NOT EXISTS entry_point_pins (
+            id INT(11) AUTO_INCREMENT PRIMARY KEY,
+            entry_point_id VARCHAR(20) NOT NULL,
+            position INT NOT NULL CHECK (position BETWEEN 1 AND 64),
+            pin_code VARCHAR(10) NOT NULL,
+            booking_id INT(11) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            UNIQUE KEY unique_entry_position (entry_point_id, position),
+            FOREIGN KEY (entry_point_id) REFERENCES entry_points(id) ON DELETE CASCADE,
+            FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE
+        )";
+        
+        if (!$conn->query($sql)) {
+            log_error("Error creating entry_point_pins table: " . $conn->error);
+            return false;
+        }
+        
+        log_error("Created entry_point_pins table");
     }
     
     // Check if we need to insert default entry points
