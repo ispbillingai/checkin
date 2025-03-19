@@ -6,23 +6,35 @@ require_once 'db_config.php';
 // Set content type to JSON
 header('Content-Type: application/json');
 
-// Simple error logging focused only on entry points
-error_log("get_entry_points.php called");
+// Enhanced error logging for entry points API
+error_log("[get_entry_points.php] API called");
 
 // Handle GET request to fetch all entry points
 if ($_SERVER["REQUEST_METHOD"] == "GET") {
     try {
-        // Just get all entry points (no filtering by room_id)
-        error_log("Fetching all entry points");
+        // Get room_id from query parameters if provided
+        $room_id = isset($_GET['room_id']) ? $_GET['room_id'] : null;
+        
+        if ($room_id) {
+            error_log("[get_entry_points.php] Fetching entry points for room_id: " . $room_id);
+            // TODO: In the future, we would filter by room_id
+            // For now, just get all entry points regardless of room_id parameter
+        } else {
+            error_log("[get_entry_points.php] Fetching all entry points");
+        }
+        
+        // Query to get all entry points
         $query = "SELECT * FROM entry_points ORDER BY name";
+        error_log("[get_entry_points.php] Executing SQL: " . $query);
         $result = $conn->query($query);
         
         if (!$result) {
-            error_log("SQL Error in get_entry_points.php: " . $conn->error);
+            error_log("[get_entry_points.php] SQL Error: " . $conn->error);
+            throw new Exception("Database query failed: " . $conn->error);
         }
         
         $entry_points = [];
-        if ($result && $result->num_rows > 0) {
+        if ($result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
                 $entry_points[] = [
                     'id' => $row['id'],
@@ -32,30 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
             }
         }
         
-        error_log("Found " . count($entry_points) . " entry points");
-        
-        // If no entry points found, provide fallbacks
-        if (count($entry_points) === 0) {
-            error_log("No entry points found. Adding fallback data");
-            
-            $entry_points = [
-                [
-                    'id' => 'entry1',
-                    'name' => 'Main Entrance',
-                    'description' => 'Front door at the main lobby'
-                ],
-                [
-                    'id' => 'entry2',
-                    'name' => 'Side Entrance',
-                    'description' => 'Side entrance near the parking lot'
-                ],
-                [
-                    'id' => 'entry3',
-                    'name' => 'Back Entrance',
-                    'description' => 'Back entrance near the garden'
-                ]
-            ];
-        }
+        error_log("[get_entry_points.php] Found " . count($entry_points) . " entry points");
         
         echo json_encode([
             'success' => true,
@@ -63,7 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
         ]);
     } catch (Exception $e) {
         // Log the error for debugging
-        error_log("Error in get_entry_points.php: " . $e->getMessage());
+        error_log("[get_entry_points.php] Error: " . $e->getMessage());
         
         echo json_encode([
             'success' => false,

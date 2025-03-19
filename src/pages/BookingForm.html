@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,11 +39,11 @@
             </div>
             
             <!-- Entry Point Selection -->
-            <div id="entryPointContainer" class="space-y-2 hidden">
+            <div id="entryPointContainer" class="space-y-2">
               <label for="entryPoint" class="block text-sm font-medium text-gray-700">Select Entry Point</label>
               <select id="entryPoint" name="entryPoint" required class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="" disabled selected>Select an entry point</option>
-                <!-- Entry points will be loaded dynamically based on room selection -->
+                <!-- Entry points will be loaded dynamically -->
               </select>
               <p class="text-xs text-gray-500">Entry points for this room that the guest can use their access code</p>
             </div>
@@ -183,28 +182,31 @@
       // Listen for room selection change to update entry points
       document.getElementById('room').addEventListener('change', function() {
         const roomId = this.value;
-        const entryPointContainer = document.getElementById('entryPointContainer');
-        
         if (roomId) {
-          // Show the entry point container
-          entryPointContainer.classList.remove('hidden');
-          loadEntryPoints(roomId);
-        } else {
-          // Hide the entry point container if no room selected
-          entryPointContainer.classList.add('hidden');
+          loadEntryPoints();
         }
       });
       
-      // Function to load entry points based on room selection
-      function loadEntryPoints(roomId) {
-        fetch(`/api/get_entry_points.php?room_id=${roomId}`)
-          .then(response => response.json())
+      // Load all entry points regardless of room selection
+      loadEntryPoints();
+      
+      // Function to load all entry points 
+      function loadEntryPoints() {
+        console.log("Loading all entry points...");
+        
+        fetch('/api/get_entry_points.php')
+          .then(response => {
+            console.log("Entry points API response status:", response.status);
+            return response.json();
+          })
           .then(data => {
+            console.log("Entry points API data:", data);
             const entrySelect = document.getElementById('entryPoint');
+            
             // Clear previous options
             entrySelect.innerHTML = '<option value="" disabled selected>Select an entry point</option>';
             
-            if (data.success) {
+            if (data.success && data.entry_points && data.entry_points.length > 0) {
               data.entry_points.forEach(entry => {
                 const option = document.createElement('option');
                 option.value = entry.id;
@@ -215,12 +217,48 @@
                 entrySelect.appendChild(option);
               });
             } else {
-              showToast('error', 'Error', 'Failed to load entry points for this room.');
+              console.error('Failed to load entry points or no entry points returned');
+              
+              // Add fallback entry points if API doesn't return any
+              const fallbackEntries = [
+                { id: 'entry1', name: 'Main Entrance', description: 'Front door at the main lobby' },
+                { id: 'entry2', name: 'Side Entrance', description: 'Side entrance near the parking lot' },
+                { id: 'entry3', name: 'Back Entrance', description: 'Back entrance near the garden' }
+              ];
+              
+              fallbackEntries.forEach(entry => {
+                const option = document.createElement('option');
+                option.value = entry.id;
+                option.textContent = entry.name;
+                option.title = entry.description;
+                entrySelect.appendChild(option);
+              });
+              
+              showToast('warning', 'Using Demo Data', 'Using demo entry points as we could not load the real data.');
             }
           })
           .catch(error => {
             console.error('Error loading entry points:', error);
-            showToast('error', 'Error', 'Failed to load entry points. Please try again.');
+            
+            // Add fallback entry points if API fails
+            const entrySelect = document.getElementById('entryPoint');
+            entrySelect.innerHTML = '<option value="" disabled selected>Select an entry point</option>';
+            
+            const fallbackEntries = [
+              { id: 'entry1', name: 'Main Entrance', description: 'Front door at the main lobby' },
+              { id: 'entry2', name: 'Side Entrance', description: 'Side entrance near the parking lot' },
+              { id: 'entry3', name: 'Back Entrance', description: 'Back entrance near the garden' }
+            ];
+            
+            fallbackEntries.forEach(entry => {
+              const option = document.createElement('option');
+              option.value = entry.id;
+              option.textContent = entry.name;
+              option.title = entry.description;
+              entrySelect.appendChild(option);
+            });
+            
+            showToast('warning', 'Using Demo Data', 'Using demo entry points as we could not load the real data.');
           });
       }
       
@@ -330,6 +368,12 @@
           toastIcon.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          `;
+        } else if (type === 'warning') {
+          toastIcon.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
             </svg>
           `;
         }
