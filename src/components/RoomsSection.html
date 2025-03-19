@@ -58,21 +58,21 @@
     const demoRooms = [
       {
         id: 'demo1',
-        name: 'Demo Single Room',
-        description: 'A comfortable single room perfect for solo travelers.',
-        image: 'https://images.unsplash.com/photo-1518791841217-8f162f1e1131?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60'
+        name: 'Deluxe Single Room',
+        description: 'A comfortable single room perfect for solo travelers with scenic views.',
+        image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'
       },
       {
         id: 'demo2',
-        name: 'Demo Double Room',
-        description: 'Spacious double room with king-size bed.',
-        image: 'https://images.unsplash.com/photo-1519710164239-da123dc03ef4?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60'
+        name: 'Premium Double Room',
+        description: 'Spacious double room with king-size bed and modern amenities.',
+        image: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'
       },
       {
         id: 'demo3',
-        name: 'Demo Suite',
-        description: 'Luxury suite with separate living area and bedroom.',
-        image: 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60'
+        name: 'Executive Suite',
+        description: 'Luxury suite with separate living area, bedroom and private balcony.',
+        image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'
       }
     ];
     
@@ -85,6 +85,7 @@
       roomCard.innerHTML = `
         <div class="relative h-48 overflow-hidden">
           <img src="${room.image}" alt="${room.name}" class="w-full h-full object-cover">
+          <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
         </div>
         <div class="p-6">
           <h3 class="text-lg font-semibold text-gray-800 mb-2">${room.name}</h3>
@@ -140,7 +141,7 @@
               roomSelect.value = roomId;
             }
             
-            // Trigger change event to load entry points if needed
+            // Trigger change event to update room description
             const event = new Event('change');
             roomSelect.dispatchEvent(event);
           }
