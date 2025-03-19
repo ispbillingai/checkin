@@ -25,6 +25,16 @@ export default defineConfig(({ mode }) => ({
         admin: path.resolve(__dirname, 'src/pages/AdminDashboard.html'),
         notFound: path.resolve(__dirname, 'src/pages/NotFound.html'),
         error: path.resolve(__dirname, 'src/pages/error.html'),
+        homePage: path.resolve(__dirname, 'src/pages/HomePage.html'),
+        // Components
+        header: path.resolve(__dirname, 'src/components/Header.html'),
+        heroBanner: path.resolve(__dirname, 'src/components/HeroBanner.html'),
+        introSection: path.resolve(__dirname, 'src/components/IntroSection.html'),
+        bookingForm: path.resolve(__dirname, 'src/components/BookingForm.html'),
+        roomsSection: path.resolve(__dirname, 'src/components/RoomsSection.html'),
+        footer: path.resolve(__dirname, 'src/components/Footer.html'),
+        toast: path.resolve(__dirname, 'src/components/Toast.html'),
+        successModal: path.resolve(__dirname, 'src/components/SuccessModal.html'),
         // Template files
         sidebarTemplate: path.resolve(__dirname, 'src/pages/templates/sidebar-template.html'),
         bookingsTemplate: path.resolve(__dirname, 'src/pages/templates/bookings-template.html'),

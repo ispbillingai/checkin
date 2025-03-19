@@ -1,0 +1,151 @@
+
+<div class="fade-in booking-form" style="animation-delay: 0.4s">
+  <div class="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+    <div class="p-6 bg-blue-50 border-b">
+      <h2 class="text-2xl font-semibold text-gray-800">Book Your Stay</h2>
+      <p class="text-sm text-gray-500 mt-1">Fill out the form below to create your booking</p>
+    </div>
+    <div class="p-6">
+      <form id="bookingForm" class="space-y-4">
+        <div class="space-y-2">
+          <label for="room" class="block text-sm font-medium text-gray-700">Select Room</label>
+          <select 
+            id="room" 
+            name="room" 
+            required
+            class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select a room</option>
+            <!-- Rooms will be populated here -->
+          </select>
+          <p id="roomDescription" class="text-sm text-gray-500 italic mt-1 hidden"></p>
+        </div>
+        
+        <div id="entryPointContainer" class="space-y-2">
+          <label for="entryPoint" class="block text-sm font-medium text-gray-700">Select Entry Point</label>
+          <select 
+            id="entryPoint" 
+            name="entryPoint" 
+            required
+            class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="" disabled selected>Select an entry point</option>
+            <!-- Entry points will be populated here -->
+          </select>
+          <p class="text-xs text-gray-500">Choose which entry point you will use to access the room</p>
+        </div>
+        
+        <div id="pinPositionContainer" class="space-y-2">
+          <label for="pinPosition" class="block text-sm font-medium text-gray-700">PIN Position</label>
+          <select 
+            id="pinPosition" 
+            name="pinPosition" 
+            required
+            class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="" disabled selected>Select a position</option>
+            <option value="1">Position 1</option>
+            <option value="2">Position 2</option>
+            <option value="3">Position 3</option>
+            <option value="4">Position 4</option>
+            <option value="5">Position 5</option>
+            <option value="6">Position 6</option>
+            <option value="7">Position 7</option>
+            <option value="8">Position 8</option>
+            <option value="9">Position 9</option>
+            <option value="10">Position 10</option>
+          </select>
+          <p class="text-xs text-gray-500">Select the position for your access PIN</p>
+        </div>
+        
+        <div id="pinCodeContainer" class="space-y-2">
+          <label for="pinCode" class="block text-sm font-medium text-gray-700">PIN Code</label>
+          <div class="flex space-x-2">
+            <input 
+              id="pinCode" 
+              name="pinCode" 
+              type="text" 
+              pattern="[0-9]{4,6}"
+              placeholder="Enter 4-6 digit PIN code" 
+              class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button 
+              type="button" 
+              id="generatePinButton"
+              class="h-11 px-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              Generate
+            </button>
+          </div>
+          <p class="text-xs text-gray-500">Enter a PIN code or click Generate for a random code</p>
+        </div>
+        
+        <div class="space-y-2">
+          <label for="arrivalDateTime" class="block text-sm font-medium text-gray-700">Arrival Date & Time</label>
+          <input 
+            id="arrivalDateTime" 
+            name="arrivalDateTime" 
+            type="datetime-local" 
+            required
+            class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        
+        <div class="space-y-2">
+          <label for="departureDateTime" class="block text-sm font-medium text-gray-700">Departure Date & Time</label>
+          <input 
+            id="departureDateTime" 
+            name="departureDateTime" 
+            type="datetime-local" 
+            required
+            class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        
+        <div class="space-y-2">
+          <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
+          <input 
+            id="name" 
+            name="name" 
+            type="text" 
+            placeholder="Enter your full name" 
+            required
+            class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        
+        <div class="space-y-2">
+          <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+          <input 
+            id="email" 
+            name="email" 
+            type="email" 
+            placeholder="Enter your email" 
+            required
+            class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        
+        <div class="space-y-2">
+          <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
+          <input 
+            id="phone" 
+            name="phone" 
+            type="tel" 
+            placeholder="Enter your phone number" 
+            required
+            class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        
+        <button 
+          type="submit" 
+          id="submitButton"
+          class="w-full h-11 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+        >
+          Create Booking
+        </button>
+      </form>
+    </div>
+  </div>
+</div>

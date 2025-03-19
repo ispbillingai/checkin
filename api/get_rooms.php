@@ -59,7 +59,6 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
         echo json_encode([
             'success' => true,
             'rooms' => $rooms,
-            'is_demo' => count($rooms) === 0,
             'debug_info' => [
                 'room_count' => count($rooms),
                 'timestamp' => date('Y-m-d H:i:s')

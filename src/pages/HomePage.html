@@ -52,627 +52,93 @@
   </style>
 </head>
 <body class="min-h-screen bg-gray-50">
-  <div class="travel-image bg-cover bg-center h-64 md:h-96 relative" 
-       style="background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80')">
-    <div class="absolute inset-0 bg-blue-900 opacity-30"></div>
-    <div class="container mx-auto px-4 h-full flex items-center relative z-10">
-      <div class="text-white max-w-2xl">
-        <h1 class="text-3xl md:text-5xl font-bold mb-2">Experience Comfort and Convenience</h1>
-        <p class="text-lg md:text-xl opacity-90">Book your stay with ease and enjoy a hassle-free check-in experience</p>
-      </div>
-    </div>
-  </div>
-
-  <header class="bg-white shadow-sm sticky top-0 z-50">
-    <div class="container mx-auto px-4 py-4">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-2">
-          <div class="p-2 rounded-full bg-blue-100 text-blue-600">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-          </div>
-          <span class="text-xl font-semibold text-gray-800">Check-in-Simplify</span>
-        </div>
-        <div>
-          <a href="/admin" class="text-sm px-4 py-2 rounded-md text-gray-600 hover:bg-gray-100 transition-colors">
-            Admin Portal
-          </a>
-        </div>
-      </div>
-    </div>
-  </header>
-
+  <!-- Load Hero Banner Component -->
+  <div id="hero-banner-container"></div>
+  
+  <!-- Load Header Component -->
+  <div id="header-container"></div>
+  
   <main class="container mx-auto px-4 py-8 md:py-16">
     <div class="max-w-6xl mx-auto">
       <div class="hero-container grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
-        <div class="fade-in" style="animation-delay: 0.2s">
-          <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
-            Simple and Quick <span class="text-blue-600">Room Booking</span>
-          </h2>
-          <p class="text-lg text-gray-600 mb-8">
-            Book your stay in just a few steps. No account required. 
-            Your access code will be sent directly to your email.
-          </p>
-          
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-            <div class="travel-image rounded-lg overflow-hidden h-48 shadow-md" 
-                style="background-image: url('https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&auto=format&fit=crop&w=720&q=80')">
-            </div>
-            <div class="travel-image rounded-lg overflow-hidden h-48 shadow-md" 
-                style="background-image: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?ixlib=rb-4.0.3&auto=format&fit=crop&w=720&q=80')">
-            </div>
-          </div>
-          
-          <div class="bg-white/90 backdrop-blur-sm p-6 rounded-lg shadow-lg border border-gray-100">
-            <div class="flex flex-col space-y-4">
-              <div class="flex items-center space-x-3 text-gray-700">
-                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">1</div>
-                <span>Select your room and dates</span>
-              </div>
-              <div class="flex items-center space-x-3 text-gray-700">
-                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">2</div>
-                <span>Enter your contact information</span>
-              </div>
-              <div class="flex items-center space-x-3 text-gray-700">
-                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">3</div>
-                <span>Receive your access code instantly</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <!-- Load Intro Section Component -->
+        <div id="intro-section-container"></div>
         
-        <div class="fade-in booking-form" style="animation-delay: 0.4s">
-          <div class="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
-            <div class="p-6 bg-blue-50 border-b">
-              <h2 class="text-2xl font-semibold text-gray-800">Book Your Stay</h2>
-              <p class="text-sm text-gray-500 mt-1">Fill out the form below to create your booking</p>
-            </div>
-            <div class="p-6">
-              <form id="bookingForm" class="space-y-4">
-                <div class="space-y-2">
-                  <label for="room" class="block text-sm font-medium text-gray-700">Select Room</label>
-                  <select 
-                    id="room" 
-                    name="room" 
-                    required
-                    class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select a room</option>
-                    <!-- Rooms will be populated here -->
-                  </select>
-                  <p id="roomDescription" class="text-sm text-gray-500 italic mt-1 hidden"></p>
-                </div>
-                
-                <div id="entryPointContainer" class="space-y-2">
-                  <label for="entryPoint" class="block text-sm font-medium text-gray-700">Select Entry Point</label>
-                  <select 
-                    id="entryPoint" 
-                    name="entryPoint" 
-                    required
-                    class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="" disabled selected>Select an entry point</option>
-                    <!-- Entry points will be populated here -->
-                  </select>
-                  <p class="text-xs text-gray-500">Choose which entry point you will use to access the room</p>
-                </div>
-                
-                <div id="pinPositionContainer" class="space-y-2">
-                  <label for="pinPosition" class="block text-sm font-medium text-gray-700">PIN Position</label>
-                  <select 
-                    id="pinPosition" 
-                    name="pinPosition" 
-                    required
-                    class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="" disabled selected>Select a position</option>
-                    <option value="1">Position 1</option>
-                    <option value="2">Position 2</option>
-                    <option value="3">Position 3</option>
-                    <option value="4">Position 4</option>
-                    <option value="5">Position 5</option>
-                    <option value="6">Position 6</option>
-                    <option value="7">Position 7</option>
-                    <option value="8">Position 8</option>
-                    <option value="9">Position 9</option>
-                    <option value="10">Position 10</option>
-                  </select>
-                  <p class="text-xs text-gray-500">Select the position for your access PIN</p>
-                </div>
-                
-                <div id="pinCodeContainer" class="space-y-2">
-                  <label for="pinCode" class="block text-sm font-medium text-gray-700">PIN Code</label>
-                  <div class="flex space-x-2">
-                    <input 
-                      id="pinCode" 
-                      name="pinCode" 
-                      type="text" 
-                      pattern="[0-9]{4,6}"
-                      placeholder="Enter 4-6 digit PIN code" 
-                      class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <button 
-                      type="button" 
-                      id="generatePinButton"
-                      class="h-11 px-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      Generate
-                    </button>
-                  </div>
-                  <p class="text-xs text-gray-500">Enter a PIN code or click Generate for a random code</p>
-                </div>
-                
-                <div class="space-y-2">
-                  <label for="arrivalDateTime" class="block text-sm font-medium text-gray-700">Arrival Date & Time</label>
-                  <input 
-                    id="arrivalDateTime" 
-                    name="arrivalDateTime" 
-                    type="datetime-local" 
-                    required
-                    class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                
-                <div class="space-y-2">
-                  <label for="departureDateTime" class="block text-sm font-medium text-gray-700">Departure Date & Time</label>
-                  <input 
-                    id="departureDateTime" 
-                    name="departureDateTime" 
-                    type="datetime-local" 
-                    required
-                    class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                
-                <div class="space-y-2">
-                  <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
-                  <input 
-                    id="name" 
-                    name="name" 
-                    type="text" 
-                    placeholder="Enter your full name" 
-                    required
-                    class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                
-                <div class="space-y-2">
-                  <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
-                  <input 
-                    id="email" 
-                    name="email" 
-                    type="email" 
-                    placeholder="Enter your email" 
-                    required
-                    class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                
-                <div class="space-y-2">
-                  <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
-                  <input 
-                    id="phone" 
-                    name="phone" 
-                    type="tel" 
-                    placeholder="Enter your phone number" 
-                    required
-                    class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                
-                <button 
-                  type="submit" 
-                  id="submitButton"
-                  class="w-full h-11 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-                >
-                  Create Booking
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
+        <!-- Load Booking Form Component -->
+        <div id="booking-form-container"></div>
       </div>
       
-      <div class="mt-16">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Our Rooms</h2>
-        <div id="roomsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div class="col-span-full text-center text-gray-500">
-            Loading available rooms...
-          </div>
-        </div>
-      </div>
+      <!-- Load Rooms Section Component -->
+      <div id="rooms-section-container"></div>
     </div>
   </main>
-
-  <footer class="mt-16 py-8 bg-gray-50 border-t">
-    <div class="container mx-auto px-4">
-      <div class="text-center text-gray-500 text-sm">
-        <p>© 2025 Check-in-Simplify. All rights reserved.</p>
-      </div>
-    </div>
-  </footer>
-
-  <div id="toast" class="fixed top-4 right-4 z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
-    <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 flex items-start max-w-xs">
-      <div id="toastIcon" class="flex-shrink-0 w-5 h-5 mr-3"></div>
-      <div>
-        <p id="toastTitle" class="font-medium text-gray-900 text-sm"></p>
-        <p id="toastMessage" class="text-sm text-gray-500 mt-1"></p>
-      </div>
-    </div>
-  </div>
-
-  <div id="successModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-    <div class="absolute inset-0 bg-black opacity-50"></div>
-    <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full m-4 p-6 fade-in">
-      <div class="text-center">
-        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
-        <h3 class="text-lg font-medium text-gray-900 mb-2">Booking Successful!</h3>
-        <p class="text-sm text-gray-500 mb-6">Your booking has been created successfully. Check your email for details.</p>
-        <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-          <p class="text-sm text-gray-700 mb-2">Your access code:</p>
-          <p id="accessCode" class="text-2xl font-bold text-blue-600 tracking-wider"></p>
-        </div>
-        <button 
-          id="closeModal" 
-          class="w-full h-10 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-
+  
+  <!-- Load Footer Component -->
+  <div id="footer-container"></div>
+  
+  <!-- Load Toast Component -->
+  <div id="toast-container"></div>
+  
+  <!-- Load Success Modal Component -->
+  <div id="success-modal-container"></div>
+  
+  <!-- Scripts -->
+  <script src="/src/js/toast-utils.js"></script>
+  <script src="/src/js/booking-form.js"></script>
+  
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       console.log("Home page loaded successfully");
       
-      // Load rooms from API
-      fetch('/api/get_rooms.php')
-        .then(response => {
-          console.log("Room API response status:", response.status);
-          return response.json();
-        })
-        .then(data => {
-          console.log("Room API data:", data);
-          if (data.success && data.rooms) {
-            const roomSelect = document.getElementById('room');
-            const roomsContainer = document.getElementById('roomsContainer');
-            
-            roomsContainer.innerHTML = '';
-            
-            if (data.rooms.length === 0) {
-              roomsContainer.innerHTML = '<div class="col-span-full text-center text-gray-500">No rooms available at the moment.</div>';
-              return;
-            }
-            
-            const roomDescriptions = {};
-            
-            data.rooms.forEach(room => {
-              const option = document.createElement('option');
-              option.value = room.id;
-              option.textContent = room.name;
-              roomSelect.appendChild(option);
-              
-              roomDescriptions[room.id] = room.description || '';
-              
-              const roomCard = document.createElement('div');
-              roomCard.className = 'bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 room-card';
-              roomCard.innerHTML = `
-                <div class="h-48 bg-gray-200 travel-image" 
-                     style="background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80&random=${Math.random()}')">
-                </div>
-                <div class="p-4">
-                  <h3 class="font-semibold text-lg text-gray-800">${room.name}</h3>
-                  <p class="text-gray-600 text-sm mt-1">${room.description || 'Comfortable accommodation with all the amenities you need.'}</p>
-                  <button 
-                    class="mt-4 w-full py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors text-sm font-medium" 
-                    onclick="selectRoom('${room.id}')">
-                    Select Room
-                  </button>
-                </div>
-              `;
-              roomsContainer.appendChild(roomCard);
-            });
-            
-            roomSelect.addEventListener('change', function() {
-              const roomId = this.value;
-              const description = roomDescriptions[roomId] || '';
-              const descriptionElement = document.getElementById('roomDescription');
-              
-              if (description) {
-                descriptionElement.textContent = description;
-                descriptionElement.classList.remove('hidden');
-              } else {
-                descriptionElement.classList.add('hidden');
-              }
-              
-              if (roomId) {
-                loadEntryPoints(roomId);
-              } else {
-                const entrySelect = document.getElementById('entryPoint');
-                entrySelect.innerHTML = '<option value="" disabled selected>Select an entry point</option>';
-              }
-            });
-            
-            window.selectRoom = function(roomId) {
-              roomSelect.value = roomId;
-              roomSelect.dispatchEvent(new Event('change'));
-              
-              document.querySelector('.booking-form').scrollIntoView({ behavior: 'smooth' });
-            };
-            
-          } else {
-            console.error('Failed to load rooms:', data.message);
-            showToast('error', 'Error', 'Failed to load rooms. Please try again later.');
-            document.getElementById('roomsContainer').innerHTML = 
-              '<div class="col-span-full text-center text-red-500">Failed to load rooms. Please refresh the page.</div>';
-          }
-        })
-        .catch(error => {
-          console.error('Error loading rooms:', error);
-          showToast('error', 'Error', 'Failed to load rooms. Please try again later.');
-          document.getElementById('roomsContainer').innerHTML = 
-            '<div class="col-span-full text-center text-red-500">Failed to load rooms. Please refresh the page.</div>';
+      // Load components
+      fetch('/src/components/HeroBanner.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('hero-banner-container').innerHTML = html;
         });
-      
-      function loadEntryPoints(roomId) {
-        console.log("Loading entry points for room:", roomId);
         
-        const entryPointContainer = document.getElementById('entryPointContainer');
-        entryPointContainer.classList.add('animate-pulse');
-        
-        fetch(`/api/get_entry_points.php?room_id=${roomId}`)
-          .then(response => {
-            console.log("Entry points API response status:", response.status);
-            return response.json();
-          })
-          .then(data => {
-            console.log("Entry points API data:", data);
-            entryPointContainer.classList.remove('animate-pulse');
-            
-            const entrySelect = document.getElementById('entryPoint');
-            entrySelect.innerHTML = '<option value="" disabled selected>Select an entry point</option>';
-            
-            if (data.success && data.entry_points && data.entry_points.length > 0) {
-              data.entry_points.forEach(entry => {
-                const option = document.createElement('option');
-                option.value = entry.id;
-                option.textContent = entry.name;
-                if (entry.description) {
-                  option.title = entry.description;
-                }
-                entrySelect.appendChild(option);
-              });
-              
-              document.getElementById('pinPositionContainer').style.display = 'block';
-              document.getElementById('pinCodeContainer').style.display = 'block';
-            } else {
-              // If no entry points were returned, show an error toast
-              console.error('No entry points found for this room');
-              showToast('error', 'No Entry Points', 'No entry points available for this room.');
-              
-              // Add a default "No entry points available" option
-              const option = document.createElement('option');
-              option.value = "";
-              option.textContent = "No entry points available";
-              option.disabled = true;
-              option.selected = true;
-              entrySelect.appendChild(option);
-            }
-          })
-          .catch(error => {
-            entryPointContainer.classList.remove('animate-pulse');
-            console.error('Error loading entry points:', error);
-            showToast('error', 'Error', 'Failed to load entry points. Please try again.');
-          });
-      }
-      
-      // Keep PIN position and code containers visible by default
-      document.getElementById('pinPositionContainer').style.display = 'block';
-      document.getElementById('pinCodeContainer').style.display = 'block';
-      
-      // Generate PIN code button handler
-      document.getElementById('generatePinButton').addEventListener('click', function() {
-        console.log("Generating PIN code");
-        const formData = new FormData();
-        formData.append('length', '4');
-        
-        // Show loading state
-        const button = this;
-        const originalText = button.textContent;
-        button.textContent = "Generating...";
-        button.disabled = true;
-        
-        fetch('/api/generate_pin.php', {
-          method: 'POST',
-          body: formData
-        })
-        .then(response => {
-          console.log("Generate PIN API response status:", response.status);
-          return response.json();
-        })
-        .then(data => {
-          console.log("Generate PIN API data:", data);
-          button.textContent = originalText;
-          button.disabled = false;
-          
-          if (data.success) {
-            document.getElementById('pinCode').value = data.pin_code;
-            showToast('success', 'PIN Generated', `Your PIN code ${data.pin_code} has been generated.`);
-          } else {
-            // If API fails, generate a PIN locally
-            const pinCode = Math.floor(1000 + Math.random() * 9000).toString();
-            document.getElementById('pinCode').value = pinCode;
-            showToast('success', 'PIN Generated', `Your PIN code ${pinCode} has been generated.`);
-          }
-        })
-        .catch(error => {
-          console.error('Error generating PIN:', error);
-          button.textContent = originalText;
-          button.disabled = false;
-          
-          // Generate a PIN locally in case of API failure
-          const pinCode = Math.floor(1000 + Math.random() * 9000).toString();
-          document.getElementById('pinCode').value = pinCode;
-          showToast('success', 'PIN Generated', `Your PIN code ${pinCode} has been generated.`);
+      fetch('/src/components/Header.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('header-container').innerHTML = html;
         });
-      });
-      
-      const today = new Date();
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      
-      const formatDateTimeForInput = (date) => {
-        return date.toISOString().slice(0, 16);
-      };
-      
-      document.getElementById('arrivalDateTime').min = formatDateTimeForInput(today);
-      document.getElementById('departureDateTime').min = formatDateTimeForInput(tomorrow);
-      
-      document.getElementById('arrivalDateTime').value = formatDateTimeForInput(today);
-      document.getElementById('departureDateTime').value = formatDateTimeForInput(tomorrow);
-      
-      document.getElementById('bookingForm').addEventListener('submit', function(e) {
-        e.preventDefault();
         
-        const submitButton = document.getElementById('submitButton');
-        const formData = new FormData(this);
-        
-        console.log("Form submission - room:", formData.get('room'));
-        console.log("Form submission - entryPoint:", formData.get('entryPoint'));
-        console.log("Form submission - pinPosition:", formData.get('pinPosition'));
-        console.log("Form submission - pinCode:", formData.get('pinCode'));
-        
-        const arrival = new Date(formData.get('arrivalDateTime'));
-        const departure = new Date(formData.get('departureDateTime'));
-        
-        if (departure <= arrival) {
-          showToast('error', 'Invalid Dates', 'Departure date must be after arrival date.');
-          return;
-        }
-        
-        if (!formData.get('entryPoint')) {
-          showToast('error', 'Missing Information', 'Please select an entry point for access.');
-          return;
-        }
-        
-        if (!formData.get('pinPosition')) {
-          showToast('error', 'Missing Information', 'Please select a PIN position.');
-          return;
-        }
-        
-        if (!formData.get('pinCode')) {
-          showToast('error', 'Missing Information', 'Please enter or generate a PIN code.');
-          return;
-        }
-        
-        if (!/^\d{4,6}$/.test(formData.get('pinCode'))) {
-          showToast('error', 'Invalid PIN', 'PIN code must be 4-6 digits.');
-          return;
-        }
-        
-        submitButton.disabled = true;
-        submitButton.innerHTML = `
-          <span class="mr-2">Processing</span>
-          <svg class="inline-block animate-spin h-4 w-4" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-        `;
-        
-        fetch('/api/process_booking.php', {
-          method: 'POST',
-          body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-          submitButton.disabled = false;
-          submitButton.textContent = 'Create Booking';
-          
-          if (data.success) {
-            document.getElementById('accessCode').textContent = data.data.accessCode;
-            document.getElementById('successModal').classList.remove('hidden');
-            
-            document.getElementById('bookingForm').reset();
-            
-            const today = new Date();
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            document.getElementById('arrivalDateTime').value = formatDateTimeForInput(today);
-            document.getElementById('departureDateTime').value = formatDateTimeForInput(tomorrow);
-            
-            loadAvailablePositions();
-          } else {
-            showToast('error', 'Booking Failed', data.message || 'There was an error creating your booking. Please try again.');
-          }
-        })
-        .catch(error => {
-          console.error('Error processing booking:', error);
-          submitButton.disabled = false;
-          submitButton.textContent = 'Create Booking';
-          showToast('error', 'Error', 'There was an error processing your request. Please try again.');
+      fetch('/src/components/IntroSection.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('intro-section-container').innerHTML = html;
         });
-      });
-      
-      document.getElementById('closeModal').addEventListener('click', function() {
-        document.getElementById('successModal').classList.add('hidden');
-      });
+        
+      fetch('/src/components/BookingForm.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('booking-form-container').innerHTML = html;
+        });
+        
+      fetch('/src/components/RoomsSection.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('rooms-section-container').innerHTML = html;
+        });
+        
+      fetch('/src/components/Footer.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('footer-container').innerHTML = html;
+        });
+        
+      fetch('/src/components/Toast.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('toast-container').innerHTML = html;
+        });
+        
+      fetch('/src/components/SuccessModal.html')
+        .then(response => response.text())
+        .then(html => {
+          document.getElementById('success-modal-container').innerHTML = html;
+        });
     });
-    
-    // Toast function implementation
-    window.showToast = function(type, title, message) {
-      const toast = document.getElementById('toast');
-      const toastTitle = document.getElementById('toastTitle');
-      const toastMessage = document.getElementById('toastMessage');
-      const toastIcon = document.getElementById('toastIcon');
-      
-      toastTitle.textContent = title;
-      toastMessage.textContent = message;
-      
-      if (type === 'success') {
-        toastIcon.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-          </svg>
-        `;
-      } else if (type === 'error') {
-        toastIcon.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-          </svg>
-        `;
-      } else if (type === 'warning') {
-        toastIcon.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-          </svg>
-        `;
-      } else {
-        toastIcon.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd" />
-          </svg>
-        `;
-      }
-      
-      // Remove any existing animation classes and reset transition
-      toast.classList.remove('translate-x-0');
-      void toast.offsetWidth; // Force reflow
-      
-      // Show the toast
-      toast.classList.add('translate-x-0');
-      
-      // Hide after 5 seconds
-      setTimeout(() => {
-        toast.classList.remove('translate-x-0');
-      }, 5000);
-    };
   </script>
 </body>
 </html>
