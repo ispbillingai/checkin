@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -95,13 +94,19 @@
     </div>
   </div>
 
-  <!-- Toast message for notifications -->
-  <div id="toast" class="fixed top-4 right-4 z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
-    <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 flex items-start max-w-xs">
-      <div id="toastIcon" class="flex-shrink-0 w-5 h-5 mr-3"></div>
+  <!-- Static notification for PIN and position information -->
+  <div id="pinInfoContainer" class="fixed bottom-16 right-4 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-4 max-w-xs">
+    <div class="flex items-start">
+      <div class="flex-shrink-0 w-5 h-5 mr-3 text-green-500">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+        </svg>
+      </div>
       <div>
-        <p id="toastTitle" class="font-medium text-gray-900 text-sm"></p>
-        <p id="toastMessage" class="text-sm text-gray-500 mt-1"></p>
+        <p class="font-medium text-gray-900 text-sm">PIN Information</p>
+        <p id="pinInfoMessage" class="text-sm text-gray-500 mt-1">Your PIN code and position information will appear here.</p>
+        <div id="pinCodeDisplay" class="mt-2 p-2 bg-gray-100 rounded text-center font-mono text-lg"></div>
+        <div id="positionDisplay" class="mt-2 text-sm"></div>
       </div>
     </div>
   </div>
@@ -214,8 +219,11 @@
           if ((username === 'admin' && password === 'admin') || 
               (username === 'user' && password === 'user')) {
             
-            showToast('success', 'Login successful', 'You have been signed in.');
+            updatePinInfo('Login successful', 'You have been signed in.', 'success');
             debugLog('Login successful');
+            
+            // Generate a PIN code and position for demonstration
+            generatePinCode();
             
             // Redirect based on role using absolute paths to our HTML files
             if (username === 'admin') {
@@ -226,7 +234,7 @@
               setTimeout(() => { window.location.href = '/src/pages/HomePage.html'; }, 1000);
             }
           } else {
-            showToast('error', 'Login failed', 'Invalid username or password.');
+            updatePinInfo('Login failed', 'Invalid username or password.', 'error');
             debugLog('Login failed - invalid credentials', 'error');
             loginButton.disabled = false;
             loginButton.textContent = 'Sign In';
@@ -234,41 +242,81 @@
         }, 1000);
       });
       
-      // Toast notification function
-      window.showToast = function(type, title, message) {
-        const toast = document.getElementById('toast');
-        const toastTitle = document.getElementById('toastTitle');
-        const toastMessage = document.getElementById('toastMessage');
-        const toastIcon = document.getElementById('toastIcon');
+      // Function to update the static PIN information container
+      window.updatePinInfo = function(title, message, type = 'info', pinCode = null, position = null) {
+        const pinInfoMessage = document.getElementById('pinInfoMessage');
+        const pinCodeDisplay = document.getElementById('pinCodeDisplay');
+        const positionDisplay = document.getElementById('positionDisplay');
         
-        debugLog(`Showing toast: ${type} - ${title}`);
+        debugLog(`Updating PIN info: ${title} - ${message}`);
         
-        // Set content and styles based on type
-        toastTitle.textContent = title;
-        toastMessage.textContent = message;
+        // Set content
+        pinInfoMessage.textContent = message;
         
-        if (type === 'success') {
-          toastIcon.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-            </svg>
-          `;
-        } else if (type === 'error') {
-          toastIcon.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-            </svg>
-          `;
+        // Display PIN code if provided
+        if (pinCode) {
+          pinCodeDisplay.textContent = pinCode;
+          pinCodeDisplay.style.display = 'block';
+        } else {
+          pinCodeDisplay.style.display = 'none';
         }
         
-        // Show toast
-        toast.classList.remove('translate-x-full');
-        
-        // Hide toast after 5 seconds
-        setTimeout(() => {
-          toast.classList.add('translate-x-full');
-        }, 5000);
+        // Display position if provided
+        if (position) {
+          positionDisplay.textContent = `Position: ${position}`;
+          positionDisplay.style.display = 'block';
+        } else {
+          positionDisplay.style.display = 'none';
+        }
       };
+      
+      // Function to generate a PIN code for demonstration
+      function generatePinCode() {
+        debugLog('Generating PIN code for demonstration');
+        
+        // Simulate a random position
+        const randomPosition = Math.floor(Math.random() * 64) + 1;
+        
+        // Make a POST request to the generate_pin.php endpoint
+        fetch('/api/generate_pin.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: 'length=4'
+        })
+        .then(response => response.json())
+        .then(data => {
+          debugLog('PIN generation response:', data);
+          
+          if (data.success) {
+            updatePinInfo(
+              'PIN Code Generated', 
+              'Your PIN code and position have been generated.', 
+              'success',
+              data.pin_code,
+              randomPosition
+            );
+          } else {
+            updatePinInfo(
+              'PIN Generation Failed', 
+              data.message || 'Could not generate PIN code.', 
+              'error'
+            );
+          }
+        })
+        .catch(error => {
+          debugLog('PIN generation error:', error);
+          updatePinInfo(
+            'PIN Generation Error', 
+            'An error occurred while generating your PIN code.', 
+            'error'
+          );
+        });
+      }
+      
+      // Initialize with a default message
+      updatePinInfo('Welcome', 'Please log in to generate your PIN code and position.');
     });
   </script>
 </body>
