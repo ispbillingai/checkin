@@ -85,7 +85,6 @@
   <main class="container mx-auto px-4 py-8 md:py-16">
     <div class="max-w-6xl mx-auto">
       <div class="hero-container grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
-        <!-- Left side - Hero text -->
         <div class="fade-in" style="animation-delay: 0.2s">
           <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
             Simple and Quick <span class="text-blue-600">Room Booking</span>
@@ -122,7 +121,6 @@
           </div>
         </div>
         
-        <!-- Right side - Booking form -->
         <div class="fade-in booking-form" style="animation-delay: 0.4s">
           <div class="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
             <div class="p-6 bg-blue-50 border-b">
@@ -131,7 +129,6 @@
             </div>
             <div class="p-6">
               <form id="bookingForm" class="space-y-4">
-                <!-- Room selection -->
                 <div class="space-y-2">
                   <label for="room" class="block text-sm font-medium text-gray-700">Select Room</label>
                   <select 
@@ -141,12 +138,10 @@
                     class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select a room</option>
-                    <!-- Room options will be loaded here -->
                   </select>
                   <p id="roomDescription" class="text-sm text-gray-500 italic mt-1 hidden"></p>
                 </div>
                 
-                <!-- Entry Point Selection -->
                 <div id="entryPointContainer" class="space-y-2">
                   <label for="entryPoint" class="block text-sm font-medium text-gray-700">Select Entry Point</label>
                   <select 
@@ -156,13 +151,11 @@
                     class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="" disabled selected>Select an entry point</option>
-                    <!-- Entry points will be loaded dynamically based on room selection -->
                   </select>
                   <p class="text-xs text-gray-500">Choose which entry point you will use to access the room</p>
                 </div>
                 
-                <!-- PIN Position Selection -->
-                <div id="pinPositionContainer" class="space-y-2 hidden">
+                <div id="pinPositionContainer" class="space-y-2">
                   <label for="pinPosition" class="block text-sm font-medium text-gray-700">PIN Position</label>
                   <select 
                     id="pinPosition" 
@@ -171,13 +164,11 @@
                     class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="" disabled selected>Select a position</option>
-                    <!-- Available positions will be loaded dynamically -->
                   </select>
                   <p class="text-xs text-gray-500">Select the position for your access PIN</p>
                 </div>
                 
-                <!-- PIN Code Input -->
-                <div id="pinCodeContainer" class="space-y-2 hidden">
+                <div id="pinCodeContainer" class="space-y-2">
                   <label for="pinCode" class="block text-sm font-medium text-gray-700">PIN Code</label>
                   <div class="flex space-x-2">
                     <input 
@@ -199,7 +190,6 @@
                   <p class="text-xs text-gray-500">Enter a PIN code or click Generate for a random code</p>
                 </div>
                 
-                <!-- Arrival date/time -->
                 <div class="space-y-2">
                   <label for="arrivalDateTime" class="block text-sm font-medium text-gray-700">Arrival Date & Time</label>
                   <input 
@@ -211,7 +201,6 @@
                   />
                 </div>
                 
-                <!-- Departure date/time -->
                 <div class="space-y-2">
                   <label for="departureDateTime" class="block text-sm font-medium text-gray-700">Departure Date & Time</label>
                   <input 
@@ -223,7 +212,6 @@
                   />
                 </div>
                 
-                <!-- Name -->
                 <div class="space-y-2">
                   <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
                   <input 
@@ -236,7 +224,6 @@
                   />
                 </div>
                 
-                <!-- Email -->
                 <div class="space-y-2">
                   <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
                   <input 
@@ -249,7 +236,6 @@
                   />
                 </div>
                 
-                <!-- Phone -->
                 <div class="space-y-2">
                   <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
                   <input 
@@ -262,7 +248,6 @@
                   />
                 </div>
                 
-                <!-- Submit button -->
                 <button 
                   type="submit" 
                   id="submitButton"
@@ -276,11 +261,9 @@
         </div>
       </div>
       
-      <!-- Featured Rooms Section -->
       <div class="mt-16">
         <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">Our Rooms</h2>
         <div id="roomsContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <!-- Rooms will be loaded here -->
           <div class="col-span-full text-center text-gray-500">
             Loading available rooms...
           </div>
@@ -297,7 +280,6 @@
     </div>
   </footer>
 
-  <!-- Toast message for notifications -->
   <div id="toast" class="fixed top-4 right-4 z-50 transform translate-x-full transition-transform duration-300 ease-in-out">
     <div class="bg-white border border-gray-200 rounded-lg shadow-lg p-4 flex items-start max-w-xs">
       <div id="toastIcon" class="flex-shrink-0 w-5 h-5 mr-3"></div>
@@ -308,7 +290,6 @@
     </div>
   </div>
 
-  <!-- Success modal -->
   <div id="successModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
     <div class="absolute inset-0 bg-black opacity-50"></div>
     <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full m-4 p-6 fade-in">
@@ -338,7 +319,6 @@
     document.addEventListener('DOMContentLoaded', function() {
       console.log("Home page loaded successfully");
       
-      // Load rooms from API
       fetch('/api/get_rooms.php')
         .then(response => {
           console.log("Room API response status:", response.status);
@@ -350,23 +330,18 @@
             const roomSelect = document.getElementById('room');
             const roomsContainer = document.getElementById('roomsContainer');
             
-            // Clear loading message
             roomsContainer.innerHTML = '';
             
-            // Store room descriptions for later use
             const roomDescriptions = {};
             
             data.rooms.forEach(room => {
-              // Add to dropdown
               const option = document.createElement('option');
               option.value = room.id;
               option.textContent = room.name;
               roomSelect.appendChild(option);
               
-              // Store description
               roomDescriptions[room.id] = room.description || '';
               
-              // Add room card to featured rooms
               const roomCard = document.createElement('div');
               roomCard.className = 'bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 room-card';
               roomCard.innerHTML = `
@@ -386,12 +361,10 @@
               roomsContainer.appendChild(roomCard);
             });
             
-            // Show room description when a room is selected
             roomSelect.addEventListener('change', function() {
               const roomId = this.value;
               const description = roomDescriptions[roomId] || '';
               const descriptionElement = document.getElementById('roomDescription');
-              const entryPointContainer = document.getElementById('entryPointContainer');
               
               if (description) {
                 descriptionElement.textContent = description;
@@ -400,28 +373,21 @@
                 descriptionElement.classList.add('hidden');
               }
               
-              // Load entry points when a room is selected
               if (roomId) {
                 loadEntryPoints(roomId);
-                // Show the PIN fields
-                document.getElementById('pinPositionContainer').classList.remove('hidden');
-                document.getElementById('pinCodeContainer').classList.remove('hidden');
               } else {
-                // Clear entry points but don't hide the container
                 const entrySelect = document.getElementById('entryPoint');
                 entrySelect.innerHTML = '<option value="" disabled selected>Select an entry point</option>';
-                // Hide the PIN fields
-                document.getElementById('pinPositionContainer').classList.add('hidden');
-                document.getElementById('pinCodeContainer').classList.add('hidden');
+                
+                document.getElementById('pinPositionContainer').style.display = 'none';
+                document.getElementById('pinCodeContainer').style.display = 'none';
               }
             });
             
-            // Function to select a room from the featured section
             window.selectRoom = function(roomId) {
               roomSelect.value = roomId;
               roomSelect.dispatchEvent(new Event('change'));
               
-              // Scroll to the booking form
               document.querySelector('.booking-form').scrollIntoView({ behavior: 'smooth' });
             };
             
@@ -435,7 +401,6 @@
           showToast('error', 'Error', 'Failed to load rooms. Please try again later.');
         });
       
-      // Function to load entry points by room ID
       function loadEntryPoints(roomId) {
         console.log("Loading entry points for room:", roomId);
         fetch(`/api/get_entry_points.php?room_id=${roomId}`)
@@ -446,7 +411,6 @@
           .then(data => {
             console.log("Entry points API data:", data);
             const entrySelect = document.getElementById('entryPoint');
-            // Clear previous options
             entrySelect.innerHTML = '<option value="" disabled selected>Select an entry point</option>';
             
             if (data.success) {
@@ -460,7 +424,9 @@
                 entrySelect.appendChild(option);
               });
               
-              // Add event listener to load positions when entry point is selected
+              document.getElementById('pinPositionContainer').style.display = 'block';
+              document.getElementById('pinCodeContainer').style.display = 'block';
+              
               entrySelect.addEventListener('change', function() {
                 const entryPointId = this.value;
                 if (entryPointId) {
@@ -477,7 +443,6 @@
           });
       }
       
-      // Function to load available PIN positions
       function loadAvailablePositions(entryPointId) {
         console.log("Loading available positions for entry point:", entryPointId);
         fetch(`/api/get_available_positions.php?entry_point_id=${entryPointId}`)
@@ -488,7 +453,6 @@
           .then(data => {
             console.log("Available positions API data:", data);
             const positionSelect = document.getElementById('pinPosition');
-            // Clear previous options
             positionSelect.innerHTML = '<option value="" disabled selected>Select a position</option>';
             
             if (data.success) {
@@ -508,12 +472,10 @@
           });
       }
       
-      // Add event listener to generate PIN button
       document.getElementById('generatePinButton').addEventListener('click', function() {
         console.log("Generating PIN code");
-        // Create form data for the length parameter
         const formData = new FormData();
-        formData.append('length', '4'); // Default to 4 digits
+        formData.append('length', '4');
         
         fetch('/api/generate_pin.php', {
           method: 'POST',
@@ -537,7 +499,9 @@
         });
       });
       
-      // Set min dates for arrival/departure
+      document.getElementById('pinPositionContainer').style.display = 'none';
+      document.getElementById('pinCodeContainer').style.display = 'none';
+      
       const today = new Date();
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -549,24 +513,20 @@
       document.getElementById('arrivalDateTime').min = formatDateTimeForInput(today);
       document.getElementById('departureDateTime').min = formatDateTimeForInput(tomorrow);
       
-      // Default values for testing
       document.getElementById('arrivalDateTime').value = formatDateTimeForInput(today);
       document.getElementById('departureDateTime').value = formatDateTimeForInput(tomorrow);
       
-      // Handle booking form submission
       document.getElementById('bookingForm').addEventListener('submit', function(e) {
         e.preventDefault();
         
         const submitButton = document.getElementById('submitButton');
         const formData = new FormData(this);
         
-        // Log form data for debugging
         console.log("Form submission - room:", formData.get('room'));
         console.log("Form submission - entryPoint:", formData.get('entryPoint'));
         console.log("Form submission - pinPosition:", formData.get('pinPosition'));
         console.log("Form submission - pinCode:", formData.get('pinCode'));
         
-        // Validate arrival and departure dates
         const arrival = new Date(formData.get('arrivalDateTime'));
         const departure = new Date(formData.get('departureDateTime'));
         
@@ -575,32 +535,26 @@
           return;
         }
         
-        // Make sure entry point is selected
         if (!formData.get('entryPoint')) {
           showToast('error', 'Missing Information', 'Please select an entry point for access.');
           return;
         }
         
-        // Make sure PIN position is selected
         if (!formData.get('pinPosition')) {
           showToast('error', 'Missing Information', 'Please select a PIN position.');
           return;
         }
         
-        // Make sure PIN code is entered
         if (!formData.get('pinCode')) {
           showToast('error', 'Missing Information', 'Please enter or generate a PIN code.');
           return;
         }
         
-        // Verify PIN code format (4-6 digits)
-        const pinCode = formData.get('pinCode');
-        if (!/^\d{4,6}$/.test(pinCode)) {
+        if (!/^\d{4,6}$/.test(formData.get('pinCode'))) {
           showToast('error', 'Invalid PIN', 'PIN code must be 4-6 digits.');
           return;
         }
         
-        // Disable button and show loading state
         submitButton.disabled = true;
         submitButton.innerHTML = `
           <span class="mr-2">Processing</span>
@@ -610,7 +564,6 @@
           </svg>
         `;
         
-        // Submit form data to API
         fetch('/api/process_booking.php', {
           method: 'POST',
           body: formData
@@ -621,21 +574,17 @@
           submitButton.textContent = 'Create Booking';
           
           if (data.success) {
-            // Show success modal with access code
             document.getElementById('accessCode').textContent = data.data.accessCode;
             document.getElementById('successModal').classList.remove('hidden');
             
-            // Reset form
             document.getElementById('bookingForm').reset();
             
-            // Set default dates again
             const today = new Date();
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
             document.getElementById('arrivalDateTime').value = formatDateTimeForInput(today);
             document.getElementById('departureDateTime').value = formatDateTimeForInput(tomorrow);
             
-            // Reload available positions
             loadAvailablePositions();
           } else {
             showToast('error', 'Booking Failed', data.message || 'There was an error creating your booking. Please try again.');
@@ -649,19 +598,16 @@
         });
       });
       
-      // Close modal button
       document.getElementById('closeModal').addEventListener('click', function() {
         document.getElementById('successModal').classList.add('hidden');
       });
       
-      // Toast notification function
       window.showToast = function(type, title, message) {
         const toast = document.getElementById('toast');
         const toastTitle = document.getElementById('toastTitle');
         const toastMessage = document.getElementById('toastMessage');
         const toastIcon = document.getElementById('toastIcon');
         
-        // Set content and styles based on type
         toastTitle.textContent = title;
         toastMessage.textContent = message;
         
