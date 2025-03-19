@@ -668,4 +668,23 @@
         if (type === 'success') {
           toastIcon.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+          `;
+        } else {
+          toastIcon.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm-2-8a6 6 0 00-6 6v1H4a6 6 0 006-6V4zm2 0a4 4 0 110 8 4 4 0 010-8z" clip-rule="evenodd" />
+            </svg>
+          `;
+        }
+        
+        toast.classList.remove('hidden');
+        setTimeout(() => {
+          toast.classList.add('hidden');
+        }, 3000);
+      };
+    });
+  </script>
+</body>
+</html>
