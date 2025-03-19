@@ -81,10 +81,27 @@ try {
         $pins[] = $row;
     }
 
+    // Get available positions for the entry point if specified
+    $available_positions = [];
+    if ($entry_point_id && $entry_point_id != 'all') {
+        $used_positions = [];
+        foreach ($pins as $pin) {
+            $used_positions[] = $pin['position'];
+        }
+        
+        // Create array of available positions (1-64)
+        for ($i = 1; $i <= 64; $i++) {
+            if (!in_array($i, $used_positions)) {
+                $available_positions[] = $i;
+            }
+        }
+    }
+
     // Return success response
     echo json_encode([
         'success' => true,
-        'pins' => $pins
+        'pins' => $pins,
+        'available_positions' => $available_positions
     ]);
 } catch (Exception $e) {
     // Return error response

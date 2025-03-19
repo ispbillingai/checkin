@@ -24,11 +24,32 @@
                 </div>
                 
                 <div class="space-y-1">
-                    <label for="entryPoint" class="block text-sm font-medium text-gray-700">Select Entry Point</label>
-                    <select id="entryPoint" name="entry_point" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" required disabled>
-                        <option value="">-- First Select a Room --</option>
-                    </select>
-                    <p id="entryPointDescription" class="text-xs text-gray-500 mt-1 hidden"></p>
+                    <label class="block text-sm font-medium text-gray-700">Select Entry Points</label>
+                    <div id="entryPointsContainer" class="border border-gray-300 rounded-md p-3 max-h-48 overflow-y-auto">
+                        <p class="text-gray-500 text-sm">First select a room to see available entry points</p>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label for="pinPosition" class="block text-sm font-medium text-gray-700">PIN Position</label>
+                        <select id="pinPosition" name="pinPosition" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <option value="">Auto-select position</option>
+                            <!-- Positions 1-64 will be added here via JavaScript -->
+                        </select>
+                        <p class="text-xs text-gray-500">Position on entry keypad (1-64)</p>
+                    </div>
+                    
+                    <div class="space-y-1">
+                        <label for="pinCode" class="block text-sm font-medium text-gray-700">PIN Code</label>
+                        <div class="flex">
+                            <input type="text" id="pinCode" name="pinCode" placeholder="Enter PIN code" maxlength="6" pattern="[0-9]{4,6}" class="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            <button type="button" id="generatePinBtn" class="bg-blue-500 text-white px-3 py-2 rounded-r-md hover:bg-blue-600">
+                                Generate
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500">4-6 digit code or leave empty to auto-generate</p>
+                    </div>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -80,7 +101,8 @@
                     <div class="mt-4 bg-gray-100 p-4 rounded-md">
                         <p class="text-sm font-medium text-gray-700">Your Access Code:</p>
                         <p id="accessCode" class="text-2xl font-bold text-blue-600 mt-1">--</p>
-                        <p class="text-xs text-gray-500 mt-2">Please use this code at the <span id="entryPointName">selected entry point</span> to access your room.</p>
+                        <p class="text-xs text-gray-500 mt-2">This code works at position <span id="pinPositionDisplay">--</span> on the keypad at the following entry points:</p>
+                        <p id="entryPointsList" class="text-sm text-gray-700 mt-1">--</p>
                     </div>
                     <div class="mt-4">
                         <button id="closeConfirmationBtn" class="inline-flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-blue-500 border border-transparent rounded-md hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500">
@@ -105,6 +127,15 @@
             document.getElementById('departureDate').min = tomorrow.toISOString().split('T')[0];
             document.getElementById('departureDate').value = tomorrow.toISOString().split('T')[0];
             
+            // Populate PIN position dropdown
+            const pinPositionSelect = document.getElementById('pinPosition');
+            for (let i = 1; i <= 64; i++) {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = i;
+                pinPositionSelect.appendChild(option);
+            }
+            
             // Load rooms
             fetch('/api/get_rooms.php')
                 .then(response => response.json())
@@ -128,15 +159,13 @@
             // Room selection changes entry point options
             document.getElementById('room').addEventListener('change', function() {
                 const roomId = this.value;
-                const entryPointSelect = document.getElementById('entryPoint');
-                const entryPointDescription = document.getElementById('entryPointDescription');
+                const entryPointsContainer = document.getElementById('entryPointsContainer');
                 
                 // Reset entry point selection
-                entryPointSelect.innerHTML = '<option value="">-- Select an Entry Point --</option>';
-                entryPointDescription.classList.add('hidden');
+                entryPointsContainer.innerHTML = '<p class="text-gray-500 text-sm">Loading entry points...</p>';
                 
                 if (!roomId) {
-                    entryPointSelect.disabled = true;
+                    entryPointsContainer.innerHTML = '<p class="text-gray-500 text-sm">First select a room to see available entry points</p>';
                     return;
                 }
                 
@@ -145,45 +174,96 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success && data.entry_points.length > 0) {
+                            entryPointsContainer.innerHTML = '';
+                            
                             data.entry_points.forEach(entryPoint => {
-                                const option = document.createElement('option');
-                                option.value = entryPoint.id;
-                                option.textContent = entryPoint.name;
-                                option.setAttribute('data-description', entryPoint.description || '');
-                                entryPointSelect.appendChild(option);
+                                const checkboxId = `entryPoint_${entryPoint.id}`;
+                                
+                                const div = document.createElement('div');
+                                div.className = 'flex items-start mb-2';
+                                
+                                const checkbox = document.createElement('input');
+                                checkbox.type = 'checkbox';
+                                checkbox.id = checkboxId;
+                                checkbox.name = 'entryPoints[]';
+                                checkbox.value = entryPoint.id;
+                                checkbox.className = 'mt-1 mr-2';
+                                
+                                const label = document.createElement('label');
+                                label.htmlFor = checkboxId;
+                                label.className = 'text-sm';
+                                
+                                const nameSpan = document.createElement('span');
+                                nameSpan.className = 'font-medium block';
+                                nameSpan.textContent = entryPoint.name;
+                                
+                                const descSpan = document.createElement('span');
+                                descSpan.className = 'text-xs text-gray-500';
+                                descSpan.textContent = entryPoint.description || 'No description available';
+                                
+                                label.appendChild(nameSpan);
+                                label.appendChild(descSpan);
+                                
+                                div.appendChild(checkbox);
+                                div.appendChild(label);
+                                
+                                entryPointsContainer.appendChild(div);
                             });
-                            entryPointSelect.disabled = false;
                         } else {
-                            entryPointSelect.innerHTML = '<option value="">No entry points available for this room</option>';
-                            entryPointSelect.disabled = true;
+                            entryPointsContainer.innerHTML = '<p class="text-gray-500 text-sm">No entry points available for this room</p>';
                         }
                     })
                     .catch(error => {
                         console.error('Error loading entry points:', error);
-                        entryPointSelect.innerHTML = '<option value="">Error loading entry points</option>';
-                        entryPointSelect.disabled = true;
+                        entryPointsContainer.innerHTML = '<p class="text-red-500 text-sm">Error loading entry points</p>';
                     });
             });
             
-            // Show entry point description when selected
-            document.getElementById('entryPoint').addEventListener('change', function() {
-                const selectedOption = this.options[this.selectedIndex];
-                const description = selectedOption.getAttribute('data-description');
-                const entryPointDescription = document.getElementById('entryPointDescription');
-                
-                if (description) {
-                    entryPointDescription.textContent = description;
-                    entryPointDescription.classList.remove('hidden');
-                } else {
-                    entryPointDescription.classList.add('hidden');
-                }
+            // Generate PIN code button
+            document.getElementById('generatePinBtn').addEventListener('click', function() {
+                fetch('/api/generate_pin.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: 'length=4'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('pinCode').value = data.pin_code;
+                    } else {
+                        alert('Error generating PIN code');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error generating PIN code:', error);
+                    alert('An error occurred. Please try again.');
+                });
             });
             
             // Form submission
             document.getElementById('bookingForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 
+                // Get selected entry points
+                const selectedEntryPoints = [];
+                document.querySelectorAll('input[name="entryPoints[]"]:checked').forEach(checkbox => {
+                    selectedEntryPoints.push(checkbox.value);
+                });
+                
+                if (selectedEntryPoints.length === 0) {
+                    alert('Please select at least one entry point');
+                    return;
+                }
+                
                 const formData = new FormData(this);
+                
+                // Remove entryPoints[] from FormData and add as JSON string
+                document.querySelectorAll('input[name="entryPoints[]"]').forEach(input => {
+                    formData.delete('entryPoints[]');
+                });
+                formData.append('entryPoints', JSON.stringify(selectedEntryPoints));
                 
                 // Add arrival and departure date times
                 const arrivalDateTime = formData.get('arrival_date') + ' 14:00:00'; // Check-in at 2 PM
@@ -194,8 +274,13 @@
                 formData.append('arrivalDateTime', arrivalDateTime);
                 formData.append('departureDateTime', departureDateTime);
                 
+                // Add auto-generate flag if PIN code is empty
+                if (!formData.get('pinCode')) {
+                    formData.append('autoGeneratePin', 'true');
+                }
+                
                 // Submit booking
-                fetch('/api/create_booking.php', {
+                fetch('/api/process_booking.php', {
                     method: 'POST',
                     body: formData
                 })
@@ -203,18 +288,20 @@
                 .then(data => {
                     if (data.success) {
                         // Show confirmation with access code
-                        document.getElementById('accessCode').textContent = data.accessCode;
-                        document.getElementById('entryPointName').textContent = data.entryPoint || 'selected entry point';
+                        document.getElementById('accessCode').textContent = data.data.accessCode;
+                        document.getElementById('pinPositionDisplay').textContent = data.data.pinPosition || 'auto-assigned';
+                        
+                        // Format entry points list
+                        const entryPointsList = Object.values(data.data.entryPoints).join(', ');
+                        document.getElementById('entryPointsList').textContent = entryPointsList;
+                        
                         document.getElementById('confirmationModal').classList.remove('hidden');
                         
                         // Reset form
                         document.getElementById('bookingForm').reset();
                         
-                        // Reset entry point selection
-                        const entryPointSelect = document.getElementById('entryPoint');
-                        entryPointSelect.innerHTML = '<option value="">-- First Select a Room --</option>';
-                        entryPointSelect.disabled = true;
-                        document.getElementById('entryPointDescription').classList.add('hidden');
+                        // Reset entry points container
+                        document.getElementById('entryPointsContainer').innerHTML = '<p class="text-gray-500 text-sm">First select a room to see available entry points</p>';
                         
                         // Reset dates
                         document.getElementById('arrivalDate').value = today.toISOString().split('T')[0];

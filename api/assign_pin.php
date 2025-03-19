@@ -29,14 +29,20 @@ $entry_point_id = isset($_POST['entry_point_id']) ? secure_input($_POST['entry_p
 $position = isset($_POST['position']) ? intval($_POST['position']) : 0;
 $pin_code = isset($_POST['pin_code']) ? secure_input($_POST['pin_code']) : '';
 $booking_id = isset($_POST['booking_id']) ? intval($_POST['booking_id']) : 0;
+$auto_generate = isset($_POST['auto_generate']) && $_POST['auto_generate'] == 'true';
 
 // Validate inputs
-if (empty($entry_point_id) || $position < 1 || $position > 64 || empty($pin_code) || $booking_id <= 0) {
+if (empty($entry_point_id) || $position < 1 || $position > 64 || $booking_id <= 0) {
     echo json_encode([
         'success' => false,
         'message' => 'Missing or invalid parameters'
     ]);
     exit;
+}
+
+// Auto-generate PIN code if requested
+if ($auto_generate || empty($pin_code)) {
+    $pin_code = str_pad(mt_rand(0, 9999), 4, '0', STR_PAD_LEFT);
 }
 
 try {
@@ -94,7 +100,8 @@ try {
         
         echo json_encode([
             'success' => true,
-            'message' => 'PIN assigned successfully'
+            'message' => 'PIN assigned successfully',
+            'pin_code' => $pin_code
         ]);
     } else {
         // Rollback transaction

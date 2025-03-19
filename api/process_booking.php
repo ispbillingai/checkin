@@ -22,6 +22,8 @@ $name = $_POST['name'] ?? '';
 $email = $_POST['email'] ?? '';
 $phone = $_POST['phone'] ?? '';
 $pinPosition = isset($_POST['pinPosition']) ? intval($_POST['pinPosition']) : null;
+$pinCode = isset($_POST['pinCode']) ? secure_input($_POST['pinCode']) : '';
+$autoGeneratePin = isset($_POST['autoGeneratePin']) && $_POST['autoGeneratePin'] == 'true';
 
 // For backwards compatibility, if entryPoints is not set but entryPoint is
 if (empty($entryPoints) && isset($_POST['entryPoint']) && !empty($_POST['entryPoint'])) {
@@ -75,12 +77,16 @@ try {
         $entryPointNames[$entryPoint] = $entryData['name'] ?? $entryPoint;
     }
     
-    // Use the room's fixed passcode
-    if ($roomData && !empty($roomData['fixed_passcode'])) {
+    // Determine access code (PIN) to use
+    if (!empty($pinCode) && !$autoGeneratePin) {
+        // Use provided PIN code
+        $accessCode = $pinCode;
+    } else if ($roomData && !empty($roomData['fixed_passcode'])) {
+        // Use the room's fixed passcode
         $accessCode = $roomData['fixed_passcode'];
     } else {
-        // Generate a random 6-digit access code
-        $accessCode = sprintf("%06d", mt_rand(0, 999999));
+        // Generate a random 4-digit access code by default
+        $accessCode = sprintf("%04d", mt_rand(0, 9999));
     }
     
     $roomName = $roomData['name'] ?? $room;
