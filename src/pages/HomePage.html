@@ -164,6 +164,10 @@
                     class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="" disabled selected>Select a position</option>
+                    <option value="1">Position 1</option>
+                    <option value="2">Position 2</option>
+                    <option value="3">Position 3</option>
+                    <option value="4">Position 4</option>
                   </select>
                   <p class="text-xs text-gray-500">Select the position for your access PIN</p>
                 </div>
@@ -489,6 +493,7 @@
           console.log("Generate PIN API data:", data);
           if (data.success) {
             document.getElementById('pinCode').value = data.pin_code;
+            showToast('success', 'PIN Generated', `Your PIN code ${data.pin_code} has been generated.`);
           } else {
             showToast('error', 'Error', 'Failed to generate PIN code.');
           }
@@ -499,8 +504,8 @@
         });
       });
       
-      document.getElementById('pinPositionContainer').style.display = 'none';
-      document.getElementById('pinCodeContainer').style.display = 'none';
+      document.getElementById('pinPositionContainer').style.display = 'block';
+      document.getElementById('pinCodeContainer').style.display = 'block';
       
       const today = new Date();
       const tomorrow = new Date(today);
