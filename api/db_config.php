@@ -75,4 +75,130 @@ function secure_input($data) {
 function generate_access_code() {
     return str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT);
 }
+
+// Setup entry points if they don't exist already
+function setup_entry_points() {
+    global $conn;
+    
+    // Check if entry_points table exists
+    $result = $conn->query("SHOW TABLES LIKE 'entry_points'");
+    if ($result->num_rows == 0) {
+        // Create entry_points table
+        $sql = "CREATE TABLE IF NOT EXISTS entry_points (
+            id VARCHAR(20) PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )";
+        
+        if (!$conn->query($sql)) {
+            log_error("Error creating entry_points table: " . $conn->error);
+            return false;
+        }
+        
+        log_error("Created entry_points table");
+    }
+    
+    // Check if room_entry_points table exists
+    $result = $conn->query("SHOW TABLES LIKE 'room_entry_points'");
+    if ($result->num_rows == 0) {
+        // Create room_entry_points table
+        $sql = "CREATE TABLE IF NOT EXISTS room_entry_points (
+            id INT(11) AUTO_INCREMENT PRIMARY KEY,
+            room_id VARCHAR(20) NOT NULL,
+            entry_point_id VARCHAR(20) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY unique_room_entry (room_id, entry_point_id),
+            FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE,
+            FOREIGN KEY (entry_point_id) REFERENCES entry_points(id) ON DELETE CASCADE
+        )";
+        
+        if (!$conn->query($sql)) {
+            log_error("Error creating room_entry_points table: " . $conn->error);
+            return false;
+        }
+        
+        log_error("Created room_entry_points table");
+    }
+    
+    // Check if we need to insert default entry points
+    $result = $conn->query("SELECT COUNT(*) as count FROM entry_points");
+    $row = $result->fetch_assoc();
+    
+    if ($row['count'] == 0) {
+        // Insert default entry points
+        $entry_points = [
+            ['entry1', 'Main Entrance', 'Front door at the main lobby'],
+            ['entry2', 'Side Entrance', 'Side entrance near the parking lot'],
+            ['entry3', 'Back Entrance', 'Back entrance near the garden']
+        ];
+        
+        foreach ($entry_points as $entry) {
+            $stmt = $conn->prepare("INSERT INTO entry_points (id, name, description) VALUES (?, ?, ?)");
+            $stmt->bind_param("sss", $entry[0], $entry[1], $entry[2]);
+            
+            if (!$stmt->execute()) {
+                log_error("Error inserting entry point {$entry[1]}: " . $stmt->error);
+            } else {
+                log_error("Added entry point: {$entry[1]}");
+            }
+        }
+        
+        // Map rooms to entry points
+        $room_entry_mappings = [
+            ['room1', 'entry1'],
+            ['room1', 'entry2'],
+            ['room2', 'entry1'],
+            ['room2', 'entry3'],
+            ['room3', 'entry2'],
+            ['room3', 'entry3'],
+            ['room4', 'entry1'],
+            ['room4', 'entry2'],
+            ['room4', 'entry3'],
+            ['room5', 'entry1']
+        ];
+        
+        foreach ($room_entry_mappings as $mapping) {
+            // Check if room exists first
+            $stmt = $conn->prepare("SELECT id FROM rooms WHERE id = ?");
+            $stmt->bind_param("s", $mapping[0]);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result->num_rows == 0) {
+                log_error("Room {$mapping[0]} not found, cannot create mapping to entry point {$mapping[1]}");
+                continue;
+            }
+            
+            // Create the mapping
+            $stmt = $conn->prepare("INSERT INTO room_entry_points (room_id, entry_point_id) VALUES (?, ?)");
+            $stmt->bind_param("ss", $mapping[0], $mapping[1]);
+            
+            if (!$stmt->execute()) {
+                log_error("Error mapping room {$mapping[0]} to entry point {$mapping[1]}: " . $stmt->error);
+            } else {
+                log_error("Mapped room {$mapping[0]} to entry point {$mapping[1]}");
+            }
+        }
+    }
+    
+    // Update bookings table if it doesn't have entry_point_id column
+    $result = $conn->query("SHOW COLUMNS FROM bookings LIKE 'entry_point_id'");
+    if ($result->num_rows == 0) {
+        $sql = "ALTER TABLE bookings ADD COLUMN entry_point_id VARCHAR(20) NOT NULL AFTER room_id, 
+                ADD CONSTRAINT fk_booking_entry_point FOREIGN KEY (entry_point_id) REFERENCES entry_points(id)";
+        
+        if (!$conn->query($sql)) {
+            log_error("Error adding entry_point_id to bookings table: " . $conn->error);
+        } else {
+            log_error("Added entry_point_id column to bookings table");
+        }
+    }
+    
+    return true;
+}
+
+// Run the setup function to ensure entry points exist
+setup_entry_points();
 ?>
