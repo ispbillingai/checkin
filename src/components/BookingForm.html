@@ -1,4 +1,3 @@
-
 <div class="fade-in booking-form" style="animation-delay: 0.4s">
   <div class="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
     <div class="p-6 bg-blue-50 border-b">
@@ -156,12 +155,12 @@
       // Load rooms from API
       loadRooms();
       
-      // Load all entry points immediately (not tied to room selection)
+      // Load all entry points (not tied to room selection)
       loadAllEntryPoints();
       
       // Set up event listeners
       setupEventListeners();
-    }, 1000); // Give components more time to load
+    }, 1000); // Give components time to load
   });
 
   function initializeDateInputs() {
@@ -224,7 +223,7 @@
             window.showToastMessage('error', 'Failed to load rooms. Please try again later.');
           }
           
-          // Provide fallback demo room data
+          // Fallback to demo rooms
           loadDemoRooms();
         });
     } else {
@@ -361,24 +360,16 @@
   }
 
   function loadAllEntryPoints() {
-    console.log("Loading all available entry points");
-    
     const entryPointsContainer = document.getElementById('entryPointsCheckboxes');
     if (!entryPointsContainer) {
-      console.error("Entry points container not found");
       return;
     }
     
     entryPointsContainer.innerHTML = '<p class="text-gray-500 text-sm">Loading entry points...</p>';
     
     fetch('/api/get_entry_points.php')
-      .then(response => {
-        console.log("Entry points API response status:", response.status);
-        return response.json();
-      })
+      .then(response => response.json())
       .then(data => {
-        console.log("Entry points API data:", data);
-        
         if (data.success && data.entry_points && data.entry_points.length > 0) {
           entryPointsContainer.innerHTML = '';
           
@@ -416,22 +407,17 @@
             entryPointsContainer.appendChild(div);
           });
         } else {
-          console.error('No entry points found or API returned error:', data);
           // Create demo entry points if API doesn't return any
           createDemoEntryPoints();
         }
       })
       .catch(error => {
-        console.error('Error loading all entry points:', error);
-        
         // Create demo entry points if API fails
         createDemoEntryPoints();
       });
   }
 
   function createDemoEntryPoints() {
-    console.log("Creating demo entry points");
-    
     const entryPointsContainer = document.getElementById('entryPointsCheckboxes');
     entryPointsContainer.innerHTML = '<p class="text-yellow-500 text-sm mb-2">Using demo entry points:</p>';
     
