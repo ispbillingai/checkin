@@ -7,12 +7,21 @@
 function fetchRoomsData() {
   console.log("Fetching rooms data...");
   
-  return fetch('/api/get_all_rooms.php')
+  return fetch('/api/get_rooms.php')
     .then(response => {
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-      return response.json();
+      return response.text().then(text => {
+        try {
+          // Try to parse as JSON
+          return JSON.parse(text);
+        } catch (e) {
+          // If parsing fails, log the response text and throw an error
+          console.error("Invalid JSON response:", text);
+          throw new Error("Server returned invalid JSON response");
+        }
+      });
     })
     .then(data => {
       console.log("Rooms data response:", data);
@@ -108,7 +117,9 @@ function renderRooms(rooms) {
       }
       
       // Show toast notification
-      if (window.showToastMessage) {
+      if (window.showToast) {
+        window.showToast('success', 'Room Selected', `${roomName} selected. Please complete the booking form.`);
+      } else if (window.showToastMessage) {
         window.showToastMessage('success', `${roomName} selected. Please complete the booking form.`);
       }
     });

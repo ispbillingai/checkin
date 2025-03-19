@@ -1,4 +1,3 @@
-
 // Booking form functionality
 document.addEventListener('DOMContentLoaded', function() {
   // Initialize date inputs with default values
@@ -34,29 +33,81 @@ function initializeDateInputs() {
 
 function loadRooms() {
   console.log("Loading rooms from API");
+  const roomsContainer = document.getElementById('roomsContainer');
   
-  fetch('/api/get_rooms.php')
-    .then(response => {
-      console.log("Room API response status:", response.status);
-      return response.json();
-    })
-    .then(data => {
-      console.log("Room API data:", data);
-      if (data.success && data.rooms) {
-        populateRooms(data.rooms);
-      } else {
-        console.error('Failed to load rooms:', data.message);
+  if (!roomsContainer) {
+    console.error("Rooms container element not found");
+    return;
+  }
+  
+  // Use the fetchRoomsData function from rooms-data.js if available
+  if (typeof window.fetchRoomsData === 'function') {
+    window.fetchRoomsData()
+      .then(rooms => {
+        if (Array.isArray(rooms) && rooms.length > 0) {
+          populateRooms(rooms);
+        } else {
+          console.error('No rooms returned from API');
+          showToast('error', 'Error', 'Failed to load rooms. Please try again later.');
+          roomsContainer.innerHTML = 
+            '<div class="col-span-full text-center text-red-500">Failed to load rooms. Please refresh the page.</div>';
+        }
+      })
+      .catch(error => {
+        console.error('Error loading rooms:', error);
         showToast('error', 'Error', 'Failed to load rooms. Please try again later.');
-        document.getElementById('roomsContainer').innerHTML = 
+        roomsContainer.innerHTML = 
           '<div class="col-span-full text-center text-red-500">Failed to load rooms. Please refresh the page.</div>';
-      }
-    })
-    .catch(error => {
-      console.error('Error loading rooms:', error);
-      showToast('error', 'Error', 'Failed to load rooms. Please try again later.');
-      document.getElementById('roomsContainer').innerHTML = 
-        '<div class="col-span-full text-center text-red-500">Failed to load rooms. Please refresh the page.</div>';
-    });
+      });
+  } else {
+    // Fallback to direct API call if fetchRoomsData is not available
+    fetch('/api/get_rooms.php')
+      .then(response => {
+        console.log("Room API response status:", response.status);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log("Room API data:", data);
+        if (data.success && data.rooms) {
+          populateRooms(data.rooms);
+        } else {
+          console.error('Failed to load rooms:', data.message);
+          showToast('error', 'Error', 'Failed to load rooms. Please try again later.');
+          roomsContainer.innerHTML = 
+            '<div class="col-span-full text-center text-red-500">Failed to load rooms. Please refresh the page.</div>';
+        }
+      })
+      .catch(error => {
+        console.error('Error loading rooms:', error);
+        showToast('error', 'Error', 'Failed to load rooms. Please try again later.');
+        roomsContainer.innerHTML = 
+          '<div class="col-span-full text-center text-red-500">Failed to load rooms. Please refresh the page.</div>';
+        
+        // Provide fallback demo room data
+        const fallbackRooms = [
+          {
+            id: 'demo1',
+            name: 'Demo Single Room',
+            description: 'A comfortable single room perfect for solo travelers.'
+          },
+          {
+            id: 'demo2',
+            name: 'Demo Double Room',
+            description: 'Spacious double room with king-size bed.'
+          },
+          {
+            id: 'demo3',
+            name: 'Demo Suite',
+            description: 'Luxury suite with separate living area and bedroom.'
+          }
+        ];
+        
+        populateRooms(fallbackRooms);
+      });
+  }
 }
 
 function populateRooms(rooms) {
@@ -186,20 +237,41 @@ function loadEntryPoints(roomId) {
 }
 
 function setupEventListeners() {
-  // PIN position and code containers are visible by default
-  document.getElementById('pinPositionContainer').style.display = 'block';
-  document.getElementById('pinCodeContainer').style.display = 'block';
+  // Check if elements exist before adding event listeners
+  const pinPositionContainer = document.getElementById('pinPositionContainer');
+  const pinCodeContainer = document.getElementById('pinCodeContainer');
+  const generatePinButton = document.getElementById('generatePinButton');
+  const bookingForm = document.getElementById('bookingForm');
+  const closeModal = document.getElementById('closeModal');
+  
+  // Only set display if elements exist
+  if (pinPositionContainer) {
+    pinPositionContainer.style.display = 'block';
+  }
+  
+  if (pinCodeContainer) {
+    pinCodeContainer.style.display = 'block';
+  }
   
   // Generate PIN code button handler
-  document.getElementById('generatePinButton').addEventListener('click', generatePinCode);
+  if (generatePinButton) {
+    generatePinButton.addEventListener('click', generatePinCode);
+  }
   
   // Form submission handler
-  document.getElementById('bookingForm').addEventListener('submit', handleFormSubmission);
+  if (bookingForm) {
+    bookingForm.addEventListener('submit', handleFormSubmission);
+  }
   
   // Modal close button handler
-  document.getElementById('closeModal').addEventListener('click', function() {
-    document.getElementById('successModal').classList.add('hidden');
-  });
+  if (closeModal) {
+    closeModal.addEventListener('click', function() {
+      const successModal = document.getElementById('successModal');
+      if (successModal) {
+        successModal.classList.add('hidden');
+      }
+    });
+  }
 }
 
 function generatePinCode() {
