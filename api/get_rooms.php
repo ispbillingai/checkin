@@ -29,6 +29,9 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
             ];
         }
         
+        // Log room count for debugging
+        error_log("Found " . count($rooms) . " rooms in database");
+        
         // Check if rooms were found
         if (count($rooms) === 0) {
             error_log("No rooms found in database. Creating fallback demo rooms.");
@@ -50,15 +53,17 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
                     'description' => 'A third sample room option.'
                 ]
             ];
-        } else {
-            error_log("Found " . count($rooms) . " rooms in the database");
         }
         
-        // Return rooms as JSON
+        // Return rooms as JSON with debugging info
         echo json_encode([
             'success' => true,
             'rooms' => $rooms,
-            'is_demo' => count($rooms) === 0
+            'is_demo' => count($rooms) === 0,
+            'debug_info' => [
+                'room_count' => count($rooms),
+                'timestamp' => date('Y-m-d H:i:s')
+            ]
         ]);
     } catch (Exception $e) {
         // Log the error and return an error response
