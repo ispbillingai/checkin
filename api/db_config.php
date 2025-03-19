@@ -265,17 +265,47 @@ function setup_entry_points() {
         }
     }
     
-    // Update bookings table if it doesn't have entry_point_id column
-    $result = $conn->query("SHOW COLUMNS FROM bookings LIKE 'entry_point_id'");
-    if ($result->num_rows == 0) {
-        $sql = "ALTER TABLE bookings ADD COLUMN entry_point_id VARCHAR(20) NOT NULL AFTER room_id, 
-                ADD CONSTRAINT fk_booking_entry_point FOREIGN KEY (entry_point_id) REFERENCES entry_points(id)";
-        
-        if (!$conn->query($sql)) {
-            log_error("Error adding entry_point_id to bookings table: " . $conn->error);
-        } else {
-            log_error("Added entry_point_id column to bookings table");
+    // Check if bookings table exists first
+    $result = $conn->query("SHOW TABLES LIKE 'bookings'");
+    if ($result->num_rows > 0) {
+        // Update bookings table only if the table exists
+        $result = $conn->query("SHOW COLUMNS FROM bookings LIKE 'entry_point_id'");
+        if ($result->num_rows == 0) {
+            // First check if entry_points table has data
+            $result = $conn->query("SELECT COUNT(*) as count FROM entry_points");
+            $row = $result->fetch_assoc();
+            
+            if ($row['count'] > 0) {
+                $sql = "ALTER TABLE bookings ADD COLUMN entry_point_id VARCHAR(20) NULL AFTER room_id";
+                
+                if (!$conn->query($sql)) {
+                    log_error("Error adding entry_point_id to bookings table: " . $conn->error);
+                } else {
+                    log_error("Added entry_point_id column to bookings table without constraint");
+                    
+                    // Update all existing rows with a default entry point
+                    $sql = "UPDATE bookings SET entry_point_id = 'entry1' WHERE entry_point_id IS NULL";
+                    if (!$conn->query($sql)) {
+                        log_error("Error updating existing bookings with default entry point: " . $conn->error);
+                    } else {
+                        log_error("Updated existing bookings with default entry point");
+                        
+                        // Now add the constraint
+                        $sql = "ALTER TABLE bookings MODIFY entry_point_id VARCHAR(20) NOT NULL, ADD CONSTRAINT fk_booking_entry_point FOREIGN KEY (entry_point_id) REFERENCES entry_points(id)";
+                        
+                        if (!$conn->query($sql)) {
+                            log_error("Error adding foreign key constraint to entry_point_id: " . $conn->error);
+                        } else {
+                            log_error("Added foreign key constraint to entry_point_id column");
+                        }
+                    }
+                }
+            } else {
+                log_error("Cannot add entry_point_id column - no entry points exist yet");
+            }
         }
+    } else {
+        log_error("Bookings table does not exist yet, skipping column addition");
     }
     
     return true;

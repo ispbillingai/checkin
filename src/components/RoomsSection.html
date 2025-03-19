@@ -12,67 +12,152 @@
   // Function to safely initialize rooms section
   function safeInitRoomsSection() {
     try {
+      console.log("Attempting to initialize rooms section");
+      
+      // Make sure the rooms container exists
+      const container = document.getElementById('roomsContainer');
+      if (!container) {
+        console.error("roomsContainer not found in the DOM");
+        return;
+      }
+      
       if (window.initRoomsSection) {
         console.log("Calling initRoomsSection from RoomsSection.html");
         window.initRoomsSection();
       } else {
         console.log("initRoomsSection not available yet, will retry");
-        setTimeout(safeInitRoomsSection, 300);
+        
+        // Load demo rooms immediately while waiting for the script to load
+        loadDemoRooms();
+        
+        // Try again after a delay
+        setTimeout(safeInitRoomsSection, 500);
       }
     } catch (err) {
       console.error("Error initializing rooms section:", err);
       // Load fallback demo data directly if we encounter an error
-      const container = document.getElementById('roomsContainer');
-      if (container) {
-        const demoRooms = [
-          {
-            id: 'demo1',
-            name: 'Demo Single Room',
-            description: 'A comfortable single room perfect for solo travelers.'
-          },
-          {
-            id: 'demo2',
-            name: 'Demo Double Room',
-            description: 'Spacious double room with king-size bed.'
-          },
-          {
-            id: 'demo3',
-            name: 'Demo Suite',
-            description: 'Luxury suite with separate living area and bedroom.'
-          }
-        ];
-        
-        container.innerHTML = '';
-        
-        demoRooms.forEach(room => {
-          const roomCard = document.createElement('div');
-          roomCard.className = "bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg hover:-translate-y-1";
-          
-          roomCard.innerHTML = `
-            <div class="p-6">
-              <h3 class="text-lg font-semibold text-gray-800 mb-2">${room.name}</h3>
-              <p class="text-gray-600 mb-4">${room.description}</p>
-              <button 
-                class="book-room-btn bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors w-full" 
-                data-room-id="${room.id}" 
-                data-room-name="${room.name}"
-              >
-                Book Now
-              </button>
-            </div>
-          `;
-          
-          container.appendChild(roomCard);
-        });
-      }
+      loadDemoRooms();
     }
+  }
+  
+  // Function to load demo room data as fallback
+  function loadDemoRooms() {
+    console.log("Loading demo rooms as fallback");
+    const container = document.getElementById('roomsContainer');
+    if (!container) {
+      console.error("roomsContainer still not found");
+      return;
+    }
+    
+    // If container is already populated with more than loading message, don't overwrite
+    if (container.childElementCount > 1) {
+      console.log("Container already has content, not loading demo rooms");
+      return;
+    }
+    
+    const demoRooms = [
+      {
+        id: 'demo1',
+        name: 'Demo Single Room',
+        description: 'A comfortable single room perfect for solo travelers.'
+      },
+      {
+        id: 'demo2',
+        name: 'Demo Double Room',
+        description: 'Spacious double room with king-size bed.'
+      },
+      {
+        id: 'demo3',
+        name: 'Demo Suite',
+        description: 'Luxury suite with separate living area and bedroom.'
+      }
+    ];
+    
+    container.innerHTML = '';
+    
+    demoRooms.forEach(room => {
+      const roomCard = document.createElement('div');
+      roomCard.className = "bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:shadow-lg hover:-translate-y-1";
+      
+      roomCard.innerHTML = `
+        <div class="p-6">
+          <h3 class="text-lg font-semibold text-gray-800 mb-2">${room.name}</h3>
+          <p class="text-gray-600 mb-4">${room.description}</p>
+          <button 
+            class="book-room-btn bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors w-full" 
+            data-room-id="${room.id}" 
+            data-room-name="${room.name}"
+          >
+            Book Now
+          </button>
+        </div>
+      `;
+      
+      container.appendChild(roomCard);
+    });
+    
+    // Add event listeners to the buttons
+    setupBookButtons();
+  }
+  
+  // Set up event listeners for book buttons
+  function setupBookButtons() {
+    document.querySelectorAll('.book-room-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        const roomId = this.getAttribute('data-room-id');
+        const roomName = this.getAttribute('data-room-name');
+        
+        // Scroll to booking form
+        const bookingForm = document.getElementById('bookingForm');
+        if (bookingForm) {
+          bookingForm.scrollIntoView({ behavior: 'smooth' });
+          
+          // If there's a room select dropdown, set its value
+          const roomSelect = document.getElementById('room');
+          if (roomSelect) {
+            // Try to find the option
+            let found = false;
+            for (let i = 0; i < roomSelect.options.length; i++) {
+              if (roomSelect.options[i].value === roomId) {
+                roomSelect.selectedIndex = i;
+                found = true;
+                break;
+              }
+            }
+            
+            // If option not found, add it
+            if (!found && roomId && roomName) {
+              const option = document.createElement('option');
+              option.value = roomId;
+              option.textContent = roomName;
+              roomSelect.appendChild(option);
+              roomSelect.value = roomId;
+            }
+            
+            // Trigger change event to load entry points if needed
+            const event = new Event('change');
+            roomSelect.dispatchEvent(event);
+          }
+        }
+        
+        // Show toast notification
+        if (window.showToast) {
+          window.showToast('success', 'Room Selected', `${roomName} selected. Please complete the booking form.`);
+        } else if (window.showToastMessage) {
+          window.showToastMessage('success', `${roomName} selected. Please complete the booking form.`);
+        }
+      });
+    });
   }
 
   // Initialize when this component loads
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', safeInitRoomsSection);
+    document.addEventListener('DOMContentLoaded', function() {
+      // Give rooms-data.js time to load
+      setTimeout(safeInitRoomsSection, 300);
+    });
   } else {
-    // If DOMContentLoaded already fired, initialize immediately
-    safeInitRoomsSection();
+    // If DOMContentLoaded already fired, wait a bit to ensure scripts are loaded
+    setTimeout(safeInitRoomsSection, 300);
   }
 </script>

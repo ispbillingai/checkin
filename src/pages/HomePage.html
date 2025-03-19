@@ -44,7 +44,10 @@
     // Function to load component into container
     function loadComponent(containerId, componentPath) {
       const container = document.getElementById(containerId);
-      if (!container) return;
+      if (!container) {
+        console.error(`Container ${containerId} not found`);
+        return;
+      }
       
       fetch(componentPath)
         .then(response => {
@@ -79,6 +82,8 @@
     
     // Load all components when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
+      console.log("DOM content loaded, loading components");
+      
       // Load components
       loadComponent('header-container', '/src/components/Header.html');
       loadComponent('hero-banner-container', '/src/components/HeroBanner.html');
