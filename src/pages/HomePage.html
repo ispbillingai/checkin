@@ -7,8 +7,6 @@
   <title>Room Booking System</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <script src="/public/js/toast-utils.js" defer></script>
-  <script src="/src/js/booking-form.js" defer></script>
-  <script src="/public/js/rooms-data.js" defer></script>
 </head>
 <body class="bg-gray-50 min-h-screen">
   <!-- Include Header -->
@@ -77,6 +75,7 @@
     
     // Load all components when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
+      // Load components
       loadComponent('header-container', '/src/components/Header.html');
       loadComponent('hero-banner-container', '/src/components/HeroBanner.html');
       loadComponent('intro-section-container', '/src/components/IntroSection.html');
@@ -87,5 +86,9 @@
       loadComponent('toast-container', '/src/components/Toast.html');
     });
   </script>
+  
+  <!-- Load these scripts at the end to ensure DOM is ready -->
+  <script src="/public/js/rooms-data.js" defer></script>
+  <script src="/src/js/booking-form.js" defer></script>
 </body>
 </html>

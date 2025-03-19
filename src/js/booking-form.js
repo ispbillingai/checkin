@@ -1,13 +1,18 @@
 // Booking form functionality
 document.addEventListener('DOMContentLoaded', function() {
-  // Initialize date inputs with default values
-  initializeDateInputs();
+  console.log("Booking form script loaded");
   
-  // Load rooms from API
-  loadRooms();
-  
-  // Set up event listeners
-  setupEventListeners();
+  // Wait a bit to ensure all components are loaded
+  setTimeout(function() {
+    // Initialize date inputs with default values
+    initializeDateInputs();
+    
+    // Load rooms from API
+    loadRooms();
+    
+    // Set up event listeners
+    setupEventListeners();
+  }, 500); // Give components time to load
 });
 
 function initializeDateInputs() {
@@ -34,9 +39,15 @@ function initializeDateInputs() {
 function loadRooms() {
   console.log("Loading rooms from API");
   const roomsContainer = document.getElementById('roomsContainer');
+  const roomSelect = document.getElementById('room');
   
   if (!roomsContainer) {
     console.error("Rooms container element not found");
+    return;
+  }
+  
+  if (!roomSelect) {
+    console.error("Room select element not found");
     return;
   }
   
@@ -48,14 +59,18 @@ function loadRooms() {
           populateRooms(rooms);
         } else {
           console.error('No rooms returned from API');
-          showToast('error', 'Error', 'Failed to load rooms. Please try again later.');
+          if (window.showToastMessage) {
+            window.showToastMessage('error', 'Failed to load rooms. Please try again later.');
+          }
           roomsContainer.innerHTML = 
             '<div class="col-span-full text-center text-red-500">Failed to load rooms. Please refresh the page.</div>';
         }
       })
       .catch(error => {
         console.error('Error loading rooms:', error);
-        showToast('error', 'Error', 'Failed to load rooms. Please try again later.');
+        if (window.showToastMessage) {
+          window.showToastMessage('error', 'Failed to load rooms. Please try again later.');
+        }
         roomsContainer.innerHTML = 
           '<div class="col-span-full text-center text-red-500">Failed to load rooms. Please refresh the page.</div>';
       });
@@ -75,14 +90,18 @@ function loadRooms() {
           populateRooms(data.rooms);
         } else {
           console.error('Failed to load rooms:', data.message);
-          showToast('error', 'Error', 'Failed to load rooms. Please try again later.');
+          if (window.showToastMessage) {
+            window.showToastMessage('error', 'Failed to load rooms. Please try again later.');
+          }
           roomsContainer.innerHTML = 
             '<div class="col-span-full text-center text-red-500">Failed to load rooms. Please refresh the page.</div>';
         }
       })
       .catch(error => {
         console.error('Error loading rooms:', error);
-        showToast('error', 'Error', 'Failed to load rooms. Please try again later.');
+        if (window.showToastMessage) {
+          window.showToastMessage('error', 'Failed to load rooms. Please try again later.');
+        }
         roomsContainer.innerHTML = 
           '<div class="col-span-full text-center text-red-500">Failed to load rooms. Please refresh the page.</div>';
         
@@ -218,7 +237,9 @@ function loadEntryPoints(roomId) {
         document.getElementById('pinCodeContainer').style.display = 'block';
       } else {
         console.error('No entry points found for this room');
-        showToast('error', 'No Entry Points', 'No entry points available for this room.');
+        if (window.showToastMessage) {
+          window.showToastMessage('error', 'No Entry Points', 'No entry points available for this room.');
+        }
         
         // Add a default "No entry points available" option
         const option = document.createElement('option');
@@ -232,11 +253,15 @@ function loadEntryPoints(roomId) {
     .catch(error => {
       entryPointContainer.classList.remove('animate-pulse');
       console.error('Error loading entry points:', error);
-      showToast('error', 'Error', 'Failed to load entry points. Please try again.');
+      if (window.showToastMessage) {
+        window.showToastMessage('error', 'Error', 'Failed to load entry points. Please try again.');
+      }
     });
 }
 
 function setupEventListeners() {
+  console.log("Setting up event listeners");
+  
   // Check if elements exist before adding event listeners
   const pinPositionContainer = document.getElementById('pinPositionContainer');
   const pinCodeContainer = document.getElementById('pinCodeContainer');
@@ -300,12 +325,16 @@ function generatePinCode() {
     
     if (data.success) {
       document.getElementById('pinCode').value = data.pin_code;
-      showToast('success', 'PIN Generated', `Your PIN code ${data.pin_code} has been generated.`);
+      if (window.showToastMessage) {
+        window.showToastMessage('success', 'PIN Generated', `Your PIN code ${data.pin_code} has been generated.`);
+      }
     } else {
       // If API fails, generate a PIN locally
       const pinCode = Math.floor(1000 + Math.random() * 9000).toString();
       document.getElementById('pinCode').value = pinCode;
-      showToast('success', 'PIN Generated', `Your PIN code ${pinCode} has been generated.`);
+      if (window.showToastMessage) {
+        window.showToastMessage('success', 'PIN Generated', `Your PIN code ${pinCode} has been generated.`);
+      }
     }
   })
   .catch(error => {
@@ -316,7 +345,9 @@ function generatePinCode() {
     // Generate a PIN locally in case of API failure
     const pinCode = Math.floor(1000 + Math.random() * 9000).toString();
     document.getElementById('pinCode').value = pinCode;
-    showToast('success', 'PIN Generated', `Your PIN code ${pinCode} has been generated.`);
+    if (window.showToastMessage) {
+      window.showToastMessage('success', 'PIN Generated', `Your PIN code ${pinCode} has been generated.`);
+    }
   });
 }
 
@@ -335,27 +366,37 @@ function handleFormSubmission(e) {
   const departure = new Date(formData.get('departureDateTime'));
   
   if (departure <= arrival) {
-    showToast('error', 'Invalid Dates', 'Departure date must be after arrival date.');
+    if (window.showToastMessage) {
+      window.showToastMessage('error', 'Invalid Dates', 'Departure date must be after arrival date.');
+    }
     return;
   }
   
   if (!formData.get('entryPoint')) {
-    showToast('error', 'Missing Information', 'Please select an entry point for access.');
+    if (window.showToastMessage) {
+      window.showToastMessage('error', 'Missing Information', 'Please select an entry point for access.');
+    }
     return;
   }
   
   if (!formData.get('pinPosition')) {
-    showToast('error', 'Missing Information', 'Please select a PIN position.');
+    if (window.showToastMessage) {
+      window.showToastMessage('error', 'Missing Information', 'Please select a PIN position.');
+    }
     return;
   }
   
   if (!formData.get('pinCode')) {
-    showToast('error', 'Missing Information', 'Please enter or generate a PIN code.');
+    if (window.showToastMessage) {
+      window.showToastMessage('error', 'Missing Information', 'Please enter or generate a PIN code.');
+    }
     return;
   }
   
   if (!/^\d{4,6}$/.test(formData.get('pinCode'))) {
-    showToast('error', 'Invalid PIN', 'PIN code must be 4-6 digits.');
+    if (window.showToastMessage) {
+      window.showToastMessage('error', 'Invalid PIN', 'PIN code must be 4-6 digits.');
+    }
     return;
   }
   
@@ -386,13 +427,17 @@ function handleFormSubmission(e) {
       // Reset date inputs
       initializeDateInputs();
     } else {
-      showToast('error', 'Booking Failed', data.message || 'There was an error creating your booking. Please try again.');
+      if (window.showToastMessage) {
+        window.showToastMessage('error', 'Booking Failed', data.message || 'There was an error creating your booking. Please try again.');
+      }
     }
   })
   .catch(error => {
     console.error('Error processing booking:', error);
     submitButton.disabled = false;
     submitButton.textContent = 'Create Booking';
-    showToast('error', 'Error', 'There was an error processing your request. Please try again.');
+    if (window.showToastMessage) {
+      window.showToastMessage('error', 'Error', 'There was an error processing your request. Please try again.');
+    }
   });
 }
