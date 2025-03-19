@@ -1,0 +1,239 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Room Booking</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-lg mx-auto bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="bg-blue-500 text-white px-6 py-4">
+                <h1 class="text-2xl font-bold">Book a Room</h1>
+                <p class="text-sm mt-1">Complete the form below to make a reservation</p>
+            </div>
+            
+            <form id="bookingForm" class="px-6 py-4 space-y-4">
+                <div class="space-y-1">
+                    <label for="room" class="block text-sm font-medium text-gray-700">Select Room</label>
+                    <select id="room" name="room" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+                        <option value="">-- Select a Room --</option>
+                    </select>
+                </div>
+                
+                <div class="space-y-1">
+                    <label for="entryPoint" class="block text-sm font-medium text-gray-700">Select Entry Point</label>
+                    <select id="entryPoint" name="entry_point" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" required disabled>
+                        <option value="">-- First Select a Room --</option>
+                    </select>
+                    <p id="entryPointDescription" class="text-xs text-gray-500 mt-1 hidden"></p>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label for="arrivalDate" class="block text-sm font-medium text-gray-700">Arrival Date</label>
+                        <input type="date" id="arrivalDate" name="arrival_date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+                    </div>
+                    
+                    <div class="space-y-1">
+                        <label for="departureDate" class="block text-sm font-medium text-gray-700">Departure Date</label>
+                        <input type="date" id="departureDate" name="departure_date" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+                    </div>
+                </div>
+                
+                <div class="space-y-1">
+                    <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
+                    <input type="text" id="name" name="name" placeholder="Enter your full name" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                
+                <div class="space-y-1">
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="Enter your email address" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                
+                <div class="space-y-1">
+                    <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500" required>
+                </div>
+                
+                <div class="pt-4">
+                    <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Book Now
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Confirmation Modal -->
+        <div id="confirmationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10 hidden">
+            <div class="bg-white rounded-lg p-6 max-w-md w-full">
+                <div class="text-center">
+                    <svg class="mx-auto h-12 w-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <h3 class="text-lg font-medium text-gray-900 mt-4">Booking Confirmed!</h3>
+                    <div class="mt-2">
+                        <p class="text-sm text-gray-500">Your booking has been confirmed. Please check your email for details.</p>
+                    </div>
+                    <div class="mt-4 bg-gray-100 p-4 rounded-md">
+                        <p class="text-sm font-medium text-gray-700">Your Access Code:</p>
+                        <p id="accessCode" class="text-2xl font-bold text-blue-600 mt-1">--</p>
+                        <p class="text-xs text-gray-500 mt-2">Please use this code at the <span id="entryPointName">selected entry point</span> to access your room.</p>
+                    </div>
+                    <div class="mt-4">
+                        <button id="closeConfirmationBtn" class="inline-flex justify-center w-full px-4 py-2 text-sm font-medium text-white bg-blue-500 border border-transparent rounded-md hover:bg-blue-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default dates (today and tomorrow)
+            const today = new Date();
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            document.getElementById('arrivalDate').min = today.toISOString().split('T')[0];
+            document.getElementById('arrivalDate').value = today.toISOString().split('T')[0];
+            
+            document.getElementById('departureDate').min = tomorrow.toISOString().split('T')[0];
+            document.getElementById('departureDate').value = tomorrow.toISOString().split('T')[0];
+            
+            // Load rooms
+            fetch('/api/get_rooms.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.rooms.length > 0) {
+                        const roomSelect = document.getElementById('room');
+                        data.rooms.forEach(room => {
+                            const option = document.createElement('option');
+                            option.value = room.id;
+                            option.textContent = room.name;
+                            roomSelect.appendChild(option);
+                        });
+                    } else {
+                        console.error('No rooms available or error loading rooms');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading rooms:', error);
+                });
+            
+            // Room selection changes entry point options
+            document.getElementById('room').addEventListener('change', function() {
+                const roomId = this.value;
+                const entryPointSelect = document.getElementById('entryPoint');
+                const entryPointDescription = document.getElementById('entryPointDescription');
+                
+                // Reset entry point selection
+                entryPointSelect.innerHTML = '<option value="">-- Select an Entry Point --</option>';
+                entryPointDescription.classList.add('hidden');
+                
+                if (!roomId) {
+                    entryPointSelect.disabled = true;
+                    return;
+                }
+                
+                // Load entry points for the selected room
+                fetch(`/api/get_entry_points.php?room_id=${roomId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.entry_points.length > 0) {
+                            data.entry_points.forEach(entryPoint => {
+                                const option = document.createElement('option');
+                                option.value = entryPoint.id;
+                                option.textContent = entryPoint.name;
+                                option.setAttribute('data-description', entryPoint.description || '');
+                                entryPointSelect.appendChild(option);
+                            });
+                            entryPointSelect.disabled = false;
+                        } else {
+                            entryPointSelect.innerHTML = '<option value="">No entry points available for this room</option>';
+                            entryPointSelect.disabled = true;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading entry points:', error);
+                        entryPointSelect.innerHTML = '<option value="">Error loading entry points</option>';
+                        entryPointSelect.disabled = true;
+                    });
+            });
+            
+            // Show entry point description when selected
+            document.getElementById('entryPoint').addEventListener('change', function() {
+                const selectedOption = this.options[this.selectedIndex];
+                const description = selectedOption.getAttribute('data-description');
+                const entryPointDescription = document.getElementById('entryPointDescription');
+                
+                if (description) {
+                    entryPointDescription.textContent = description;
+                    entryPointDescription.classList.remove('hidden');
+                } else {
+                    entryPointDescription.classList.add('hidden');
+                }
+            });
+            
+            // Form submission
+            document.getElementById('bookingForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                
+                // Add arrival and departure date times
+                const arrivalDateTime = formData.get('arrival_date') + ' 14:00:00'; // Check-in at 2 PM
+                const departureDateTime = formData.get('departure_date') + ' 12:00:00'; // Check-out at 12 PM
+                
+                formData.delete('arrival_date');
+                formData.delete('departure_date');
+                formData.append('arrivalDateTime', arrivalDateTime);
+                formData.append('departureDateTime', departureDateTime);
+                
+                // Submit booking
+                fetch('/api/create_booking.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Show confirmation with access code
+                        document.getElementById('accessCode').textContent = data.accessCode;
+                        document.getElementById('entryPointName').textContent = data.entryPoint || 'selected entry point';
+                        document.getElementById('confirmationModal').classList.remove('hidden');
+                        
+                        // Reset form
+                        document.getElementById('bookingForm').reset();
+                        
+                        // Reset entry point selection
+                        const entryPointSelect = document.getElementById('entryPoint');
+                        entryPointSelect.innerHTML = '<option value="">-- First Select a Room --</option>';
+                        entryPointSelect.disabled = true;
+                        document.getElementById('entryPointDescription').classList.add('hidden');
+                        
+                        // Reset dates
+                        document.getElementById('arrivalDate').value = today.toISOString().split('T')[0];
+                        document.getElementById('departureDate').value = tomorrow.toISOString().split('T')[0];
+                    } else {
+                        alert('Error: ' + (data.message || 'Failed to create booking'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error creating booking:', error);
+                    alert('An error occurred. Please try again.');
+                });
+            });
+            
+            // Close confirmation modal
+            document.getElementById('closeConfirmationBtn').addEventListener('click', function() {
+                document.getElementById('confirmationModal').classList.add('hidden');
+            });
+        });
+    </script>
+</body>
+</html>

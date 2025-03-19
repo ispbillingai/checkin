@@ -1,3 +1,4 @@
+
 <?php
 // Include database configuration
 require_once 'db_config.php';
@@ -41,6 +42,9 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
             'entry_points' => $entry_points
         ]);
     } catch (Exception $e) {
+        // Log the error for debugging
+        log_error("Error in get_entry_points.php: " . $e->getMessage());
+        
         echo json_encode([
             'success' => false,
             'message' => 'Error: ' . $e->getMessage()

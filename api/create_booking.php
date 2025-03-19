@@ -19,11 +19,26 @@ if (!isset($_SESSION['user_id'])) {
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Get data from POST
     $room_id = secure_input($_POST['room']);
+    $entry_point_id = secure_input($_POST['entry_point']);
     $arrival_date_time = secure_input($_POST['arrivalDateTime']);
     $departure_date_time = secure_input($_POST['departureDateTime']);
     $guest_name = secure_input($_POST['name']);
     $email = secure_input($_POST['email']);
     $phone = secure_input($_POST['phone']);
+    
+    // Validate entry point exists for the selected room
+    $stmt = $conn->prepare("SELECT * FROM room_entry_points WHERE room_id = ? AND entry_point_id = ?");
+    $stmt->bind_param("ss", $room_id, $entry_point_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows === 0) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'The selected entry point is not available for this room'
+        ]);
+        exit;
+    }
     
     // Generate access code
     $access_code = generate_access_code();
@@ -32,10 +47,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $created_at = date('Y-m-d H:i:s');
     
     // Prepare SQL statement
-    $stmt = $conn->prepare("INSERT INTO bookings (room_id, guest_name, email, phone, arrival_date_time, departure_date_time, access_code, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssssss", $room_id, $guest_name, $email, $phone, $arrival_date_time, $departure_date_time, $access_code, $created_at);
+    $stmt = $conn->prepare("INSERT INTO bookings (room_id, entry_point_id, guest_name, email, phone, arrival_datetime, departure_datetime, access_code, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssssssss", $room_id, $entry_point_id, $guest_name, $email, $phone, $arrival_date_time, $departure_date_time, $access_code, $created_at);
     
     if ($stmt->execute()) {
+        // Get room name
+        $stmt = $conn->prepare("SELECT name FROM rooms WHERE id = ?");
+        $stmt->bind_param("s", $room_id);
+        $stmt->execute();
+        $room_result = $stmt->get_result();
+        $room_name = ($room_result->num_rows > 0) ? $room_result->fetch_assoc()['name'] : $room_id;
+        
+        // Get entry point name
+        $stmt = $conn->prepare("SELECT name FROM entry_points WHERE id = ?");
+        $stmt->bind_param("s", $entry_point_id);
+        $stmt->execute();
+        $entry_point_result = $stmt->get_result();
+        $entry_point_name = ($entry_point_result->num_rows > 0) ? $entry_point_result->fetch_assoc()['name'] : $entry_point_id;
+
         // Send email with access code (simplified for demo)
         $to = $email;
         $subject = "Your Booking Confirmation and Access Code";
@@ -49,12 +78,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             <p>Dear $guest_name,</p>
             <p>Your booking has been confirmed:</p>
             <ul>
-                <li><strong>Room:</strong> " . $room_id . "</li>
+                <li><strong>Room:</strong> " . $room_name . "</li>
+                <li><strong>Entry Point:</strong> " . $entry_point_name . "</li>
                 <li><strong>Check-in:</strong> " . $arrival_date_time . "</li>
                 <li><strong>Check-out:</strong> " . $departure_date_time . "</li>
                 <li><strong>Access Code:</strong> <span style='font-size:18px;font-weight:bold;'>" . $access_code . "</span></li>
             </ul>
-            <p>Please use this access code to enter your room.</p>
+            <p>Please use this access code to enter your room using the " . $entry_point_name . ".</p>
             <p>Thank you for choosing our service!</p>
         </body>
         </html>
@@ -72,7 +102,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         echo json_encode([
             'success' => true,
             'message' => 'Booking created successfully',
-            'accessCode' => $access_code
+            'accessCode' => $access_code,
+            'entryPoint' => $entry_point_name,
+            'room' => $room_name
         ]);
     } else {
         // Return error JSON

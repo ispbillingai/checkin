@@ -35,14 +35,20 @@ try {
     $entry_point = $result->fetch_assoc();
     
     // Get connected rooms
-    $stmt = $conn->prepare("SELECT room_id FROM room_entry_points WHERE entry_point_id = ?");
+    $stmt = $conn->prepare("SELECT r.id, r.name 
+                           FROM rooms r 
+                           JOIN room_entry_points rep ON r.id = rep.room_id 
+                           WHERE rep.entry_point_id = ?");
     $stmt->bind_param("s", $id);
     $stmt->execute();
     $result = $stmt->get_result();
     
     $connected_rooms = [];
     while ($row = $result->fetch_assoc()) {
-        $connected_rooms[] = $row['room_id'];
+        $connected_rooms[] = [
+            'id' => $row['id'],
+            'name' => $row['name']
+        ];
     }
     
     $entry_point['connected_rooms'] = $connected_rooms;
@@ -52,6 +58,9 @@ try {
         'entry_point' => $entry_point
     ]);
 } catch (Exception $e) {
+    // Log the error for debugging
+    log_error("Error in get_entry_point.php: " . $e->getMessage());
+    
     echo json_encode([
         'success' => false,
         'message' => 'Error: ' . $e->getMessage()

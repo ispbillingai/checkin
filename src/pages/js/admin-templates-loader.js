@@ -25,6 +25,13 @@ async function loadTemplates() {
     document.getElementById('roomsSection').innerHTML = roomsTemplate;
     console.log("Rooms template loaded");
     
+    // Load entry points template
+    const entryPointsResponse = await fetch('../pages/templates/entry-points-template.html');
+    const entryPointsTemplate = await entryPointsResponse.text();
+    document.getElementById('entry-points-template-container').innerHTML = entryPointsTemplate;
+    document.getElementById('entryPointsSection').innerHTML = entryPointsTemplate;
+    console.log("Entry points template loaded");
+    
     // Load passcodes template
     const passcodesResponse = await fetch('../pages/templates/passcodes-template.html');
     const passcodesTemplate = await passcodesResponse.text();
@@ -72,6 +79,11 @@ function initializeComponents() {
   // Initialize rooms functionality if the script is loaded
   if (typeof initializeRooms === 'function') {
     initializeRooms();
+  }
+  
+  // Initialize entry points functionality if the script is loaded
+  if (typeof initEntryPointsManagement === 'function') {
+    initEntryPointsManagement();
   }
   
   // Initialize passcodes functionality if the script is loaded
