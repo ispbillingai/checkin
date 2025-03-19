@@ -4,140 +4,87 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Book Your Stay - Check-in-Simplify</title>
+  <title>Room Booking System</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <style>
-    .animated-bg {
-      background-size: 400% 400%;
-      animation: gradient 15s ease infinite;
-      background-image: linear-gradient(-45deg, #F2FCE2, #E5DEFF, #D3E4FD, #FFDEE2);
-    }
-    @keyframes gradient {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    .fade-in {
-      animation: fadeIn 0.8s ease-in;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .travel-image {
-      background-size: cover;
-      background-position: center;
-      transition: transform 0.5s ease;
-    }
-    .travel-image:hover {
-      transform: scale(1.03);
-    }
-    .room-card {
-      transition: all 0.3s ease;
-    }
-    .room-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-    }
-    @media (max-width: 768px) {
-      .hero-container {
-        flex-direction: column-reverse;
-      }
-      .booking-form {
-        margin-top: -2rem;
-        position: relative;
-        z-index: 10;
-      }
-    }
-  </style>
+  <script src="/js/toast-utils.js" defer></script>
+  <script src="/js/booking-form.js" defer></script>
+  <script src="/js/rooms-data.js" defer></script>
 </head>
-<body class="min-h-screen bg-gray-50">
-  <!-- Load Hero Banner Component -->
-  <div id="hero-banner-container"></div>
-  
-  <!-- Load Header Component -->
+<body class="bg-gray-50 min-h-screen">
+  <!-- Include Header -->
   <div id="header-container"></div>
   
-  <main class="container mx-auto px-4 py-8 md:py-16">
-    <div class="max-w-6xl mx-auto">
-      <div class="hero-container grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16">
-        <!-- Load Intro Section Component -->
-        <div id="intro-section-container"></div>
-        
-        <!-- Load Booking Form Component -->
-        <div id="booking-form-container"></div>
-      </div>
-      
-      <!-- Load Rooms Section Component -->
-      <div id="rooms-section-container"></div>
-    </div>
+  <!-- Main Content -->
+  <main class="container mx-auto px-4 py-8">
+    <!-- Include Hero Banner -->
+    <div id="hero-banner-container"></div>
+    
+    <!-- Include Intro Section -->
+    <div id="intro-section-container"></div>
+    
+    <!-- Include Rooms Section -->
+    <div id="rooms-section-container"></div>
+    
+    <!-- Include Booking Form -->
+    <div id="booking-form-container"></div>
   </main>
   
-  <!-- Load Footer Component -->
+  <!-- Include Footer -->
   <div id="footer-container"></div>
   
-  <!-- Load Toast Component -->
-  <div id="toast-container"></div>
-  
-  <!-- Load Success Modal Component -->
+  <!-- Include Success Modal -->
   <div id="success-modal-container"></div>
   
-  <!-- Scripts -->
-  <script src="/src/js/toast-utils.js"></script>
-  <script src="/src/js/booking-form.js"></script>
+  <!-- Include Toast -->
+  <div id="toast-container"></div>
   
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log("Home page loaded successfully");
+    // Function to load component into container
+    function loadComponent(containerId, componentPath) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
       
-      // Load components
-      fetch('/src/components/HeroBanner.html')
-        .then(response => response.text())
+      fetch(componentPath)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Failed to load ${componentPath}: ${response.status} ${response.statusText}`);
+          }
+          return response.text();
+        })
         .then(html => {
-          document.getElementById('hero-banner-container').innerHTML = html;
+          container.innerHTML = html;
+          
+          // Execute scripts in the component
+          const scripts = container.querySelectorAll('script');
+          scripts.forEach(script => {
+            const newScript = document.createElement('script');
+            
+            if (script.src) {
+              newScript.src = script.src;
+            } else {
+              newScript.textContent = script.textContent;
+            }
+            
+            // Replace the original script with the new one
+            script.parentNode.replaceChild(newScript, script);
+          });
+        })
+        .catch(error => {
+          console.error(`Error loading component ${componentPath}:`, error);
+          container.innerHTML = `<div class="text-red-500">Failed to load component: ${error.message}</div>`;
         });
-        
-      fetch('/src/components/Header.html')
-        .then(response => response.text())
-        .then(html => {
-          document.getElementById('header-container').innerHTML = html;
-        });
-        
-      fetch('/src/components/IntroSection.html')
-        .then(response => response.text())
-        .then(html => {
-          document.getElementById('intro-section-container').innerHTML = html;
-        });
-        
-      fetch('/src/components/BookingForm.html')
-        .then(response => response.text())
-        .then(html => {
-          document.getElementById('booking-form-container').innerHTML = html;
-        });
-        
-      fetch('/src/components/RoomsSection.html')
-        .then(response => response.text())
-        .then(html => {
-          document.getElementById('rooms-section-container').innerHTML = html;
-        });
-        
-      fetch('/src/components/Footer.html')
-        .then(response => response.text())
-        .then(html => {
-          document.getElementById('footer-container').innerHTML = html;
-        });
-        
-      fetch('/src/components/Toast.html')
-        .then(response => response.text())
-        .then(html => {
-          document.getElementById('toast-container').innerHTML = html;
-        });
-        
-      fetch('/src/components/SuccessModal.html')
-        .then(response => response.text())
-        .then(html => {
-          document.getElementById('success-modal-container').innerHTML = html;
-        });
+    }
+    
+    // Load all components when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      loadComponent('header-container', '/components/Header.html');
+      loadComponent('hero-banner-container', '/components/HeroBanner.html');
+      loadComponent('intro-section-container', '/components/IntroSection.html');
+      loadComponent('rooms-section-container', '/components/RoomsSection.html');
+      loadComponent('booking-form-container', '/components/BookingForm.html');
+      loadComponent('footer-container', '/components/Footer.html');
+      loadComponent('success-modal-container', '/components/SuccessModal.html');
+      loadComponent('toast-container', '/components/Toast.html');
     });
   </script>
 </body>

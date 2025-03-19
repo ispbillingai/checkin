@@ -7,3 +7,23 @@
     </div>
   </div>
 </div>
+
+<script>
+  // Load rooms data when this component is loaded
+  document.addEventListener('DOMContentLoaded', function() {
+    // Check if the rooms utility is already loaded
+    if (window.initRoomsSection) {
+      window.initRoomsSection();
+    } else {
+      // Load the script if not already loaded
+      const script = document.createElement('script');
+      script.src = '/js/rooms-data.js';
+      script.onload = function() {
+        if (window.initRoomsSection) {
+          window.initRoomsSection();
+        }
+      };
+      document.head.appendChild(script);
+    }
+  });
+</script>
