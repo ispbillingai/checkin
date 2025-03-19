@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -145,6 +144,21 @@
                     <!-- Room options will be loaded here -->
                   </select>
                   <p id="roomDescription" class="text-sm text-gray-500 italic mt-1 hidden"></p>
+                </div>
+                
+                <!-- Entry Point Selection -->
+                <div id="entryPointContainer" class="space-y-2 hidden">
+                  <label for="entryPoint" class="block text-sm font-medium text-gray-700">Select Entry Point</label>
+                  <select 
+                    id="entryPoint" 
+                    name="entryPoint" 
+                    required
+                    class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="" disabled selected>Select an entry point</option>
+                    <!-- Entry points will be loaded dynamically based on room selection -->
+                  </select>
+                  <p class="text-xs text-gray-500">Entry points for this room that the guest can use their access code</p>
                 </div>
                 
                 <!-- Arrival date/time -->
@@ -335,12 +349,21 @@
               const roomId = this.value;
               const description = roomDescriptions[roomId] || '';
               const descriptionElement = document.getElementById('roomDescription');
+              const entryPointContainer = document.getElementById('entryPointContainer');
               
               if (description) {
                 descriptionElement.textContent = description;
                 descriptionElement.classList.remove('hidden');
               } else {
                 descriptionElement.classList.add('hidden');
+              }
+              
+              // Load entry points when a room is selected
+              if (roomId) {
+                entryPointContainer.classList.remove('hidden');
+                loadEntryPoints(roomId);
+              } else {
+                entryPointContainer.classList.add('hidden');
               }
             });
             
@@ -362,6 +385,35 @@
           console.error('Error loading rooms:', error);
           showToast('error', 'Error', 'Failed to load rooms. Please try again later.');
         });
+      
+      // Function to load entry points based on room selection
+      function loadEntryPoints(roomId) {
+        fetch(`/api/get_entry_points.php?room_id=${roomId}`)
+          .then(response => response.json())
+          .then(data => {
+            const entrySelect = document.getElementById('entryPoint');
+            // Clear previous options
+            entrySelect.innerHTML = '<option value="" disabled selected>Select an entry point</option>';
+            
+            if (data.success) {
+              data.entry_points.forEach(entry => {
+                const option = document.createElement('option');
+                option.value = entry.id;
+                option.textContent = entry.name;
+                if (entry.description) {
+                  option.title = entry.description;
+                }
+                entrySelect.appendChild(option);
+              });
+            } else {
+              showToast('error', 'Error', 'Failed to load entry points for this room.');
+            }
+          })
+          .catch(error => {
+            console.error('Error loading entry points:', error);
+            showToast('error', 'Error', 'Failed to load entry points. Please try again.');
+          });
+      }
       
       // Set min dates for arrival/departure
       const today = new Date();
@@ -395,6 +447,12 @@
           return;
         }
         
+        // Make sure entry point is selected
+        if (!formData.get('entryPoint')) {
+          showToast('error', 'Missing Information', 'Please select an entry point for access.');
+          return;
+        }
+        
         // Disable button and show loading state
         submitButton.disabled = true;
         submitButton.innerHTML = `
@@ -422,6 +480,9 @@
             
             // Reset form
             document.getElementById('bookingForm').reset();
+            
+            // Hide the entry point container
+            document.getElementById('entryPointContainer').classList.add('hidden');
             
             // Set default dates again
             const today = new Date();
