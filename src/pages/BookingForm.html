@@ -40,7 +40,7 @@
             </div>
             
             <!-- Entry Point Selection -->
-            <div class="space-y-2">
+            <div id="entryPointContainer" class="space-y-2 hidden">
               <label for="entryPoint" class="block text-sm font-medium text-gray-700">Select Entry Point</label>
               <select id="entryPoint" name="entryPoint" required class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="" disabled selected>Select an entry point</option>
@@ -183,8 +183,15 @@
       // Listen for room selection change to update entry points
       document.getElementById('room').addEventListener('change', function() {
         const roomId = this.value;
+        const entryPointContainer = document.getElementById('entryPointContainer');
+        
         if (roomId) {
+          // Show the entry point container
+          entryPointContainer.classList.remove('hidden');
           loadEntryPoints(roomId);
+        } else {
+          // Hide the entry point container if no room selected
+          entryPointContainer.classList.add('hidden');
         }
       });
       
@@ -202,6 +209,9 @@
                 const option = document.createElement('option');
                 option.value = entry.id;
                 option.textContent = entry.name;
+                if (entry.description) {
+                  option.title = entry.description;
+                }
                 entrySelect.appendChild(option);
               });
             } else {
@@ -277,6 +287,9 @@
             const bookingDetails = `Room: ${data.data.roomName}, Entry: ${data.data.entryName}, Access Code: ${data.data.accessCode}`;
             showToast('success', 'Booking successful!', bookingDetails);
             document.getElementById('bookingForm').reset();
+            
+            // Hide the entry point container after successful booking
+            document.getElementById('entryPointContainer').classList.add('hidden');
           } else {
             showToast('error', 'Booking failed', data.message || 'Please try again later.');
           }
