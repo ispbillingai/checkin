@@ -15,6 +15,7 @@ require_once 'db_config.php';
 
 // Get form data
 $room = $_POST['room'] ?? '';
+$entryPoint = $_POST['entryPoint'] ?? '';
 $arrivalDateTime = $_POST['arrivalDateTime'] ?? '';
 $departureDateTime = $_POST['departureDateTime'] ?? '';
 $name = $_POST['name'] ?? '';
@@ -22,7 +23,7 @@ $email = $_POST['email'] ?? '';
 $phone = $_POST['phone'] ?? '';
 
 // Validate input
-if (empty($room) || empty($arrivalDateTime) || empty($departureDateTime) || empty($name) || empty($email) || empty($phone)) {
+if (empty($room) || empty($entryPoint) || empty($arrivalDateTime) || empty($departureDateTime) || empty($name) || empty($email) || empty($phone)) {
     echo json_encode(['success' => false, 'message' => 'All fields are required']);
     exit;
 }
@@ -35,6 +36,13 @@ try {
     $result = $stmt->get_result();
     $roomData = $result->fetch_assoc();
     
+    // Get entry point name
+    $stmt = $conn->prepare("SELECT name FROM entry_points WHERE id = ?");
+    $stmt->bind_param("s", $entryPoint);
+    $stmt->execute();
+    $entryResult = $stmt->get_result();
+    $entryData = $entryResult->fetch_assoc();
+    
     // Use the room's fixed passcode
     if ($roomData && !empty($roomData['fixed_passcode'])) {
         $accessCode = $roomData['fixed_passcode'];
@@ -45,11 +53,12 @@ try {
     }
     
     $roomName = $roomData['name'] ?? $room;
+    $entryName = $entryData['name'] ?? $entryPoint;
     
     // Insert booking into database
-    $stmt = $conn->prepare("INSERT INTO bookings (room_id, guest_name, email, phone, arrival_datetime, departure_datetime, access_code) 
-                            VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssssss", $room, $name, $email, $phone, $arrivalDateTime, $departureDateTime, $accessCode);
+    $stmt = $conn->prepare("INSERT INTO bookings (room_id, entry_point_id, guest_name, email, phone, arrival_datetime, departure_datetime, access_code) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssssss", $room, $entryPoint, $name, $email, $phone, $arrivalDateTime, $departureDateTime, $accessCode);
     $stmt->execute();
     
     if ($stmt->affected_rows > 0) {
@@ -66,6 +75,7 @@ try {
             $emailTemplate = $notificationSettings['email_template'];
             $emailTemplate = str_replace('{GUEST_NAME}', $name, $emailTemplate);
             $emailTemplate = str_replace('{ROOM_NAME}', $roomName, $emailTemplate);
+            $emailTemplate = str_replace('{ENTRY_POINT_NAME}', $entryName, $emailTemplate);
             $emailTemplate = str_replace('{ARRIVAL_DATETIME}', $arrivalDateTime, $emailTemplate);
             $emailTemplate = str_replace('{DEPARTURE_DATETIME}', $departureDateTime, $emailTemplate);
             $emailTemplate = str_replace('{ACCESS_CODE}', $accessCode, $emailTemplate);
@@ -91,6 +101,7 @@ try {
             $smsTemplate = $notificationSettings['sms_template'];
             $smsTemplate = str_replace('{GUEST_NAME}', $name, $smsTemplate);
             $smsTemplate = str_replace('{ROOM_NAME}', $roomName, $smsTemplate);
+            $smsTemplate = str_replace('{ENTRY_POINT_NAME}', $entryName, $smsTemplate);
             $smsTemplate = str_replace('{ARRIVAL_DATETIME}', $arrivalDateTime, $smsTemplate);
             $smsTemplate = str_replace('{DEPARTURE_DATETIME}', $departureDateTime, $smsTemplate);
             $smsTemplate = str_replace('{ACCESS_CODE}', $accessCode, $smsTemplate);
@@ -105,7 +116,9 @@ try {
             'message' => 'Booking created successfully', 
             'data' => [
                 'bookingId' => $bookingId,
-                'accessCode' => $accessCode
+                'accessCode' => $accessCode,
+                'roomName' => $roomName,
+                'entryName' => $entryName
             ]
         ]);
     } else {

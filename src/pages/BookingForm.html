@@ -39,6 +39,16 @@
               </select>
             </div>
             
+            <!-- Entry Point Selection -->
+            <div class="space-y-2">
+              <label for="entryPoint" class="block text-sm font-medium text-gray-700">Select Entry Point</label>
+              <select id="entryPoint" name="entryPoint" required class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="" disabled selected>Select an entry point</option>
+                <!-- Entry points will be loaded dynamically based on room selection -->
+              </select>
+              <p class="text-xs text-gray-500">Entry points for this room that the guest can use their access code</p>
+            </div>
+            
             <!-- Arrival Date and Time -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="space-y-2">
@@ -162,14 +172,47 @@
               roomSelect.appendChild(option);
             });
           } else {
-            console.error('Error loading rooms:', data.message);
             showToast('error', 'Error', 'Failed to load rooms. Please refresh the page.');
           }
         })
         .catch(error => {
-          console.error('Error:', error);
+          console.error('Error loading rooms:', error);
           showToast('error', 'Error', 'Failed to load rooms. Please refresh the page.');
         });
+      
+      // Listen for room selection change to update entry points
+      document.getElementById('room').addEventListener('change', function() {
+        const roomId = this.value;
+        if (roomId) {
+          loadEntryPoints(roomId);
+        }
+      });
+      
+      // Function to load entry points based on room selection
+      function loadEntryPoints(roomId) {
+        fetch(`/api/get_entry_points.php?room_id=${roomId}`)
+          .then(response => response.json())
+          .then(data => {
+            const entrySelect = document.getElementById('entryPoint');
+            // Clear previous options
+            entrySelect.innerHTML = '<option value="" disabled selected>Select an entry point</option>';
+            
+            if (data.success) {
+              data.entry_points.forEach(entry => {
+                const option = document.createElement('option');
+                option.value = entry.id;
+                option.textContent = entry.name;
+                entrySelect.appendChild(option);
+              });
+            } else {
+              showToast('error', 'Error', 'Failed to load entry points for this room.');
+            }
+          })
+          .catch(error => {
+            console.error('Error loading entry points:', error);
+            showToast('error', 'Error', 'Failed to load entry points. Please try again.');
+          });
+      }
       
       // Populate time selects
       const timeSelects = [document.getElementById('arrivalTime'), document.getElementById('departureTime')];
@@ -231,7 +274,8 @@
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            showToast('success', 'Booking successful!', `Your access code is: ${data.data.accessCode}`);
+            const bookingDetails = `Room: ${data.data.roomName}, Entry: ${data.data.entryName}, Access Code: ${data.data.accessCode}`;
+            showToast('success', 'Booking successful!', bookingDetails);
             document.getElementById('bookingForm').reset();
           } else {
             showToast('error', 'Booking failed', data.message || 'Please try again later.');
