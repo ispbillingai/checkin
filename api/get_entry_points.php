@@ -6,14 +6,16 @@ require_once 'db_config.php';
 header('Content-Type: application/json');
 
 // Add detailed error logging
-error_log("Fetching entry points");
+error_log("get_entry_points.php called");
 
 // Handle GET request to fetch all entry points
 if ($_SERVER["REQUEST_METHOD"] == "GET") {
     try {
+        error_log("Fetching entry points - GET request received");
+        
         if (isset($_GET['room_id'])) {
             // If room_id is provided, get entry points for that specific room
-            $room_id = secure_input($_GET['room_id']);
+            $room_id = isset($_GET['room_id']) ? $_GET['room_id'] : '';
             error_log("Fetching entry points for room: " . $room_id);
             
             $query = "SELECT ep.* FROM entry_points ep 
@@ -21,24 +23,36 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
                      WHERE rep.room_id = ?
                      ORDER BY ep.name";
             
+            error_log("Query: " . $query . " with room_id: " . $room_id);
+            
             $stmt = $conn->prepare($query);
             $stmt->bind_param("s", $room_id);
             $stmt->execute();
             $result = $stmt->get_result();
+            
+            if (!$result) {
+                error_log("SQL Error: " . $conn->error);
+            }
         } else {
             // Otherwise, get all entry points
             error_log("Fetching all entry points");
             $query = "SELECT * FROM entry_points ORDER BY name";
             $result = $conn->query($query);
+            
+            if (!$result) {
+                error_log("SQL Error: " . $conn->error);
+            }
         }
         
         $entry_points = [];
-        while ($row = $result->fetch_assoc()) {
-            $entry_points[] = [
-                'id' => $row['id'],
-                'name' => $row['name'],
-                'description' => $row['description']
-            ];
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                $entry_points[] = [
+                    'id' => $row['id'],
+                    'name' => $row['name'],
+                    'description' => $row['description']
+                ];
+            }
         }
         
         error_log("Found " . count($entry_points) . " entry points");

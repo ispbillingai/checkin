@@ -1,3 +1,4 @@
+
 <div class="fade-in booking-form" style="animation-delay: 0.4s">
   <div class="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
     <div class="p-6 bg-blue-50 border-b">
@@ -356,7 +357,7 @@
       descriptionElement.classList.add('hidden');
     }
     
-    // Entry points are now loaded independently, not tied to room selection
+    // Entry points are loaded independently, not tied to room selection
   }
 
   function loadAllEntryPoints() {
@@ -370,10 +371,13 @@
     
     entryPointsContainer.innerHTML = '<p class="text-gray-500 text-sm">Loading entry points...</p>';
     
-    fetch('/api/get_all_entry_points.php')
-      .then(response => response.json())
+    fetch('/api/get_entry_points.php')
+      .then(response => {
+        console.log("Entry points API response status:", response.status);
+        return response.json();
+      })
       .then(data => {
-        console.log("All entry points API data:", data);
+        console.log("Entry points API data:", data);
         
         if (data.success && data.entry_points && data.entry_points.length > 0) {
           entryPointsContainer.innerHTML = '';
@@ -412,6 +416,7 @@
             entryPointsContainer.appendChild(div);
           });
         } else {
+          console.error('No entry points found or API returned error:', data);
           // Create demo entry points if API doesn't return any
           createDemoEntryPoints();
         }

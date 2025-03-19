@@ -49,6 +49,8 @@
         return;
       }
       
+      console.log(`Loading component: ${componentPath} into ${containerId}`);
+      
       fetch(componentPath)
         .then(response => {
           if (!response.ok) {
@@ -73,6 +75,8 @@
             // Replace the original script with the new one
             script.parentNode.replaceChild(newScript, script);
           });
+          
+          console.log(`Component loaded successfully: ${componentPath}`);
         })
         .catch(error => {
           console.error(`Error loading component ${componentPath}:`, error);
