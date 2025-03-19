@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -159,6 +160,44 @@
                     <!-- Entry points will be loaded dynamically based on room selection -->
                   </select>
                   <p class="text-xs text-gray-500">Choose which entry point you will use to access the room</p>
+                </div>
+                
+                <!-- PIN Position Selection - NEW -->
+                <div id="pinPositionContainer" class="space-y-2">
+                  <label for="pinPosition" class="block text-sm font-medium text-gray-700">PIN Position</label>
+                  <select 
+                    id="pinPosition" 
+                    name="pinPosition" 
+                    required
+                    class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="" disabled selected>Select a position</option>
+                    <!-- Available positions will be loaded dynamically -->
+                  </select>
+                  <p class="text-xs text-gray-500">Select the position for your access PIN</p>
+                </div>
+                
+                <!-- PIN Code Input - NEW -->
+                <div id="pinCodeContainer" class="space-y-2">
+                  <label for="pinCode" class="block text-sm font-medium text-gray-700">PIN Code</label>
+                  <div class="flex space-x-2">
+                    <input 
+                      id="pinCode" 
+                      name="pinCode" 
+                      type="text" 
+                      pattern="[0-9]{4,6}"
+                      placeholder="Enter 4-6 digit PIN code" 
+                      class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <button 
+                      type="button" 
+                      id="generatePinButton"
+                      class="h-11 px-3 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      Generate
+                    </button>
+                  </div>
+                  <p class="text-xs text-gray-500">Enter a PIN code or click Generate for a random code</p>
                 </div>
                 
                 <!-- Arrival date/time -->
@@ -448,6 +487,59 @@
       // Load all entry points when page loads
       loadAllEntryPoints();
       
+      // NEW: Function to load available PIN positions
+      function loadAvailablePositions() {
+        fetch('/api/get_available_positions.php')
+          .then(response => response.json())
+          .then(data => {
+            const positionSelect = document.getElementById('pinPosition');
+            // Clear previous options
+            positionSelect.innerHTML = '<option value="" disabled selected>Select a position</option>';
+            
+            if (data.success) {
+              data.positions.forEach(position => {
+                const option = document.createElement('option');
+                option.value = position;
+                option.textContent = `Position ${position}`;
+                positionSelect.appendChild(option);
+              });
+            } else {
+              showToast('error', 'Error', 'Failed to load available positions.');
+            }
+          })
+          .catch(error => {
+            console.error('Error loading available positions:', error);
+            showToast('error', 'Error', 'Failed to load available positions. Please try again.');
+          });
+      }
+      
+      // Load available positions when page loads
+      loadAvailablePositions();
+      
+      // NEW: Add event listener to generate PIN button
+      document.getElementById('generatePinButton').addEventListener('click', function() {
+        // Create form data for the length parameter
+        const formData = new FormData();
+        formData.append('length', '4'); // Default to 4 digits
+        
+        fetch('/api/generate_pin.php', {
+          method: 'POST',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            document.getElementById('pinCode').value = data.pin_code;
+          } else {
+            showToast('error', 'Error', 'Failed to generate PIN code.');
+          }
+        })
+        .catch(error => {
+          console.error('Error generating PIN:', error);
+          showToast('error', 'Error', 'Failed to generate PIN code. Please try again.');
+        });
+      });
+      
       // Set min dates for arrival/departure
       const today = new Date();
       const tomorrow = new Date(today);
@@ -486,6 +578,25 @@
           return;
         }
         
+        // NEW: Make sure PIN position is selected
+        if (!formData.get('pinPosition')) {
+          showToast('error', 'Missing Information', 'Please select a PIN position.');
+          return;
+        }
+        
+        // NEW: Make sure PIN code is entered
+        if (!formData.get('pinCode')) {
+          showToast('error', 'Missing Information', 'Please enter or generate a PIN code.');
+          return;
+        }
+        
+        // Verify PIN code format (4-6 digits)
+        const pinCode = formData.get('pinCode');
+        if (!/^\d{4,6}$/.test(pinCode)) {
+          showToast('error', 'Invalid PIN', 'PIN code must be 4-6 digits.');
+          return;
+        }
+        
         // Disable button and show loading state
         submitButton.disabled = true;
         submitButton.innerHTML = `
@@ -514,15 +625,15 @@
             // Reset form
             document.getElementById('bookingForm').reset();
             
-            // Hide the entry point container
-            document.getElementById('entryPointContainer').classList.add('hidden');
-            
             // Set default dates again
             const today = new Date();
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
             document.getElementById('arrivalDateTime').value = formatDateTimeForInput(today);
             document.getElementById('departureDateTime').value = formatDateTimeForInput(tomorrow);
+            
+            // Reload available positions
+            loadAvailablePositions();
           } else {
             showToast('error', 'Booking Failed', data.message || 'There was an error creating your booking. Please try again.');
           }
