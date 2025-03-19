@@ -6,14 +6,8 @@ session_start();
 // Include database configuration
 require_once 'db_config.php';
 
-// Check if user is logged in and is admin
-if (!isset($_SESSION['user_id']) || !isset($_SESSION['is_admin']) || $_SESSION['is_admin'] != 1) {
-    echo json_encode([
-        'success' => false,
-        'message' => 'Unauthorized access'
-    ]);
-    exit;
-}
+// Set content type to JSON
+header('Content-Type: application/json');
 
 // Generate a random PIN code (4-6 digits)
 function generate_pin_code($length = 4) {
@@ -41,7 +35,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         'message' => 'Invalid request method'
     ]);
 }
-
-// Close connection
-$conn->close();
 ?>

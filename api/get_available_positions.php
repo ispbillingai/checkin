@@ -6,19 +6,13 @@ session_start();
 // Include database configuration
 require_once 'db_config.php';
 
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    echo json_encode([
-        'success' => false,
-        'message' => 'User not authenticated'
-    ]);
-    exit;
-}
+// Set content type to JSON
+header('Content-Type: application/json');
 
 // Get entry point ID from query string
-$entry_point_id = isset($_GET['entry_point_id']) ? secure_input($_GET['entry_point_id']) : '';
+$entry_point_id = isset($_GET['entry_point_id']) ? secure_input($_GET['entry_point_id']) : null;
 
-// Validate input
+// If no entry point specified, return error
 if (empty($entry_point_id)) {
     echo json_encode([
         'success' => false,
@@ -64,7 +58,7 @@ try {
     // Return success response
     echo json_encode([
         'success' => true,
-        'available_positions' => $available_positions,
+        'positions' => $available_positions,
         'used_positions' => $used_positions
     ]);
 } catch (Exception $e) {

@@ -106,8 +106,8 @@
     </div>
   </div>
 
-  <!-- Debug Panel -->
-  <div id="debugPanel" class="fixed bottom-4 right-4 w-96 bg-white border border-gray-300 rounded-lg shadow-lg z-50 hidden">
+  <!-- Debug Panel - Now visible by default for debugging -->
+  <div id="debugPanel" class="fixed bottom-4 right-4 w-96 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
     <div class="p-3 bg-gray-100 border-b flex items-center justify-between">
       <h3 class="font-medium text-sm">Debug Information</h3>
       <div>
@@ -150,19 +150,21 @@
       const originalConsoleWarn = console.warn;
       
       console.log = function() {
-        // Suppress console.log completely
+        const args = Array.from(arguments).join(' ');
+        debugLog(args);
+        originalConsoleLog.apply(console, arguments);
       };
       
       console.error = function() {
         const args = Array.from(arguments).join(' ');
         debugLog(args, 'error');
-        // Don't call original console.error
+        originalConsoleError.apply(console, arguments);
       };
       
       console.warn = function() {
         const args = Array.from(arguments).join(' ');
         debugLog(args, 'warn');
-        // Don't call original console.warn
+        originalConsoleWarn.apply(console, arguments);
       };
       
       // Clear debug logs
@@ -221,7 +223,7 @@
               setTimeout(() => { window.location.href = '/src/pages/AdminDashboard.html'; }, 1000);
             } else {
               debugLog("Redirecting to booking page");
-              setTimeout(() => { window.location.href = '/src/pages/BookingForm.html'; }, 1000);
+              setTimeout(() => { window.location.href = '/src/pages/HomePage.html'; }, 1000);
             }
           } else {
             showToast('error', 'Login failed', 'Invalid username or password.');

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -147,7 +146,7 @@
                   <p id="roomDescription" class="text-sm text-gray-500 italic mt-1 hidden"></p>
                 </div>
                 
-                <!-- Entry Point Selection - Now visible by default -->
+                <!-- Entry Point Selection -->
                 <div id="entryPointContainer" class="space-y-2">
                   <label for="entryPoint" class="block text-sm font-medium text-gray-700">Select Entry Point</label>
                   <select 
@@ -162,8 +161,8 @@
                   <p class="text-xs text-gray-500">Choose which entry point you will use to access the room</p>
                 </div>
                 
-                <!-- PIN Position Selection - NEW -->
-                <div id="pinPositionContainer" class="space-y-2">
+                <!-- PIN Position Selection -->
+                <div id="pinPositionContainer" class="space-y-2 hidden">
                   <label for="pinPosition" class="block text-sm font-medium text-gray-700">PIN Position</label>
                   <select 
                     id="pinPosition" 
@@ -177,8 +176,8 @@
                   <p class="text-xs text-gray-500">Select the position for your access PIN</p>
                 </div>
                 
-                <!-- PIN Code Input - NEW -->
-                <div id="pinCodeContainer" class="space-y-2">
+                <!-- PIN Code Input -->
+                <div id="pinCodeContainer" class="space-y-2 hidden">
                   <label for="pinCode" class="block text-sm font-medium text-gray-700">PIN Code</label>
                   <div class="flex space-x-2">
                     <input 
@@ -341,8 +340,12 @@
       
       // Load rooms from API
       fetch('/api/get_rooms.php')
-        .then(response => response.json())
+        .then(response => {
+          console.log("Room API response status:", response.status);
+          return response.json();
+        })
         .then(data => {
+          console.log("Room API data:", data);
           if (data.success && data.rooms) {
             const roomSelect = document.getElementById('room');
             const roomsContainer = document.getElementById('roomsContainer');
@@ -400,10 +403,16 @@
               // Load entry points when a room is selected
               if (roomId) {
                 loadEntryPoints(roomId);
+                // Show the PIN fields
+                document.getElementById('pinPositionContainer').classList.remove('hidden');
+                document.getElementById('pinCodeContainer').classList.remove('hidden');
               } else {
                 // Clear entry points but don't hide the container
                 const entrySelect = document.getElementById('entryPoint');
                 entrySelect.innerHTML = '<option value="" disabled selected>Select an entry point</option>';
+                // Hide the PIN fields
+                document.getElementById('pinPositionContainer').classList.add('hidden');
+                document.getElementById('pinCodeContainer').classList.add('hidden');
               }
             });
             
@@ -426,11 +435,16 @@
           showToast('error', 'Error', 'Failed to load rooms. Please try again later.');
         });
       
-      // Function to load all entry points (not specific to a room)
-      function loadAllEntryPoints() {
-        fetch('/api/get_entry_points.php')
-          .then(response => response.json())
+      // Function to load entry points by room ID
+      function loadEntryPoints(roomId) {
+        console.log("Loading entry points for room:", roomId);
+        fetch(`/api/get_entry_points.php?room_id=${roomId}`)
+          .then(response => {
+            console.log("Entry points API response status:", response.status);
+            return response.json();
+          })
           .then(data => {
+            console.log("Entry points API data:", data);
             const entrySelect = document.getElementById('entryPoint');
             // Clear previous options
             entrySelect.innerHTML = '<option value="" disabled selected>Select an entry point</option>';
@@ -445,34 +459,13 @@
                 }
                 entrySelect.appendChild(option);
               });
-            } else {
-              showToast('error', 'Error', 'Failed to load entry points.');
-            }
-          })
-          .catch(error => {
-            console.error('Error loading entry points:', error);
-            showToast('error', 'Error', 'Failed to load entry points. Please try again.');
-          });
-      }
-      
-      // Load entry points by room ID
-      function loadEntryPoints(roomId) {
-        fetch(`/api/get_entry_points.php?room_id=${roomId}`)
-          .then(response => response.json())
-          .then(data => {
-            const entrySelect = document.getElementById('entryPoint');
-            // Clear previous options
-            entrySelect.innerHTML = '<option value="" disabled selected>Select an entry point</option>';
-            
-            if (data.success) {
-              data.entry_points.forEach(entry => {
-                const option = document.createElement('option');
-                option.value = entry.id;
-                option.textContent = entry.name;
-                if (entry.description) {
-                  option.title = entry.description;
+              
+              // Add event listener to load positions when entry point is selected
+              entrySelect.addEventListener('change', function() {
+                const entryPointId = this.value;
+                if (entryPointId) {
+                  loadAvailablePositions(entryPointId);
                 }
-                entrySelect.appendChild(option);
               });
             } else {
               showToast('error', 'Error', 'Failed to load entry points for this room.');
@@ -484,14 +477,16 @@
           });
       }
       
-      // Load all entry points when page loads
-      loadAllEntryPoints();
-      
-      // NEW: Function to load available PIN positions
-      function loadAvailablePositions() {
-        fetch('/api/get_available_positions.php')
-          .then(response => response.json())
+      // Function to load available PIN positions
+      function loadAvailablePositions(entryPointId) {
+        console.log("Loading available positions for entry point:", entryPointId);
+        fetch(`/api/get_available_positions.php?entry_point_id=${entryPointId}`)
+          .then(response => {
+            console.log("Available positions API response status:", response.status);
+            return response.json();
+          })
           .then(data => {
+            console.log("Available positions API data:", data);
             const positionSelect = document.getElementById('pinPosition');
             // Clear previous options
             positionSelect.innerHTML = '<option value="" disabled selected>Select a position</option>';
@@ -513,11 +508,9 @@
           });
       }
       
-      // Load available positions when page loads
-      loadAvailablePositions();
-      
-      // NEW: Add event listener to generate PIN button
+      // Add event listener to generate PIN button
       document.getElementById('generatePinButton').addEventListener('click', function() {
+        console.log("Generating PIN code");
         // Create form data for the length parameter
         const formData = new FormData();
         formData.append('length', '4'); // Default to 4 digits
@@ -526,8 +519,12 @@
           method: 'POST',
           body: formData
         })
-        .then(response => response.json())
+        .then(response => {
+          console.log("Generate PIN API response status:", response.status);
+          return response.json();
+        })
         .then(data => {
+          console.log("Generate PIN API data:", data);
           if (data.success) {
             document.getElementById('pinCode').value = data.pin_code;
           } else {
@@ -563,6 +560,12 @@
         const submitButton = document.getElementById('submitButton');
         const formData = new FormData(this);
         
+        // Log form data for debugging
+        console.log("Form submission - room:", formData.get('room'));
+        console.log("Form submission - entryPoint:", formData.get('entryPoint'));
+        console.log("Form submission - pinPosition:", formData.get('pinPosition'));
+        console.log("Form submission - pinCode:", formData.get('pinCode'));
+        
         // Validate arrival and departure dates
         const arrival = new Date(formData.get('arrivalDateTime'));
         const departure = new Date(formData.get('departureDateTime'));
@@ -578,13 +581,13 @@
           return;
         }
         
-        // NEW: Make sure PIN position is selected
+        // Make sure PIN position is selected
         if (!formData.get('pinPosition')) {
           showToast('error', 'Missing Information', 'Please select a PIN position.');
           return;
         }
         
-        // NEW: Make sure PIN code is entered
+        // Make sure PIN code is entered
         if (!formData.get('pinCode')) {
           showToast('error', 'Missing Information', 'Please enter or generate a PIN code.');
           return;
@@ -603,7 +606,7 @@
           <span class="mr-2">Processing</span>
           <svg class="inline-block animate-spin h-4 w-4" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
         `;
         
@@ -665,26 +668,4 @@
         if (type === 'success') {
           toastIcon.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-            </svg>
-          `;
-        } else if (type === 'error') {
-          toastIcon.innerHTML = `
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-            </svg>
-          `;
-        }
-        
-        // Show toast
-        toast.classList.remove('translate-x-full');
-        
-        // Hide toast after 5 seconds
-        setTimeout(() => {
-          toast.classList.add('translate-x-full');
-        }, 5000);
-      };
-    });
-  </script>
-</body>
-</html>
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.
