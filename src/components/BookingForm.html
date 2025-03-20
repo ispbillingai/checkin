@@ -47,6 +47,46 @@
           />
         </div>
         
+        <!-- PIN Position -->
+        <div class="space-y-2" id="pinPositionContainer">
+          <label for="pinPosition" class="block text-sm font-medium text-gray-700">PIN Position (1-64)</label>
+          <input 
+            id="pinPosition" 
+            name="pinPosition" 
+            type="number" 
+            min="1" 
+            max="64" 
+            placeholder="Enter position number (1-64)" 
+            required
+            class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <p class="text-xs text-gray-500">Choose a position number between 1 and 64</p>
+        </div>
+        
+        <!-- PIN Code -->
+        <div class="space-y-2" id="pinCodeContainer">
+          <label for="pinCode" class="block text-sm font-medium text-gray-700">PIN Code</label>
+          <div class="flex space-x-2">
+            <input 
+              id="pinCode" 
+              name="pinCode" 
+              type="text" 
+              placeholder="Enter 4-digit PIN code" 
+              pattern="[0-9]{4,6}"
+              required
+              class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button 
+              type="button" 
+              id="generatePinButton"
+              class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              Generate
+            </button>
+          </div>
+          <p class="text-xs text-gray-500">Enter a 4-6 digit PIN code or click Generate</p>
+        </div>
+        
         <!-- Full Name -->
         <div class="space-y-2">
           <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
@@ -237,6 +277,20 @@
   function setupEventListeners() {
     console.log('BookingForm.html: Setting up event listeners');
     
+    // Generate PIN button
+    const generatePinButton = document.getElementById('generatePinButton');
+    if (generatePinButton) {
+      generatePinButton.addEventListener('click', function() {
+        // Generate a 4-digit PIN
+        const pinCode = Math.floor(1000 + Math.random() * 9000).toString();
+        document.getElementById('pinCode').value = pinCode;
+        
+        if (window.showToastMessage) {
+          window.showToastMessage('success', `PIN code ${pinCode} generated`);
+        }
+      });
+    }
+    
     // Submit booking form
     const bookingForm = document.getElementById('bookingForm');
     if (bookingForm) {
@@ -259,6 +313,24 @@
           console.error('BookingForm.html: Departure date must be after arrival date');
           if (window.showToastMessage) {
             window.showToastMessage('error', 'Departure date must be after arrival date');
+          }
+          return;
+        }
+        
+        // Validate position and PIN
+        const position = formData.get('pinPosition');
+        const pinCode = formData.get('pinCode');
+        
+        if (!position || position < 1 || position > 64) {
+          if (window.showToastMessage) {
+            window.showToastMessage('error', 'PIN position must be between 1 and 64');
+          }
+          return;
+        }
+        
+        if (!pinCode || !/^\d{4,6}$/.test(pinCode)) {
+          if (window.showToastMessage) {
+            window.showToastMessage('error', 'PIN code must be 4-6 digits');
           }
           return;
         }
