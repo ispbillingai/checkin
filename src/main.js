@@ -1,4 +1,3 @@
-
 // Setup error logging
 const logError = (error, context = '') => {
   console.error(`[ERROR] ${context}:`, error);
@@ -125,7 +124,7 @@ const populateEntryPoints = async (entryPoints) => {
 };
 
 // Initialize the application
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // Add database connection check functionality
   const checkDbBtn = document.getElementById('check-db-btn');
   const dbStatus = document.getElementById('db-status');
@@ -161,32 +160,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const roomPositionInput = document.getElementById('room-position-input');
   
   if (roomSelect && roomPositionInput) {
-    roomSelect.addEventListener('change', async function() {
+    roomSelect.addEventListener('change', function() {
       if (this.value) {
         roomPositionInput.classList.remove('hidden');
-        
-        // Fetch and populate entry points for the selected room
-        const entryPoints = await fetchRoomEntryPoints(this.value);
-        populateEntryPoints(entryPoints);
       } else {
         roomPositionInput.classList.add('hidden');
         const roomPositionField = document.getElementById('room-position');
         if (roomPositionField) {
           roomPositionField.value = '';
         }
-        
-        // Clear entry points when no room is selected
-        document.getElementById('entry-points-container').innerHTML = 
-          '<p class="text-gray-500">Please select a room to see available entry points.</p>';
       }
     });
-    
-    // Initial placeholder text for entry points
-    if (!roomSelect.value) {
-      document.getElementById('entry-points-container').innerHTML = 
-        '<p class="text-gray-500">Please select a room to see available entry points.</p>';
-    }
   }
+
+  // Fetch and display all entry points regardless of room selection
+  const entryPoints = await fetchEntryPoints();
+  populateEntryPoints(entryPoints);
 
   // Handle PIN code generation
   const generatePinBtn = document.getElementById('generate-pin');
@@ -338,4 +327,3 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
-
