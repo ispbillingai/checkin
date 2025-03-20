@@ -4,15 +4,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Room Gallery</title>
-    <meta name="description" content="Browse our beautiful room gallery" />
+    <title>Check-in-Simplify</title>
+    <meta name="description" content="Simple check-in and booking system" />
     <meta name="author" content="Lovable" />
     <meta property="og:image" content="/og-image.png" />
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <!-- Silent logging script to disable ALL console output -->
+    <script src="/src/js/silent-logging.js"></script>
     <!-- Lovable script tag -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+    <!-- Load error logging first -->
+    <script src="/src/js/error-logger.js"></script>
     <!-- Then load the main application script -->
     <script src="/src/index.js"></script>
+    <!-- Debug tools for development -->
+    <script src="/src/js/debug.js"></script>
   </head>
 
   <body>
