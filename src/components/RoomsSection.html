@@ -12,21 +12,15 @@
   // Function to safely initialize rooms section
   function safeInitRoomsSection() {
     try {
-      console.log("Attempting to initialize rooms section");
-      
       // Make sure the rooms container exists
       const container = document.getElementById('roomsContainer');
       if (!container) {
-        console.error("roomsContainer not found in the DOM");
         return;
       }
       
       if (window.initRoomsSection) {
-        console.log("Calling initRoomsSection from RoomsSection.html");
         window.initRoomsSection();
       } else {
-        console.log("initRoomsSection not available yet, will retry");
-        
         // Load demo rooms immediately while waiting for the script to load
         loadDemoRooms();
         
@@ -34,7 +28,6 @@
         setTimeout(safeInitRoomsSection, 500);
       }
     } catch (err) {
-      console.error("Error initializing rooms section:", err);
       // Load fallback demo data directly if we encounter an error
       loadDemoRooms();
     }
@@ -42,16 +35,13 @@
   
   // Function to load demo room data as fallback
   function loadDemoRooms() {
-    console.log("Loading demo rooms as fallback");
     const container = document.getElementById('roomsContainer');
     if (!container) {
-      console.error("roomsContainer still not found");
       return;
     }
     
     // If container is already populated with more than loading message, don't overwrite
     if (container.childElementCount > 1) {
-      console.log("Container already has content, not loading demo rooms");
       return;
     }
     

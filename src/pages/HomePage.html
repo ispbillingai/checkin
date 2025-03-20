@@ -45,16 +45,13 @@
     function loadComponent(containerId, componentPath) {
       const container = document.getElementById(containerId);
       if (!container) {
-        console.error(`Container ${containerId} not found`);
         return;
       }
-      
-      console.log(`Loading component: ${componentPath} into ${containerId}`);
       
       fetch(componentPath)
         .then(response => {
           if (!response.ok) {
-            throw new Error(`Failed to load ${componentPath}: ${response.status} ${response.statusText}`);
+            throw new Error(`Failed to load ${componentPath}`);
           }
           return response.text();
         })
@@ -75,19 +72,14 @@
             // Replace the original script with the new one
             script.parentNode.replaceChild(newScript, script);
           });
-          
-          console.log(`Component loaded successfully: ${componentPath}`);
         })
         .catch(error => {
-          console.error(`Error loading component ${componentPath}:`, error);
-          container.innerHTML = `<div class="text-red-500">Failed to load component: ${error.message}</div>`;
+          container.innerHTML = `<div class="text-red-500">Failed to load component</div>`;
         });
     }
     
     // Load all components when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
-      console.log("DOM content loaded, loading components");
-      
       // Load components
       loadComponent('header-container', '/src/components/Header.html');
       loadComponent('hero-banner-container', '/src/components/HeroBanner.html');

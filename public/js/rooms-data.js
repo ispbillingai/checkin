@@ -5,8 +5,6 @@
 
 // Function to fetch rooms data with enhanced error handling
 function fetchRoomsData() {
-  console.log("Fetching rooms data...");
-  
   return fetch('/api/get_rooms.php')
     .then(response => {
       if (!response.ok) {
@@ -17,27 +15,21 @@ function fetchRoomsData() {
           // Try to parse as JSON
           return JSON.parse(text);
         } catch (e) {
-          // If parsing fails, log the response text and throw an error
-          console.error("Invalid JSON response:", text);
+          // If parsing fails, throw an error
           throw new Error("Server returned invalid JSON response");
         }
       });
     })
     .then(data => {
-      console.log("Rooms data response:", data);
       if (data.success) {
         return data.rooms;
       } else {
         // If API returns an error message
-        console.error("API Error:", data.message);
         throw new Error(data.message || 'Failed to load rooms data');
       }
     })
     .catch(error => {
-      console.error("Error fetching rooms:", error);
-      
       // Return demo data as fallback
-      console.log("Using fallback demo room data");
       return [
         {
           id: 'demo1',
@@ -62,7 +54,6 @@ function fetchRoomsData() {
 function renderRooms(rooms) {
   const roomsContainer = document.getElementById('roomsContainer');
   if (!roomsContainer) {
-    console.error("Rooms container element not found");
     return;
   }
   
@@ -128,8 +119,6 @@ function renderRooms(rooms) {
 
 // Initialize rooms section
 function initRoomsSection() {
-  console.log("Initializing rooms section");
-  
   // Fetch and render rooms
   fetchRoomsData()
     .then(rooms => {

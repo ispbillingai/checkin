@@ -28,18 +28,11 @@
     <script>
       // Check if URL contains /admin and redirect appropriately
       document.addEventListener('DOMContentLoaded', function() {
-        console.log("index.html DOM loaded, checking for redirects");
-        
         const path = window.location.pathname;
-        console.log("Current path:", path);
         
         if (path.includes('/admin')) {
-          console.log("Admin path detected, redirecting");
           window.location.href = '/src/pages/AdminDashboard.html';
         }
-        
-        // Log successful page load
-        console.log("index.html fully loaded");
       });
     </script>
   </body>
