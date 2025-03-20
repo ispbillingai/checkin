@@ -1,0 +1,382 @@
+
+<div class="backdrop-blur-sm bg-white/90 border shadow-lg rounded-lg overflow-hidden mb-8">
+  <div class="bg-blue-50 border-b p-6">
+    <h2 class="text-xl font-semibold">Bookings Summary</h2>
+    <p class="text-sm text-gray-500 mt-1">View and manage all bookings for the selected date</p>
+  </div>
+  <div class="p-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+      <!-- Date Selection -->
+      <div class="space-y-2">
+        <label for="booking-date" class="block text-sm font-medium text-gray-700">Select Date</label>
+        <input type="date" id="booking-date" class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      
+      <!-- Room Selection -->
+      <div class="space-y-2">
+        <label for="room-filter" class="block text-sm font-medium text-gray-700">Filter by Room</label>
+        <select id="room-filter" class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="all">All Rooms</option>
+          <!-- Room options will be dynamically added here -->
+        </select>
+      </div>
+      
+      <!-- Search -->
+      <div class="space-y-2">
+        <label for="booking-search" class="block text-sm font-medium text-gray-700">Search by Name or Code</label>
+        <div class="relative">
+          <svg xmlns="http://www.w3.org/2000/svg" class="absolute left-3 top-3 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input type="text" id="booking-search" class="w-full h-11 pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Search bookings...">
+        </div>
+      </div>
+    </div>
+    
+    <div class="flex justify-end mb-4">
+      <button id="refreshButton" class="flex items-center gap-1 px-3 py-1 text-sm border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <svg id="refreshIcon" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        Refresh
+      </button>
+    </div>
+    
+    <div id="bookingsContainer" class="rounded-md border overflow-hidden">
+      <table class="w-full border-collapse">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guest Name</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Contact</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Access Code</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Check-in</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Check-out</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="bookingsTableBody" class="bg-white divide-y divide-gray-200">
+          <!-- Bookings will be populated here by JavaScript -->
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Empty state -->
+    <div id="emptyState" class="hidden flex flex-col items-center justify-center py-12 text-center">
+      <div class="rounded-full bg-blue-100 p-3 mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-medium mb-1">No bookings found</h3>
+      <p class="text-gray-500 mb-4">
+        There are no bookings for the selected date and filters.
+      </p>
+      <button id="refreshEmptyButton" class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        Refresh Data
+      </button>
+    </div>
+    
+    <!-- Loading state -->
+    <div id="loadingState" class="hidden h-[300px] flex items-center justify-center">
+      <div class="flex flex-col items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-600 animate-spin mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        <p class="text-gray-500">Loading bookings...</p>
+      </div>
+    </div>
+    
+    <!-- Debug Panel -->
+    <div id="debugPanel" class="mt-8 p-4 bg-gray-100 rounded-lg border border-gray-300 hidden">
+      <h3 class="text-md font-medium mb-2 flex items-center justify-between">
+        Debug Information
+        <button id="clearDebugBtn" class="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded">Clear</button>
+      </h3>
+      <div id="debugContent" class="text-xs font-mono bg-gray-800 text-green-400 p-3 rounded overflow-auto max-h-40">
+        <!-- Debug logs will appear here -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Debug functionality
+  const debugPanel = document.getElementById('debugPanel');
+  const debugContent = document.getElementById('debugContent');
+  const clearDebugBtn = document.getElementById('clearDebugBtn');
+  
+  // Show debug panel with keyboard shortcut (Ctrl+Shift+D)
+  document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+      debugPanel.classList.toggle('hidden');
+      e.preventDefault();
+    }
+  });
+  
+  // Clear debug logs
+  clearDebugBtn.addEventListener('click', function() {
+    debugContent.innerHTML = '';
+  });
+  
+  // Debug log function that only logs to our debug panel, not to console
+  function debugLog(message, type = 'info') {
+    const timestamp = new Date().toLocaleTimeString();
+    const logElement = document.createElement('div');
+    logElement.className = 'py-1';
+    
+    // Set color based on type
+    let color = 'text-green-400'; // Default for info
+    if (type === 'error') color = 'text-red-400';
+    if (type === 'warn') color = 'text-yellow-400';
+    
+    logElement.innerHTML = `<span class="text-gray-500">[${timestamp}]</span> <span class="${color}">${message}</span>`;
+    debugContent.appendChild(logElement);
+    debugContent.scrollTop = debugContent.scrollHeight; // Auto-scroll to bottom
+  }
+  
+  // Override console methods to add to debug panel but not log to console
+  const originalConsoleError = console.error;
+  console.error = function() {
+    const args = Array.from(arguments).join(' ');
+    debugLog(args, 'error');
+    // We don't call the original console.error anymore
+  };
+  
+  // Cache DOM elements
+  const bookingDateInput = document.getElementById('booking-date');
+  const roomFilterSelect = document.getElementById('room-filter');
+  const bookingSearchInput = document.getElementById('booking-search');
+  const refreshButton = document.getElementById('refreshButton');
+  const refreshEmptyButton = document.getElementById('refreshEmptyButton');
+  const bookingsTableBody = document.getElementById('bookingsTableBody');
+  const bookingsContainer = document.getElementById('bookingsContainer');
+  const emptyState = document.getElementById('emptyState');
+  const loadingState = document.getElementById('loadingState');
+  const refreshIcon = document.getElementById('refreshIcon');
+  
+  debugLog('Bookings template script initialized');
+  
+  // Set default date to today
+  const today = new Date();
+  const formattedDate = today.toISOString().split('T')[0];
+  bookingDateInput.value = formattedDate;
+  debugLog(`Set default date to: ${formattedDate}`);
+  
+  // Format date for display
+  function formatDate(dateString) {
+    const options = { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    return new Date(dateString).toLocaleString('en-US', options);
+  }
+  
+  // Load rooms for filter
+  function loadRooms() {
+    debugLog('Loading rooms for filter...');
+    fetch('/api/get_all_rooms.php')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          const rooms = data.rooms;
+          roomFilterSelect.innerHTML = '<option value="all">All Rooms</option>';
+          debugLog(`Loaded ${rooms.length} rooms`);
+          
+          rooms.forEach(room => {
+            const option = document.createElement('option');
+            option.value = room.id;
+            option.textContent = room.name;
+            roomFilterSelect.appendChild(option);
+          });
+        } else {
+          throw new Error(data.message || 'Failed to load rooms');
+        }
+      })
+      .catch(error => {
+        debugLog(`Error loading rooms: ${error.message}`, 'error');
+      });
+  }
+  
+  // Load bookings
+  function loadBookings() {
+    // Show loading state
+    bookingsContainer.classList.add('hidden');
+    emptyState.classList.add('hidden');
+    loadingState.classList.remove('hidden');
+    
+    // Add animation to refresh icon
+    refreshIcon.classList.add('animate-spin');
+    
+    const date = bookingDateInput.value;
+    const roomId = roomFilterSelect.value;
+    
+    // Construct URL with query parameters
+    const url = `/api/get_bookings.php?date=${date}${roomId !== 'all' ? `&room=${roomId}` : ''}`;
+    debugLog(`Fetching bookings from: ${url}`);
+    
+    fetch(url)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error ${response.status}`);
+        }
+        debugLog(`Response status: ${response.status}`);
+        return response.json();
+      })
+      .then(data => {
+        // Stop refresh icon animation
+        refreshIcon.classList.remove('animate-spin');
+        
+        if (data.success) {
+          const bookings = data.bookings;
+          debugLog(`Received ${bookings.length} bookings`);
+          
+          if (bookings.length === 0) {
+            // Show empty state
+            bookingsContainer.classList.add('hidden');
+            loadingState.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+            debugLog('No bookings found, showing empty state');
+          } else {
+            // Filter bookings if search term is provided
+            const searchTerm = bookingSearchInput.value.toLowerCase();
+            let filteredBookings = bookings;
+            
+            if (searchTerm) {
+              filteredBookings = bookings.filter(booking => 
+                booking.guestName.toLowerCase().includes(searchTerm) || 
+                booking.accessCode.toLowerCase().includes(searchTerm)
+              );
+              debugLog(`Filter applied: "${searchTerm}" - ${filteredBookings.length} bookings match`);
+            }
+            
+            // Render bookings
+            renderBookings(filteredBookings);
+            
+            // Show bookings container
+            loadingState.classList.add('hidden');
+            emptyState.classList.add('hidden');
+            bookingsContainer.classList.remove('hidden');
+          }
+        } else {
+          throw new Error(data.message || 'Failed to load bookings');
+        }
+      })
+      .catch(error => {
+        debugLog(`Error fetching bookings: ${error.message}`, 'error');
+        
+        // Stop refresh icon animation
+        refreshIcon.classList.remove('animate-spin');
+        
+        // Show empty state with error
+        bookingsContainer.classList.add('hidden');
+        loadingState.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+      });
+  }
+  
+  // Render bookings to table
+  function renderBookings(bookings) {
+    bookingsTableBody.innerHTML = '';
+    debugLog(`Rendering ${bookings.length} bookings to table`);
+    
+    bookings.forEach(booking => {
+      const row = document.createElement('tr');
+      
+      // Create table cells
+      row.innerHTML = `
+        <td class="px-4 py-3 whitespace-nowrap">
+          <div class="text-sm font-medium text-gray-900">${booking.room}</div>
+        </td>
+        <td class="px-4 py-3 whitespace-nowrap">
+          <div class="text-sm font-medium text-gray-900">${booking.guestName}</div>
+        </td>
+        <td class="px-4 py-3 whitespace-nowrap hidden md:table-cell">
+          <div class="text-sm text-gray-500">${booking.email}</div>
+          <div class="text-sm text-gray-500">${booking.phone || 'N/A'}</div>
+        </td>
+        <td class="px-4 py-3 whitespace-nowrap">
+          <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+            ${booking.accessCode}
+          </span>
+        </td>
+        <td class="px-4 py-3 whitespace-nowrap hidden md:table-cell">
+          <div class="text-sm text-gray-500">${formatDate(booking.arrivalDateTime)}</div>
+        </td>
+        <td class="px-4 py-3 whitespace-nowrap hidden md:table-cell">
+          <div class="text-sm text-gray-500">${formatDate(booking.departureDateTime)}</div>
+        </td>
+        <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+          <button data-booking-id="${booking.id}" class="text-blue-600 hover:text-blue-900 mr-2 view-booking">View</button>
+          <button data-booking-id="${booking.id}" class="text-red-600 hover:text-red-900 cancel-booking">Cancel</button>
+        </td>
+      `;
+      
+      bookingsTableBody.appendChild(row);
+    });
+    
+    // Add event listeners to action buttons
+    document.querySelectorAll('.view-booking').forEach(button => {
+      button.addEventListener('click', function() {
+        const bookingId = this.getAttribute('data-booking-id');
+        debugLog(`View booking clicked: ID ${bookingId}`);
+        alert(`View booking: ${bookingId}`);
+      });
+    });
+    
+    document.querySelectorAll('.cancel-booking').forEach(button => {
+      button.addEventListener('click', function() {
+        const bookingId = this.getAttribute('data-booking-id');
+        debugLog(`Cancel booking clicked: ID ${bookingId}`);
+        if (confirm(`Are you sure you want to cancel booking ${bookingId}?`)) {
+          debugLog(`Confirming cancellation of booking ID ${bookingId}`);
+          alert(`Booking ${bookingId} cancelled`);
+        }
+      });
+    });
+  }
+  
+  // Event Listeners
+  bookingDateInput.addEventListener('change', function() {
+    debugLog(`Date filter changed to: ${this.value}`);
+    loadBookings();
+  });
+  
+  roomFilterSelect.addEventListener('change', function() {
+    debugLog(`Room filter changed to: ${this.options[this.selectedIndex].text} (ID: ${this.value})`);
+    loadBookings();
+  });
+  
+  refreshButton.addEventListener('click', function() {
+    debugLog('Manual refresh triggered');
+    loadBookings();
+  });
+  
+  refreshEmptyButton.addEventListener('click', function() {
+    debugLog('Empty state refresh triggered');
+    loadBookings();
+  });
+  
+  bookingSearchInput.addEventListener('input', function() {
+    debugLog(`Search term changed to: "${this.value}"`);
+    // If we have already loaded bookings, just filter them
+    if (!bookingsContainer.classList.contains('hidden')) {
+      loadBookings();
+    }
+  });
+  
+  // Initial load
+  debugLog('Performing initial data load');
+  loadRooms();
+  loadBookings();
+});
+</script>

@@ -1,0 +1,25 @@
+
+<div id="successModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+  <div class="absolute inset-0 bg-black opacity-50"></div>
+  <div class="relative bg-white rounded-lg shadow-xl max-w-md w-full m-4 p-6 fade-in">
+    <div class="text-center">
+      <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+      </div>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">Booking Successful!</h3>
+      <p class="text-sm text-gray-500 mb-6">Your booking has been created successfully. Check your email for details.</p>
+      <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+        <p class="text-sm text-gray-700 mb-2">Your access code:</p>
+        <p id="accessCode" class="text-2xl font-bold text-blue-600 tracking-wider"></p>
+      </div>
+      <button 
+        id="closeModal" 
+        class="w-full h-10 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,284 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booking Form with Entry Points</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 py-6">
+  <div class="container mx-auto px-4">
+    <div class="max-w-2xl mx-auto bg-white shadow-md rounded-lg p-6">
+      <h2 class="text-2xl font-bold mb-6 text-gray-800">Book a Room</h2>
+      
+      <form id="bookingForm" class="space-y-6">
+        <!-- Guest Information -->
+        <div>
+          <h3 class="text-lg font-semibold mb-3 text-gray-700">Guest Information</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="guestName" class="block text-sm font-medium text-gray-700">Full Name</label>
+              <input type="text" id="guestName" name="guestName" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+              <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+              <input type="email" id="email" name="email" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+              <label for="phone" class="block text-sm font-medium text-gray-700">Phone</label>
+              <input type="tel" id="phone" name="phone" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+          </div>
+        </div>
+        
+        <!-- Booking Details -->
+        <div>
+          <h3 class="text-lg font-semibold mb-3 text-gray-700">Booking Details</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="room" class="block text-sm font-medium text-gray-700">Room</label>
+              <select id="room" name="room" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <option value="">Select a room</option>
+                <!-- Room options will be loaded dynamically -->
+              </select>
+            </div>
+            <div>
+              <label for="adults" class="block text-sm font-medium text-gray-700">Adults</label>
+              <select id="adults" name="adults" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+            </div>
+            <div>
+              <label for="children" class="block text-sm font-medium text-gray-700">Children</label>
+              <select id="children" name="children" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Dates -->
+        <div>
+          <h3 class="text-lg font-semibold mb-3 text-gray-700">Dates</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="checkIn" class="block text-sm font-medium text-gray-700">Check-in Date</label>
+              <input type="date" id="checkIn" name="checkIn" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+              <label for="checkOut" class="block text-sm font-medium text-gray-700">Check-out Date</label>
+              <input type="date" id="checkOut" name="checkOut" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+            </div>
+          </div>
+        </div>
+        
+        <!-- Entry Points -->
+        <div>
+          <h3 class="text-lg font-semibold mb-3 text-gray-700">Access Points</h3>
+          <div id="entryPointsContainer" class="border border-gray-300 rounded-md p-3 max-h-48 overflow-y-auto">
+            <p class="text-gray-500 text-sm">Please select a room first to see available entry points.</p>
+          </div>
+          <p class="text-xs text-gray-500 mt-1">Select one or more entry points you will use to access the room.</p>
+        </div>
+        
+        <!-- Submit Button -->
+        <div>
+          <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+            Book Now
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const roomSelect = document.getElementById('room');
+      const entryPointsContainer = document.getElementById('entryPointsContainer');
+      const bookingForm = document.getElementById('bookingForm');
+      
+      // Set minimum dates for check-in and check-out
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      const formatDate = date => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+      
+      document.getElementById('checkIn').min = formatDate(today);
+      document.getElementById('checkIn').value = formatDate(today);
+      document.getElementById('checkOut').min = formatDate(tomorrow);
+      document.getElementById('checkOut').value = formatDate(tomorrow);
+      
+      // Check-in date change listener
+      document.getElementById('checkIn').addEventListener('change', function() {
+        const checkInDate = new Date(this.value);
+        const checkOutDate = new Date(checkInDate);
+        checkOutDate.setDate(checkOutDate.getDate() + 1);
+        
+        document.getElementById('checkOut').min = formatDate(checkOutDate);
+        
+        // If check-out date is before new check-in date, update it
+        const currentCheckOutDate = new Date(document.getElementById('checkOut').value);
+        if (currentCheckOutDate <= checkInDate) {
+          document.getElementById('checkOut').value = formatDate(checkOutDate);
+        }
+      });
+      
+      // Load rooms
+      fetch('/api/get_rooms.php')
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.rooms) {
+            data.rooms.forEach(room => {
+              const option = document.createElement('option');
+              option.value = room.id;
+              option.textContent = room.name;
+              roomSelect.appendChild(option);
+            });
+          }
+        })
+        .catch(error => {
+          // Create demo rooms if API fails
+          const demoRooms = [
+            { id: 'room1', name: 'Standard Room' },
+            { id: 'room2', name: 'Deluxe Room' },
+            { id: 'room3', name: 'Suite' }
+          ];
+          
+          demoRooms.forEach(room => {
+            const option = document.createElement('option');
+            option.value = room.id;
+            option.textContent = room.name;
+            roomSelect.appendChild(option);
+          });
+        });
+      
+      // Room selection change listener
+      roomSelect.addEventListener('change', function() {
+        const roomId = this.value;
+        
+        if (!roomId) {
+          entryPointsContainer.innerHTML = '<p class="text-gray-500 text-sm">Please select a room first to see available entry points.</p>';
+          return;
+        }
+        
+        entryPointsContainer.innerHTML = '<p class="text-gray-500 text-sm">Loading entry points...</p>';
+        
+        // Load entry points for the selected room
+        fetch(`/api/get_entry_points.php?room_id=${roomId}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.success && data.entry_points.length > 0) {
+              entryPointsContainer.innerHTML = '';
+              
+              data.entry_points.forEach(entryPoint => {
+                const div = document.createElement('div');
+                div.className = 'flex items-start space-x-2 py-1';
+                
+                div.innerHTML = `
+                  <input type="checkbox" id="entry_${entryPoint.id}" name="entry_points[]" value="${entryPoint.id}" class="mt-1">
+                  <div>
+                    <label for="entry_${entryPoint.id}" class="block text-sm font-medium text-gray-700">${entryPoint.name}</label>
+                    <p class="text-xs text-gray-500">${entryPoint.description || ''}</p>
+                  </div>
+                `;
+                
+                entryPointsContainer.appendChild(div);
+              });
+            } else {
+              entryPointsContainer.innerHTML = '<p class="text-gray-500 text-sm">No entry points available for this room</p>';
+            }
+          })
+          .catch(error => {
+            entryPointsContainer.innerHTML = '<p class="text-red-500 text-sm">Error loading entry points</p>';
+            
+            // Create demo entry points as fallback
+            const demoEntryPoints = [
+              { id: 'entry1', name: 'Main Entrance', description: 'Front door at the main lobby' },
+              { id: 'entry2', name: 'Side Entrance', description: 'Side entrance near the parking lot' },
+              { id: 'entry3', name: 'Back Entrance', description: 'Back entrance near the garden' }
+            ];
+            
+            entryPointsContainer.innerHTML = '';
+              
+            demoEntryPoints.forEach(entryPoint => {
+              const div = document.createElement('div');
+              div.className = 'flex items-start space-x-2 py-1';
+              
+              div.innerHTML = `
+                <input type="checkbox" id="entry_${entryPoint.id}" name="entry_points[]" value="${entryPoint.id}" class="mt-1">
+                <div>
+                  <label for="entry_${entryPoint.id}" class="block text-sm font-medium text-gray-700">${entryPoint.name}</label>
+                  <p class="text-xs text-gray-500">${entryPoint.description || ''}</p>
+                </div>
+              `;
+              
+              entryPointsContainer.appendChild(div);
+            });
+          });
+      });
+      
+      // Form submission
+      bookingForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Get selected entry points
+        const selectedEntryPoints = Array.from(document.querySelectorAll('input[name="entry_points[]"]:checked')).map(cb => cb.value);
+        
+        if (selectedEntryPoints.length === 0) {
+          alert('Please select at least one entry point.');
+          return;
+        }
+        
+        // Gather form data
+        const formData = new FormData(this);
+        
+        // Remove existing entry points and add selected ones
+        for (const key of formData.keys()) {
+          if (key.startsWith('entry_points')) {
+            formData.delete(key);
+          }
+        }
+        
+        selectedEntryPoints.forEach(ep => {
+          formData.append('entry_points[]', ep);
+        });
+        
+        // Submit booking
+        fetch('/api/create_booking.php', {
+          method: 'POST',
+          body: formData
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              alert('Booking created successfully! Your booking confirmation code is: ' + data.booking_code);
+              bookingForm.reset();
+              
+              // Reset entry points
+              entryPointsContainer.innerHTML = '<p class="text-gray-500 text-sm">Please select a room first to see available entry points.</p>';
+            } else {
+              alert('Error: ' + (data.message || 'Failed to create booking.'));
+            }
+          })
+          .catch(error => {
+            alert('An error occurred while creating your booking. Please try again later.');
+          });
+      });
+    });
+  </script>
+</body>
+</html>

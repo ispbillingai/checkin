@@ -1,0 +1,489 @@
+
+<!-- Booking Form HTML -->
+<div class="fade-in booking-form" style="animation-delay: 0.4s">
+  <div class="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
+    <div class="p-6 bg-blue-50 border-b">
+      <h2 class="text-2xl font-semibold text-gray-800">Book Your Stay</h2>
+      <p class="text-sm text-gray-500 mt-1">Fill out the form below to create your booking</p>
+    </div>
+    <div class="p-6">
+      <form id="bookingForm" class="space-y-4">
+        <!-- Room Selection -->
+        <div class="space-y-2">
+          <label for="room" class="block text-sm font-medium text-gray-700">Select Room</label>
+          <select 
+            id="room" 
+            name="room" 
+            required
+            class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select a room</option>
+            <!-- Rooms will be populated here -->
+          </select>
+          <p id="roomDescription" class="text-sm text-gray-500 italic mt-1 hidden"></p>
+        </div>
+        
+        <!-- Arrival Date & Time -->
+        <div class="space-y-2">
+          <label for="arrivalDateTime" class="block text-sm font-medium text-gray-700">Arrival Date & Time</label>
+          <input 
+            id="arrivalDateTime" 
+            name="arrivalDateTime" 
+            type="datetime-local" 
+            required
+            class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+                <!-- Entry Points (NEW) -->
+                <div id="entryPointContainer" class="space-y-2">
+                  <label class="block text-sm font-medium text-gray-700">Select Entry Points</label>
+                  <div id="entryPointsCheckboxes" class="border border-gray-300 rounded-md p-3 max-h-48 overflow-y-auto">
+                    <p class="text-gray-500 text-sm">Loading entry points...</p>
+                  </div>
+                  <p class="text-xs text-gray-500">Select one or more entry points you will use to access the room</p>
+                </div>
+        <!-- Departure Date & Time -->
+        <div class="space-y-2">
+          <label for="departureDateTime" class="block text-sm font-medium text-gray-700">Departure Date & Time</label>
+          <input 
+            id="departureDateTime" 
+            name="departureDateTime" 
+            type="datetime-local" 
+            required
+            class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        
+        <!-- PIN Position -->
+        <div class="space-y-2" id="pinPositionContainer">
+          <label for="pinPosition" class="block text-sm font-medium text-gray-700">PIN Position (1-64)</label>
+          <input 
+            id="pinPosition" 
+            name="pinPosition" 
+            type="number" 
+            min="1" 
+            max="64" 
+            placeholder="Enter position number (1-64)" 
+            required
+            class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <p class="text-xs text-gray-500">Choose a position number between 1 and 64</p>
+        </div>
+        
+        <!-- PIN Code -->
+        <div class="space-y-2" id="pinCodeContainer">
+          <label for="pinCode" class="block text-sm font-medium text-gray-700">PIN Code</label>
+          <div class="flex space-x-2">
+            <input 
+              id="pinCode" 
+              name="pinCode" 
+              type="text" 
+              placeholder="Enter 4-digit PIN code" 
+              pattern="[0-9]{4,6}"
+              required
+              class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button 
+              type="button" 
+              id="generatePinButton"
+              class="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              Generate
+            </button>
+          </div>
+          <p class="text-xs text-gray-500">Enter a 4-6 digit PIN code or click Generate</p>
+        </div>
+        
+        <!-- Full Name -->
+        <div class="space-y-2">
+          <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
+          <input 
+            id="name" 
+            name="name" 
+            type="text" 
+            placeholder="Enter your full name" 
+            required
+            class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        
+        <!-- Email -->
+        <div class="space-y-2">
+          <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+          <input 
+            id="email" 
+            name="email" 
+            type="email" 
+            placeholder="Enter your email" 
+            required
+            class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        
+        <!-- Phone -->
+        <div class="space-y-2">
+          <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
+          <input 
+            id="phone" 
+            name="phone" 
+            type="tel" 
+            placeholder="Enter your phone number" 
+            required
+            class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        
+        <!-- Submit -->
+        <button 
+          type="submit" 
+          id="submitButton"
+          class="w-full h-11 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+        >
+          Create Booking
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('BookingForm.html: DOM content loaded');
+    
+    // Wait a bit to ensure all components are loaded
+    setTimeout(function() {
+      console.log('BookingForm.html: Initializing form');
+      
+      // Initialize date inputs with default values
+      initializeDateInputs();
+      
+
+          // Load entry points from API (NEW)
+    loadAllEntryPoints();
+
+      // Load rooms from API
+      loadRooms();
+      
+      // Set up event listeners
+      setupEventListeners();
+    }, 1000);
+  });
+
+  // NEW: function to load entry points from /api/get_entry_points.php
+  function loadAllEntryPoints() {
+    const entryPointsContainer = document.getElementById('entryPointsCheckboxes');
+    if (!entryPointsContainer) return;
+
+    entryPointsContainer.innerHTML = '<p class="text-gray-500 text-sm">Loading entry points...</p>';
+
+    // Adjust the path if your get_entry_points.php is elsewhere:
+    fetch('/api/get_entry_points.php')
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && data.entry_points && data.entry_points.length > 0) {
+          entryPointsContainer.innerHTML = '';
+          data.entry_points.forEach(entry => {
+            const checkboxId = `entryPoint_${entry.id}`;
+            
+            // Container for each entry
+            const div = document.createElement('div');
+            div.className = 'mb-2';
+
+            // Checkbox
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = checkboxId;
+            checkbox.name = 'entryPoints[]';
+            checkbox.value = entry.id;
+            checkbox.className = 'mr-2';
+
+            // Label
+            const label = document.createElement('label');
+            label.htmlFor = checkboxId;
+            label.textContent = `${entry.name} – ${entry.description || 'No description'}`;
+
+            // Append to container
+            div.appendChild(checkbox);
+            div.appendChild(label);
+            entryPointsContainer.appendChild(div);
+          });
+        } else {
+          // If no data or error, create fallback demo entry points
+          createDemoEntryPoints();
+        }
+      })
+      .catch(() => {
+        // If fetch fails, create fallback demo entry points
+        createDemoEntryPoints();
+      });
+  }
+
+    // NEW: fallback if no real entry points come from the API
+    function createDemoEntryPoints() {
+    const entryPointsContainer = document.getElementById('entryPointsCheckboxes');
+    if (!entryPointsContainer) return;
+    entryPointsContainer.innerHTML = '';
+
+    const demo = [
+      { id: 'entry1', name: 'Main Entrance', description: 'Front door at the main lobby' },
+      { id: 'entry2', name: 'Side Entrance', description: 'Entrance near the parking lot' },
+      { id: 'entry3', name: 'Back Entrance', description: 'Entrance near the garden' }
+    ];
+
+    demo.forEach(entry => {
+      const checkboxId = `entryPoint_${entry.id}`;
+      const div = document.createElement('div');
+      div.className = 'mb-2';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = checkboxId;
+      checkbox.name = 'entryPoints[]';
+      checkbox.value = entry.id;
+      checkbox.className = 'mr-2';
+
+      const label = document.createElement('label');
+      label.htmlFor = checkboxId;
+      label.textContent = `${entry.name} – ${entry.description}`;
+
+      div.appendChild(checkbox);
+      div.appendChild(label);
+      entryPointsContainer.appendChild(div);
+    });
+  }
+
+  function initializeDateInputs() {
+    console.log('BookingForm.html: Initializing date inputs');
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const formatDateTimeForInput = (date) => date.toISOString().slice(0, 16);
+    
+    const arrivalInput = document.getElementById('arrivalDateTime');
+    const departureInput = document.getElementById('departureDateTime');
+    
+    if (arrivalInput && departureInput) {
+      arrivalInput.min = formatDateTimeForInput(today);
+      departureInput.min = formatDateTimeForInput(tomorrow);
+      
+      arrivalInput.value = formatDateTimeForInput(today);
+      departureInput.value = formatDateTimeForInput(tomorrow);
+      console.log('BookingForm.html: Date inputs initialized successfully');
+    } else {
+      console.error('BookingForm.html: Failed to find date input elements');
+    }
+  }
+
+  function loadRooms() {
+    console.log('BookingForm.html: Loading rooms');
+    const roomSelect = document.getElementById('room');
+    if (!roomSelect) {
+      console.error('BookingForm.html: Room select element not found');
+      setTimeout(loadRooms, 500);
+      return;
+    }
+    
+    // Use shared populateRoomSelects function if available
+    if (typeof window.populateRoomSelects === 'function') {
+      console.log('BookingForm.html: Using global populateRoomSelects function');
+      window.populateRoomSelects();
+      return;
+    }
+    
+    // Fallback to direct API fetch
+    console.log('BookingForm.html: Falling back to direct API fetch for rooms');
+    fetch('/api/get_rooms.php')
+      .then(response => {
+        console.log(`BookingForm.html: Rooms API response status: ${response.status}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('BookingForm.html: Rooms API data received:', data);
+        if (data.success && data.rooms) {
+          populateRooms(data.rooms);
+        } else {
+          console.warn('BookingForm.html: No rooms in API response, falling back to demo rooms');
+          // Fallback to demo rooms
+          loadDemoRooms();
+        }
+      })
+      .catch(error => {
+        console.error('BookingForm.html: Error fetching rooms:', error);
+        loadDemoRooms(); // fallback
+      });
+  }
+
+  function loadDemoRooms() {
+    console.log('BookingForm.html: Loading demo rooms');
+    const roomSelect = document.getElementById('room');
+    if (!roomSelect) return;
+    
+    const demoRooms = [
+      { id: 'demo1', name: 'Demo Single Room',  description: 'A comfortable single room.' },
+      { id: 'demo2', name: 'Demo Double Room',  description: 'A spacious double room.' },
+      { id: 'demo3', name: 'Demo Suite',        description: 'A luxury suite.' }
+    ];
+    populateRooms(demoRooms);
+  }
+
+  function populateRooms(rooms) {
+    console.log(`BookingForm.html: Populating ${rooms.length} rooms`);
+    const roomSelect = document.getElementById('room');
+    if (!roomSelect) return;
+    
+    // Clear any existing options except the placeholder
+    while (roomSelect.options.length > 1) {
+      roomSelect.remove(1);
+    }
+    
+    if (rooms.length === 0) return;
+    
+    const roomDescriptions = {};
+    
+    rooms.forEach(room => {
+      const option = document.createElement('option');
+      option.value = room.id;
+      option.textContent = room.name;
+      roomSelect.appendChild(option);
+      
+      roomDescriptions[room.id] = room.description || '';
+    });
+    
+    // Show/hide the room description
+    roomSelect.addEventListener('change', function() {
+      const desc = roomDescriptions[this.value] || '';
+      const descElem = document.getElementById('roomDescription');
+      if (desc) {
+        descElem.textContent = desc;
+        descElem.classList.remove('hidden');
+      } else {
+        descElem.classList.add('hidden');
+      }
+    });
+    
+    console.log('BookingForm.html: Rooms populated successfully');
+  }
+
+  function setupEventListeners() {
+    console.log('BookingForm.html: Setting up event listeners');
+    
+    // Generate PIN button
+    const generatePinButton = document.getElementById('generatePinButton');
+    if (generatePinButton) {
+      generatePinButton.addEventListener('click', function() {
+        // Generate a 4-digit PIN
+        const pinCode = Math.floor(1000 + Math.random() * 9000).toString();
+        document.getElementById('pinCode').value = pinCode;
+        
+        if (window.showToastMessage) {
+          window.showToastMessage('success', `PIN code ${pinCode} generated`);
+        }
+      });
+    }
+    
+    // Submit booking form
+    const bookingForm = document.getElementById('bookingForm');
+    if (bookingForm) {
+      bookingForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        console.log('BookingForm.html: Form submission started');
+        
+        const submitButton = document.getElementById('submitButton');
+        const formData = new FormData(this);
+        
+        // Log form data for debugging
+        console.log('BookingForm.html: Form data collected:');
+        for (let [key, value] of formData.entries()) {
+          console.log(`  ${key}: ${value}`);
+        }
+        
+        const arrival = new Date(formData.get('arrivalDateTime'));
+        const departure = new Date(formData.get('departureDateTime'));
+        if (departure <= arrival) {
+          console.error('BookingForm.html: Departure date must be after arrival date');
+          if (window.showToastMessage) {
+            window.showToastMessage('error', 'Departure date must be after arrival date');
+          }
+          return;
+        }
+        
+        // Validate position and PIN
+        const position = formData.get('pinPosition');
+        const pinCode = formData.get('pinCode');
+        
+        if (!position || position < 1 || position > 64) {
+          if (window.showToastMessage) {
+            window.showToastMessage('error', 'PIN position must be between 1 and 64');
+          }
+          return;
+        }
+        
+        if (!pinCode || !/^\d{4,6}$/.test(pinCode)) {
+          if (window.showToastMessage) {
+            window.showToastMessage('error', 'PIN code must be 4-6 digits');
+          }
+          return;
+        }
+        
+        // Disable submit button to prevent multiple submissions
+        submitButton.disabled = true;
+        submitButton.innerText = 'Processing...';
+        submitButton.classList.add('opacity-75');
+        
+        // Submit the form data
+        fetch('/api/process_booking.php', {
+          method: 'POST',
+          body: formData
+        })
+          .then(response => {
+            console.log(`BookingForm.html: Booking API response status: ${response.status}`);
+            return response.json();
+          })
+          .then(data => {
+            console.log('BookingForm.html: Booking API response:', data);
+            
+            if (data.success) {
+              // Show success message
+              if (window.showToastMessage) {
+                window.showToastMessage('success', 'Booking created successfully! Your access code is: ' + data.data.accessCode);
+              }
+              
+              // Reset form
+              bookingForm.reset();
+              initializeDateInputs();
+              
+              // Hide room description
+              document.getElementById('roomDescription').classList.add('hidden');
+              
+              // Scroll to confirmation
+              if (document.getElementById('bookingConfirmation')) {
+                document.getElementById('bookingConfirmation').scrollIntoView({ behavior: 'smooth' });
+              }
+            } else {
+              // Show error message
+              console.error('BookingForm.html: Booking API error:', data.message);
+              if (window.showToastMessage) {
+                window.showToastMessage('error', 'Failed to create booking: ' + data.message);
+              }
+            }
+          })
+          .catch(error => {
+            console.error('BookingForm.html: Error creating booking:', error);
+            if (window.showToastMessage) {
+              window.showToastMessage('error', 'Error creating booking. Please try again.');
+            }
+          })
+          .finally(() => {
+            // Re-enable submit button
+            submitButton.disabled = false;
+            submitButton.innerText = 'Create Booking';
+            submitButton.classList.remove('opacity-75');
+          });
+      });
+    }
+  }
+</script>

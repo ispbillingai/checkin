@@ -1,0 +1,286 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booking System</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-b from-blue-50 to-white p-4 md:p-8">
+  <div class="w-full max-w-3xl mx-auto animate-fade-in">
+    <div class="flex items-center justify-between mb-8">
+      <a href="/" class="flex items-center gap-1 text-gray-500 hover:text-gray-800">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Sign Out
+      </a>
+      <h1 class="text-2xl font-medium text-center">Booking System</h1>
+      <div class="w-24"></div> <!-- Spacer for alignment -->
+    </div>
+    
+    <div class="backdrop-blur-sm bg-white/90 border shadow-lg rounded-lg overflow-hidden">
+      <div class="bg-blue-50 border-b p-6">
+        <h2 class="text-2xl font-semibold leading-none tracking-tight">New Reservation</h2>
+        <p class="text-sm text-gray-500 mt-1.5">Fill in the details to make a new booking</p>
+      </div>
+      <div class="p-6 pt-6 pb-2">
+        <form id="bookingForm" class="space-y-6">
+          <div class="space-y-4">
+            <!-- Room Selection -->
+            <div class="space-y-2">
+              <label for="room" class="block text-sm font-medium text-gray-700">Select Room</label>
+              <select id="room" name="room" required class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="" disabled selected>Select a room</option>
+                <!-- Rooms will be loaded dynamically -->
+              </select>
+            </div>
+            
+            <!-- Entry Point Selection Removed -->
+            <div class="space-y-2 hidden">
+              <p class="text-sm text-gray-500">Entry points functionality has been removed</p>
+            </div>
+            
+            <!-- Arrival Date and Time -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label for="arrivalDate" class="block text-sm font-medium text-gray-700">Arrival Date</label>
+                <div class="relative">
+                  <input type="text" id="arrivalDate" name="arrivalDate" required
+                    class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+              </div>
+              
+              <div class="space-y-2">
+                <label for="arrivalTime" class="block text-sm font-medium text-gray-700">Arrival Time</label>
+                <select id="arrivalTime" name="arrivalTime" required
+                  class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="" disabled selected>Select time</option>
+                </select>
+              </div>
+            </div>
+            
+            <!-- Departure Date and Time -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <label for="departureDate" class="block text-sm font-medium text-gray-700">Departure Date</label>
+                <div class="relative">
+                  <input type="text" id="departureDate" name="departureDate" required
+                    class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+              </div>
+              
+              <div class="space-y-2">
+                <label for="departureTime" class="block text-sm font-medium text-gray-700">Departure Time</label>
+                <select id="departureTime" name="departureTime" required
+                  class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="" disabled selected>Select time</option>
+                </select>
+              </div>
+            </div>
+            
+            <!-- Personal Details -->
+            <div class="space-y-2">
+              <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
+              <input type="text" id="name" name="name" required 
+                class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div class="space-y-2">
+              <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+              <input type="email" id="email" name="email" required 
+                class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            
+            <div class="space-y-2">
+              <label for="phone" class="block text-sm font-medium text-gray-700">Phone</label>
+              <input type="tel" id="phone" name="phone" required 
+                class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+          
+          <div class="pt-4">
+            <button type="submit" class="w-full h-11 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+              Create Booking
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast container -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-50"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize date pickers
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      flatpickr('#arrivalDate', {
+        minDate: 'today',
+        defaultDate: 'today'
+      });
+      
+      flatpickr('#departureDate', {
+        minDate: tomorrow,
+        defaultDate: tomorrow
+      });
+      
+      // Populate time options
+      populateTimeOptions('arrivalTime', '14:00');
+      populateTimeOptions('departureTime', '10:00');
+      
+      // Load room data
+      loadRooms();
+      
+      // Form submission
+      document.getElementById('bookingForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitBooking();
+      });
+    });
+    
+    function populateTimeOptions(selectId, defaultTime) {
+      const select = document.getElementById(selectId);
+      if (!select) return;
+      
+      // Clear existing options except the placeholder
+      while (select.options.length > 1) {
+        select.remove(1);
+      }
+      
+      // Add time options in 30-minute intervals
+      for (let hour = 0; hour < 24; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+          const h = hour.toString().padStart(2, '0');
+          const m = minute.toString().padStart(2, '0');
+          const timeValue = `${h}:${m}`;
+          const timeDisplay = formatTimeDisplay(h, m);
+          
+          const option = document.createElement('option');
+          option.value = timeValue;
+          option.textContent = timeDisplay;
+          
+          if (timeValue === defaultTime) {
+            option.selected = true;
+          }
+          
+          select.appendChild(option);
+        }
+      }
+    }
+    
+    function formatTimeDisplay(hour, minute) {
+      const h = parseInt(hour);
+      const period = h < 12 ? 'AM' : 'PM';
+      const hour12 = h % 12 || 12;
+      return `${hour12}:${minute} ${period}`;
+    }
+    
+    function loadRooms() {
+      const roomSelect = document.getElementById('room');
+      if (!roomSelect) return;
+      
+      fetch('/api/get_rooms.php')
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.rooms) {
+            data.rooms.forEach(room => {
+              const option = document.createElement('option');
+              option.value = room.id;
+              option.textContent = room.name;
+              roomSelect.appendChild(option);
+            });
+          } else {
+            // Use demo rooms if API fails
+            addDemoRooms();
+          }
+        })
+        .catch(error => {
+          console.error('Error loading rooms:', error);
+          addDemoRooms();
+        });
+    }
+    
+    function addDemoRooms() {
+      const roomSelect = document.getElementById('room');
+      if (!roomSelect) return;
+      
+      const demoRooms = [
+        { id: 'room1', name: 'Standard Room' },
+        { id: 'room2', name: 'Deluxe Room' },
+        { id: 'room3', name: 'Suite' }
+      ];
+      
+      demoRooms.forEach(room => {
+        const option = document.createElement('option');
+        option.value = room.id;
+        option.textContent = room.name;
+        roomSelect.appendChild(option);
+      });
+    }
+    
+    function submitBooking() {
+      const form = document.getElementById('bookingForm');
+      const formData = new FormData(form);
+      
+      // Disable submit button
+      const submitButton = form.querySelector('button[type="submit"]');
+      submitButton.disabled = true;
+      submitButton.textContent = 'Processing...';
+      
+      fetch('/api/process_booking.php', {
+        method: 'POST',
+        body: formData
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showToast('success', 'Booking created successfully!');
+            form.reset();
+          } else {
+            showToast('error', 'Failed to create booking: ' + (data.message || 'Unknown error'));
+          }
+        })
+        .catch(error => {
+          console.error('Error creating booking:', error);
+          showToast('error', 'Error creating booking. Please try again.');
+        })
+        .finally(() => {
+          // Re-enable submit button
+          submitButton.disabled = false;
+          submitButton.textContent = 'Create Booking';
+        });
+    }
+    
+    function showToast(type, message) {
+      const toastContainer = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      toast.className = `mb-4 p-4 rounded shadow-lg text-white ${type === 'success' ? 'bg-green-500' : 'bg-red-500'} transition-all duration-300 opacity-0`;
+      toast.textContent = message;
+      
+      toastContainer.appendChild(toast);
+      
+      // Fade in
+      setTimeout(() => {
+        toast.classList.remove('opacity-0');
+      }, 10);
+      
+      // Remove after 3 seconds
+      setTimeout(() => {
+        toast.classList.add('opacity-0');
+        setTimeout(() => {
+          toastContainer.removeChild(toast);
+        }, 300);
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
