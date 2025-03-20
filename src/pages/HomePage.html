@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Room Booking System</title>
+  <title>Room Gallery</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <style>
     .image-gallery {
@@ -22,24 +22,14 @@
     .gallery-image:hover {
       transform: scale(1.03);
     }
-    .fade-in {
-      animation: fadeIn 1s ease-in forwards;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-  <!-- Include Header -->
-  <div id="header-container"></div>
-  
   <!-- Main Content -->
   <main class="container mx-auto px-4 py-8">
-    <div class="text-center mb-16 fade-in">
+    <div class="text-center mb-16">
       <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
-        Welcome to Our <span class="text-blue-600">Room Gallery</span>
+        Room Gallery
       </h1>
       <p class="text-xl text-gray-600 max-w-3xl mx-auto">
         Browse our selection of beautiful rooms and spaces
@@ -47,62 +37,13 @@
     </div>
     
     <div class="image-gallery mb-16">
-      <div class="gallery-image fade-in" style="background-image: url('https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&auto=format&fit=crop&w=720&q=80'); animation-delay: 0.1s;"></div>
-      <div class="gallery-image fade-in" style="background-image: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?ixlib=rb-4.0.3&auto=format&fit=crop&w=720&q=80'); animation-delay: 0.2s;"></div>
-      <div class="gallery-image fade-in" style="background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=720&q=80'); animation-delay: 0.3s;"></div>
-      <div class="gallery-image fade-in" style="background-image: url('https://images.unsplash.com/photo-1566665797739-1674de7a421a?ixlib=rb-4.0.3&auto=format&fit=crop&w=720&q=80'); animation-delay: 0.4s;"></div>
-      <div class="gallery-image fade-in" style="background-image: url('https://images.unsplash.com/photo-1578683010236-d716f9a3f461?ixlib=rb-4.0.3&auto=format&fit=crop&w=720&q=80'); animation-delay: 0.5s;"></div>
-      <div class="gallery-image fade-in" style="background-image: url('https://images.unsplash.com/photo-1540518614846-7eded433c457?ixlib=rb-4.0.3&auto=format&fit=crop&w=720&q=80'); animation-delay: 0.6s;"></div>
+      <div class="gallery-image" style="background-image: url('https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&auto=format&fit=crop&w=720&q=80');"></div>
+      <div class="gallery-image" style="background-image: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?ixlib=rb-4.0.3&auto=format&fit=crop&w=720&q=80');"></div>
+      <div class="gallery-image" style="background-image: url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=720&q=80');"></div>
+      <div class="gallery-image" style="background-image: url('https://images.unsplash.com/photo-1566665797739-1674de7a421a?ixlib=rb-4.0.3&auto=format&fit=crop&w=720&q=80');"></div>
+      <div class="gallery-image" style="background-image: url('https://images.unsplash.com/photo-1578683010236-d716f9a3f461?ixlib=rb-4.0.3&auto=format&fit=crop&w=720&q=80');"></div>
+      <div class="gallery-image" style="background-image: url('https://images.unsplash.com/photo-1540518614846-7eded433c457?ixlib=rb-4.0.3&auto=format&fit=crop&w=720&q=80');"></div>
     </div>
   </main>
-  
-  <!-- Include Footer -->
-  <div id="footer-container"></div>
-  
-  <script>
-    // Function to load component into container
-    function loadComponent(containerId, componentPath) {
-      const container = document.getElementById(containerId);
-      if (!container) {
-        return;
-      }
-      
-      fetch(componentPath)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`Failed to load ${componentPath}`);
-          }
-          return response.text();
-        })
-        .then(html => {
-          container.innerHTML = html;
-          
-          // Execute scripts in the component
-          const scripts = container.querySelectorAll('script');
-          scripts.forEach(script => {
-            const newScript = document.createElement('script');
-            
-            if (script.src) {
-              newScript.src = script.src;
-            } else {
-              newScript.textContent = script.textContent;
-            }
-            
-            // Replace the original script with the new one
-            script.parentNode.replaceChild(newScript, script);
-          });
-        })
-        .catch(error => {
-          container.innerHTML = `<div class="text-red-500">Failed to load component: ${error.message}</div>`;
-        });
-    }
-    
-    // Load components when DOM is ready
-    document.addEventListener('DOMContentLoaded', function() {
-      // Load only header and footer
-      loadComponent('header-container', '/src/components/Header.html');
-      loadComponent('footer-container', '/src/components/Footer.html');
-    });
-  </script>
 </body>
 </html>
