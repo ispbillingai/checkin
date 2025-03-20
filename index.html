@@ -6,41 +6,51 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Booking System</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-  <link rel="stylesheet" href="/src/styles.css">
+  <!-- Add Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
 </head>
-<body>
+<body class="bg-gray-50">
   <div id="app">
-    <div class="container">
-      <header class="header">
-        <h1>Welcome to Our Booking System</h1>
-        <p class="subtitle">A simple way to manage your bookings</p>
+    <div class="container mx-auto px-4 py-8">
+      <header class="text-center mb-12">
+        <h1 class="text-3xl font-bold text-blue-600 mb-2">Welcome to Our Booking System</h1>
+        <p class="text-gray-600">A simple way to manage your bookings</p>
       </header>
       
-      <main class="main-content">
-        <div class="card">
-          <h2>Our Services</h2>
-          <p>We provide an easy way to manage room bookings and access codes.</p>
-          <button class="btn" id="check-db-btn">Check Database Connection</button>
-          <div id="db-status" class="status-message"></div>
+      <main class="max-w-3xl mx-auto">
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h2 class="text-xl font-semibold text-blue-600 mb-4">Our Services</h2>
+          <p class="mb-6">We provide an easy way to manage room bookings and access codes.</p>
+          <button id="check-db-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors">
+            Check Database Connection
+          </button>
+          <div id="db-status" class="mt-4 p-3 rounded"></div>
         </div>
 
-        <div class="card booking-form">
-          <h2>Make a Booking</h2>
+        <div class="bg-white rounded-lg shadow-md p-6">
+          <h2 class="text-xl font-semibold text-blue-600 mb-4">Make a Booking</h2>
           <form id="booking-form">
-            <div class="form-group">
-              <label for="name">Full Name</label>
-              <input type="text" id="name" name="name" required class="form-control">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label for="name" class="block mb-1 font-medium text-gray-700">Full Name</label>
+                <input type="text" id="name" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+              </div>
+              
+              <div>
+                <label for="email" class="block mb-1 font-medium text-gray-700">Email Address</label>
+                <input type="email" id="email" name="email" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+              </div>
             </div>
             
-            <div class="form-group">
-              <label for="email">Email Address</label>
-              <input type="email" id="email" name="email" required class="form-control">
-            </div>
-            
-            <div class="form-group">
-              <label for="room">Select Room</label>
-              <select id="room" name="room" required class="form-control">
+            <div class="mb-4">
+              <label for="room" class="block mb-1 font-medium text-gray-700">Select Room</label>
+              <select id="room" name="room" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
                 <option value="">-- Select a Room --</option>
                 <option value="room1">Conference Room A</option>
                 <option value="room2">Conference Room B</option>
@@ -49,34 +59,68 @@
                 <option value="room5">Executive Suite</option>
               </select>
             </div>
-            
-            <div class="form-group">
-              <label for="date">Date</label>
-              <input type="date" id="date" name="date" required class="form-control">
+
+            <div class="mb-4">
+              <label class="block mb-1 font-medium text-gray-700">Entry Points</label>
+              <div id="entry-points-container" class="space-y-2">
+                <div class="flex items-center space-x-2">
+                  <input type="checkbox" id="entry1" name="entry_points[]" value="entry1" class="entry-point-checkbox">
+                  <label for="entry1">Main Entrance</label>
+                  <div class="position-input hidden ml-4">
+                    <label for="position-entry1" class="text-sm text-gray-600">Position:</label>
+                    <input type="number" id="position-entry1" name="positions[entry1]" min="1" max="64" class="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                  </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <input type="checkbox" id="entry2" name="entry_points[]" value="entry2" class="entry-point-checkbox">
+                  <label for="entry2">Side Entrance</label>
+                  <div class="position-input hidden ml-4">
+                    <label for="position-entry2" class="text-sm text-gray-600">Position:</label>
+                    <input type="number" id="position-entry2" name="positions[entry2]" min="1" max="64" class="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                  </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <input type="checkbox" id="entry3" name="entry_points[]" value="entry3" class="entry-point-checkbox">
+                  <label for="entry3">Back Entrance</label>
+                  <div class="position-input hidden ml-4">
+                    <label for="position-entry3" class="text-sm text-gray-600">Position:</label>
+                    <input type="number" id="position-entry3" name="positions[entry3]" min="1" max="64" class="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                  </div>
+                </div>
+              </div>
             </div>
             
-            <div class="form-group">
-              <label for="time">Time</label>
-              <input type="time" id="time" name="time" required class="form-control">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label for="date" class="block mb-1 font-medium text-gray-700">Date</label>
+                <input type="date" id="date" name="date" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+              </div>
+              
+              <div>
+                <label for="time" class="block mb-1 font-medium text-gray-700">Time</label>
+                <input type="time" id="time" name="time" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+              </div>
             </div>
             
-            <div class="form-group">
-              <label for="duration">Duration (hours)</label>
-              <input type="number" id="duration" name="duration" min="1" max="8" value="1" required class="form-control">
+            <div class="mb-4">
+              <label for="duration" class="block mb-1 font-medium text-gray-700">Duration (hours)</label>
+              <input type="number" id="duration" name="duration" min="1" max="8" value="1" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
             </div>
             
-            <div class="form-group">
-              <label for="notes">Additional Notes</label>
-              <textarea id="notes" name="notes" rows="3" class="form-control"></textarea>
+            <div class="mb-6">
+              <label for="notes" class="block mb-1 font-medium text-gray-700">Additional Notes</label>
+              <textarea id="notes" name="notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"></textarea>
             </div>
             
-            <button type="submit" class="btn btn-primary">Submit Booking</button>
+            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors">
+              Submit Booking
+            </button>
           </form>
-          <div id="booking-status" class="status-message"></div>
+          <div id="booking-status" class="mt-4 p-3 rounded"></div>
         </div>
       </main>
       
-      <footer class="footer">
+      <footer class="text-center text-gray-600 mt-12">
         <p>&copy; <script>document.write(new Date().getFullYear())</script> Booking System. All rights reserved.</p>
       </footer>
     </div>
