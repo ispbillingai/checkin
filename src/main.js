@@ -1,4 +1,6 @@
 
+import './styles.css';
+
 // Setup error logging
 const logError = (error, context = '') => {
   console.error(`[ERROR] ${context}:`, error);
@@ -53,6 +55,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Handle room selection to show position input
+  const roomSelect = document.getElementById('room');
+  const roomPositionInput = document.getElementById('room-position-input');
+  
+  if (roomSelect && roomPositionInput) {
+    roomSelect.addEventListener('change', function() {
+      if (this.value) {
+        roomPositionInput.classList.remove('hidden');
+      } else {
+        roomPositionInput.classList.add('hidden');
+        const roomPositionField = document.getElementById('room-position');
+        if (roomPositionField) {
+          roomPositionField.value = '';
+        }
+      }
+    });
+  }
+
   // Handle booking form entry points and positions
   const entryPointCheckboxes = document.querySelectorAll('.entry-point-checkbox');
   
@@ -81,6 +101,18 @@ document.addEventListener('DOMContentLoaded', () => {
       event.preventDefault();
       
       try {
+        // Validate room selection and position
+        const roomSelect = document.getElementById('room');
+        const roomPosition = document.getElementById('room-position');
+        
+        if (!roomSelect.value) {
+          throw new Error('Please select a room');
+        }
+        
+        if (!roomPosition.value) {
+          throw new Error('Please provide a position for the room');
+        }
+        
         // Validate that at least one entry point is selected
         const selectedEntryPoints = document.querySelectorAll('.entry-point-checkbox:checked');
         if (selectedEntryPoints.length === 0) {
@@ -120,6 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Add entry points data to booking data
         bookingData.entryPointsData = entryPoints;
+        bookingData.roomPosition = roomPosition.value;
         
         console.log('[INFO] Booking data:', bookingData);
         
@@ -134,6 +167,8 @@ document.addEventListener('DOMContentLoaded', () => {
           document.querySelectorAll('.position-input').forEach(div => {
             div.classList.add('hidden');
           });
+          // Reset room position input to hidden
+          roomPositionInput.classList.add('hidden');
         }, 1500);
       } catch (error) {
         bookingStatus.textContent = `Error: ${error.message}`;
