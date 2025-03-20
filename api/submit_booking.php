@@ -1,16 +1,9 @@
 <?php
-// Include database configuration
+// Include database configuration, which already defines secure_input()
 require_once '../php/db_config.php';
 
 // Set the response header to JSON
 header('Content-Type: application/json');
-
-/**
- * Safely trim/escape user input
- */
-function secure_input($data) {
-    return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
-}
 
 /**
  * Process booking submission and insert into the `bookings` table only.
@@ -27,7 +20,16 @@ function process_booking() {
     }
     
     // Validate required fields
-    $required_fields = ['name','email','room','pin_code','arrival_date','arrival_time','departure_date','departure_time'];
+    $required_fields = [
+        'name',
+        'email',
+        'room',
+        'pin_code',
+        'arrival_date',
+        'arrival_time',
+        'departure_date',
+        'departure_time'
+    ];
     foreach ($required_fields as $field) {
         if (empty($_POST[$field])) {
             return [
@@ -38,7 +40,11 @@ function process_booking() {
     }
 
     // At least one entry point must be selected
-    if (!isset($_POST['entry_points']) || !is_array($_POST['entry_points']) || count($_POST['entry_points']) === 0) {
+    if (
+        !isset($_POST['entry_points']) ||
+        !is_array($_POST['entry_points']) ||
+        count($_POST['entry_points']) === 0
+    ) {
         return [
             'success' => false,
             'message' => 'At least one entry point must be selected'
@@ -46,6 +52,7 @@ function process_booking() {
     }
     
     // Gather data
+    // secure_input() is called here, but its definition is in db_config.php
     $guest_name  = secure_input($_POST['name']);
     $email       = secure_input($_POST['email']);
     $phone       = !empty($_POST['phone']) ? secure_input($_POST['phone']) : '';
@@ -58,12 +65,15 @@ function process_booking() {
     $departure_datetime = $_POST['departure_date'] . ' ' . $_POST['departure_time'] . ':00';
     
     // Build arrays of entry points & positions
-    $entry_ids      = [];
+    $entry_ids       = [];
     $entry_positions = [];
     
     foreach ($_POST['entry_points'] as $entry_id) {
         // Make sure position is provided
-        if (!isset($_POST['positions'][$entry_id]) || empty($_POST['positions'][$entry_id])) {
+        if (
+            !isset($_POST['positions'][$entry_id]) ||
+            empty($_POST['positions'][$entry_id])
+        ) {
             return [
                 'success' => false,
                 'message' => "Position is required for entry point ID {$entry_id}"
@@ -76,21 +86,19 @@ function process_booking() {
                 'message' => 'Entry point position must be between 1 and 64'
             ];
         }
-        $entry_ids[]        = $entry_id;
-        $entry_positions[]  = $position;
+        $entry_ids[]       = $entry_id;
+        $entry_positions[] = $position;
     }
     
     // Convert arrays to comma-separated strings
-    // Example: $entry_ids => [1,2,5] => "1,2,5"
-    $entry_ids_str       = implode(',', $entry_ids);
-    $positions_str       = implode(',', $entry_positions);
+    $entry_ids_str  = implode(',', $entry_ids);
+    $positions_str  = implode(',', $entry_positions);
 
     // Start transaction
     $conn->begin_transaction();
     
     try {
-        // (Optional) Validate the room if needed
-        // If your "rooms" table has an id = "A101" or "101", etc., do:
+        // Optional: validate that this room actually exists in your rooms table
         $stmt = $conn->prepare("SELECT id, name FROM rooms WHERE id = ?");
         $stmt->bind_param("s", $room_id);
         $stmt->execute();
@@ -109,7 +117,6 @@ function process_booking() {
                 (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
         ";
         $stmt = $conn->prepare($sql);
-        // Note the param order below matches the placeholders
         $stmt->bind_param(
             "ssssssssss",
             $room_id,
@@ -134,14 +141,15 @@ function process_booking() {
         $conn->commit();
         
         return [
-            'success'     => true,
-            'message'     => 'Booking created successfully!',
-            'booking_id'  => $booking_id,
-            'room_name'   => $room['name'],
-            'pin_code'    => $pin_code
+            'success'    => true,
+            'message'    => 'Booking created successfully!',
+            'booking_id' => $booking_id,
+            'room_name'  => $room['name'],
+            'pin_code'   => $pin_code
         ];
         
     } catch (Exception $e) {
+        // Roll back on any error
         $conn->rollback();
         return [
             'success' => false,
@@ -150,7 +158,7 @@ function process_booking() {
     }
 }
 
-// Actually process the booking
+// Actually process the booking and output the result
 $result = process_booking();
 echo json_encode($result);
 ?>
