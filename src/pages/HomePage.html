@@ -71,8 +71,74 @@
     <!-- Include Booking Form -->
     <div id="booking-form-container"></div>
     
-    <!-- Include Entry Points Section (above rooms) -->
-    <div id="entry-points-section-container"></div>
+ <!-- Entry Points Section -->
+ <div id="entryPointsSection" class="entry-points-section">
+  <label class="block">Select Entry Points</label>
+  <div id="entryPointsContainer" class="border rounded-md p-3" style="max-height: 200px; overflow-y: auto;">
+    <p class="text-gray-500">Loading entry points...</p>
+  </div>
+  <p class="text-gray-500" style="font-size: 0.8rem; margin-top: 0.5rem;">
+    Select one or more entry points you will use to access the room.
+  </p>
+</div>
+
+<!-- Inline JavaScript to load entry points -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    loadEntryPoints();
+  });
+
+  function loadEntryPoints() {
+    const container = document.getElementById('entryPointsContainer');
+    if (!container) {
+      console.error("Entry Points container not found in the DOM.");
+      return;
+    }
+    
+    // Show an initial loading message
+    container.innerHTML = '<p class="text-gray-500">Loading entry points...</p>';
+    
+    // Adjust this URL if necessary:
+    fetch('/api/get_entry_points.php')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Network response was not OK: " + response.statusText);
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.success && Array.isArray(data.entry_points) && data.entry_points.length > 0) {
+          container.innerHTML = ''; // Clear the loading message
+          data.entry_points.forEach(entry => {
+            const div = document.createElement('div');
+            div.className = 'mb-2';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.name = 'entryPoints[]';
+            checkbox.value = entry.id;
+            checkbox.id = 'entry_' + entry.id;
+            checkbox.style.marginRight = '8px';
+            
+            const label = document.createElement('label');
+            label.htmlFor = 'entry_' + entry.id;
+            label.textContent = entry.name + " – " + (entry.description || "No description");
+            
+            div.appendChild(checkbox);
+            div.appendChild(label);
+            container.appendChild(div);
+          });
+        } else {
+          console.error("No entry points found in API response:", data);
+          container.innerHTML = '<p class="text-yellow-500">No entry points available</p>';
+        }
+      })
+      .catch(error => {
+        console.error("Error fetching entry points:", error);
+        container.innerHTML = '<p class="text-red-500">Error loading entry points</p>';
+      });
+  }
+</script>
     
     <!-- Include Rooms Section -->
     <div id="rooms-section-container"></div>
@@ -156,7 +222,7 @@
       loadComponent('hero-banner-container', '/src/components/HeroBanner.html');
       loadComponent('intro-section-container', '/src/components/IntroSection.html');
       loadComponent('booking-form-container', '/src/components/BookingForm.html');
-      loadComponent('entry-points-section-container', '/src/components/EntryPointsSection.html');
+
       loadComponent('rooms-section-container', '/src/components/RoomsSection.html');
       loadComponent('footer-container', '/src/components/Footer.html');
       loadComponent('success-modal-container', '/src/components/SuccessModal.html');
