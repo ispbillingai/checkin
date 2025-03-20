@@ -43,6 +43,87 @@ const updateDepartureDateMin = () => {
   }
 };
 
+// Fetch entry points from the database
+const fetchEntryPoints = async () => {
+  try {
+    const response = await fetch('/api/get_entry_points.php');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.success ? data.entry_points : [];
+  } catch (error) {
+    logError(error, 'Fetching Entry Points');
+    return [];
+  }
+};
+
+// Fetch entry points for a specific room
+const fetchRoomEntryPoints = async (roomId) => {
+  if (!roomId) return [];
+  
+  try {
+    const response = await fetch(`/api/get_room_entry_points.php?room_id=${roomId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.success ? data.entry_points : [];
+  } catch (error) {
+    logError(error, 'Fetching Room Entry Points');
+    return [];
+  }
+};
+
+// Populate entry points container with data from database
+const populateEntryPoints = async (entryPoints) => {
+  const container = document.getElementById('entry-points-container');
+  if (!container) return;
+  
+  // Clear existing content
+  container.innerHTML = '';
+  
+  if (entryPoints.length === 0) {
+    container.innerHTML = '<p class="text-gray-500">No entry points available for this room.</p>';
+    return;
+  }
+  
+  // Create HTML for each entry point
+  entryPoints.forEach(entryPoint => {
+    const entryPointDiv = document.createElement('div');
+    entryPointDiv.className = 'flex items-center space-x-2';
+    entryPointDiv.innerHTML = `
+      <input type="checkbox" id="${entryPoint.id}" name="entry_points[]" value="${entryPoint.id}" class="entry-point-checkbox">
+      <label for="${entryPoint.id}">${entryPoint.name}</label>
+      <div class="position-input hidden ml-4">
+        <label for="position-${entryPoint.id}" class="text-sm text-gray-600">Position:</label>
+        <input type="number" id="position-${entryPoint.id}" name="positions[${entryPoint.id}]" min="1" max="64" 
+          class="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+      </div>
+      ${entryPoint.description ? `<span class="text-xs text-gray-500">(${entryPoint.description})</span>` : ''}
+    `;
+    container.appendChild(entryPointDiv);
+  });
+  
+  // Reattach event listeners to newly created checkboxes
+  const entryPointCheckboxes = document.querySelectorAll('.entry-point-checkbox');
+  entryPointCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+      const positionInput = this.parentElement.querySelector('.position-input');
+      if (this.checked) {
+        positionInput.classList.remove('hidden');
+      } else {
+        positionInput.classList.add('hidden');
+        // Clear the position value when unchecked
+        const positionField = positionInput.querySelector('input[type="number"]');
+        if (positionField) {
+          positionField.value = '';
+        }
+      }
+    });
+  });
+};
+
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
   // Add database connection check functionality
@@ -75,42 +156,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Handle room selection to show position input
+  // Handle room selection to show position input and load room-specific entry points
   const roomSelect = document.getElementById('room');
   const roomPositionInput = document.getElementById('room-position-input');
   
   if (roomSelect && roomPositionInput) {
-    roomSelect.addEventListener('change', function() {
+    roomSelect.addEventListener('change', async function() {
       if (this.value) {
         roomPositionInput.classList.remove('hidden');
+        
+        // Fetch and populate entry points for the selected room
+        const entryPoints = await fetchRoomEntryPoints(this.value);
+        populateEntryPoints(entryPoints);
       } else {
         roomPositionInput.classList.add('hidden');
         const roomPositionField = document.getElementById('room-position');
         if (roomPositionField) {
           roomPositionField.value = '';
         }
+        
+        // Clear entry points when no room is selected
+        document.getElementById('entry-points-container').innerHTML = 
+          '<p class="text-gray-500">Please select a room to see available entry points.</p>';
       }
     });
+    
+    // Initial placeholder text for entry points
+    if (!roomSelect.value) {
+      document.getElementById('entry-points-container').innerHTML = 
+        '<p class="text-gray-500">Please select a room to see available entry points.</p>';
+    }
   }
-
-  // Handle booking form entry points and positions
-  const entryPointCheckboxes = document.querySelectorAll('.entry-point-checkbox');
-  
-  entryPointCheckboxes.forEach(checkbox => {
-    checkbox.addEventListener('change', function() {
-      const positionInput = this.parentElement.querySelector('.position-input');
-      if (this.checked) {
-        positionInput.classList.remove('hidden');
-      } else {
-        positionInput.classList.add('hidden');
-        // Clear the position value when unchecked
-        const positionField = positionInput.querySelector('input[type="number"]');
-        if (positionField) {
-          positionField.value = '';
-        }
-      }
-    });
-  });
 
   // Handle PIN code generation
   const generatePinBtn = document.getElementById('generate-pin');
@@ -248,6 +324,9 @@ document.addEventListener('DOMContentLoaded', () => {
           });
           // Reset room position input to hidden
           roomPositionInput.classList.add('hidden');
+          // Clear entry points
+          document.getElementById('entry-points-container').innerHTML = 
+            '<p class="text-gray-500">Please select a room to see available entry points.</p>';
         } else {
           throw new Error(result.message || 'Failed to submit booking');
         }
@@ -259,3 +338,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
