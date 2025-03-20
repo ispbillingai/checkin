@@ -1,8 +1,7 @@
-
 <?php
-require_once 'db_config.php';
+// get_entry_points.php
+require_once 'db_config.php';  // Ensure this file sets $conn = new mysqli(...)
 
-// Return JSON in all cases
 header('Content-Type: application/json');
 
 try {
@@ -15,16 +14,14 @@ try {
         exit;
     }
 
-    // Build and run query
-    $query = "SELECT * FROM entry_points ORDER BY name";
-    $result = $conn->query($query);
+    // Query your table (make sure it's spelled exactly "entry_points")
+    $sql = "SELECT * FROM entry_points ORDER BY name";
+    $result = $conn->query($sql);
 
-    // Check for SQL errors
     if (!$result) {
-        throw new Exception("SQL Error: " . $conn->error);
+        throw new Exception("Query error: " . $conn->error);
     }
 
-    // Fetch results
     $entry_points = [];
     while ($row = $result->fetch_assoc()) {
         $entry_points[] = [
@@ -34,20 +31,15 @@ try {
         ];
     }
 
-    // Return data
     echo json_encode([
-        'success' => true,
+        'success'      => true,
         'entry_points' => $entry_points
     ]);
-
 } catch (Exception $e) {
-    // On any exception, return an error
     echo json_encode([
         'success' => false,
         'message' => $e->getMessage()
     ]);
-    exit;
+} finally {
+    $conn->close();
 }
-
-// Close the DB connection
-$conn->close();
