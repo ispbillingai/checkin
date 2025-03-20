@@ -15,21 +15,49 @@ require_once 'db_config.php';
 
 // Get form data
 $room = $_POST['room'] ?? '';
+$entryPoints = isset($_POST['entryPoints']) ? json_decode($_POST['entryPoints'], true) : [];
 $arrivalDateTime = $_POST['arrivalDateTime'] ?? '';
 $departureDateTime = $_POST['departureDateTime'] ?? '';
 $name = $_POST['name'] ?? '';
 $email = $_POST['email'] ?? '';
 $phone = $_POST['phone'] ?? '';
+$pinPosition = isset($_POST['pinPosition']) ? intval($_POST['pinPosition']) : null;
+$pinCode = isset($_POST['pinCode']) ? secure_input($_POST['pinCode']) : '';
+$autoGeneratePin = isset($_POST['autoGeneratePin']) && $_POST['autoGeneratePin'] == 'true';
+
+// For backwards compatibility, if entryPoints is not set but entryPoint is
+if (empty($entryPoints) && isset($_POST['entryPoint']) && !empty($_POST['entryPoint'])) {
+    $entryPoints = [$_POST['entryPoint']];
+}
 
 // Validate input
-if (empty($room) || empty($arrivalDateTime) || empty($departureDateTime) || empty($name) || empty($email) || empty($phone)) {
-    echo json_encode(['success' => false, 'message' => 'All fields are required']);
+if (empty($room) || empty($entryPoints) || empty($arrivalDateTime) || empty($departureDateTime) || empty($name) || empty($email) || empty($phone)) {
+    echo json_encode(['success' => false, 'message' => 'All fields are required, including at least one entry point']);
     exit;
+}
+
+// Validate that all specified entry points are available for the room
+foreach ($entryPoints as $entryPoint) {
+    $stmt = $conn->prepare("SELECT * FROM room_entry_points WHERE room_id = ? AND entry_point_id = ?");
+    $stmt->bind_param("ss", $room, $entryPoint);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows === 0) {
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Entry point ' . $entryPoint . ' is not available for this room'
+        ]);
+        exit;
+    }
 }
 
 try {
     // Use transaction to ensure data consistency
     $conn->begin_transaction();
+    
+    // Get primary entry point (first in the list)
+    $primaryEntryPoint = $entryPoints[0];
     
     // Prepare SQL statement to check for room's fixed passcode
     $stmt = $conn->prepare("SELECT name, fixed_passcode FROM rooms WHERE id = ?");
@@ -38,8 +66,22 @@ try {
     $result = $stmt->get_result();
     $roomData = $result->fetch_assoc();
     
+    // Get entry point names for display
+    $entryPointNames = [];
+    foreach ($entryPoints as $entryPoint) {
+        $stmt = $conn->prepare("SELECT name FROM entry_points WHERE id = ?");
+        $stmt->bind_param("s", $entryPoint);
+        $stmt->execute();
+        $entryResult = $stmt->get_result();
+        $entryData = $entryResult->fetch_assoc();
+        $entryPointNames[$entryPoint] = $entryData['name'] ?? $entryPoint;
+    }
+    
     // Determine access code (PIN) to use
-    if ($roomData && !empty($roomData['fixed_passcode'])) {
+    if (!empty($pinCode) && !$autoGeneratePin) {
+        // Use provided PIN code
+        $accessCode = $pinCode;
+    } else if ($roomData && !empty($roomData['fixed_passcode'])) {
         // Use the room's fixed passcode
         $accessCode = $roomData['fixed_passcode'];
     } else {
@@ -49,19 +91,32 @@ try {
     
     $roomName = $roomData['name'] ?? $room;
     
-    // Insert booking into database
-    $stmt = $conn->prepare("INSERT INTO bookings (room_id, guest_name, email, phone, arrival_datetime, departure_datetime, access_code) 
-                            VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("sssssss", $room, $name, $email, $phone, $arrivalDateTime, $departureDateTime, $accessCode);
+    // Insert booking into database with primary entry point
+    $stmt = $conn->prepare("INSERT INTO bookings (room_id, entry_point_id, guest_name, email, phone, arrival_datetime, departure_datetime, access_code) 
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssssssss", $room, $primaryEntryPoint, $name, $email, $phone, $arrivalDateTime, $departureDateTime, $accessCode);
     $stmt->execute();
     
     if ($stmt->affected_rows > 0) {
         $bookingId = $conn->insert_id;
         
+        // Assign the PIN code to all selected entry points
+        $success = assign_pin_to_entry_points($bookingId, $entryPoints, $accessCode, $pinPosition);
+        
+        if (!$success) {
+            // Roll back the transaction
+            $conn->rollback();
+            echo json_encode(['success' => false, 'message' => 'Error assigning PIN code to entry points']);
+            exit;
+        }
+        
         // Get notification settings
         $query = "SELECT * FROM notification_settings LIMIT 1";
         $result = $conn->query($query);
         $notificationSettings = $result->fetch_assoc();
+        
+        // Format entry point names for display
+        $entryPointNamesList = implode(', ', array_values($entryPointNames));
         
         // Check if email notifications are enabled
         if ($notificationSettings && $notificationSettings['email_enabled']) {
@@ -69,6 +124,7 @@ try {
             $emailTemplate = $notificationSettings['email_template'];
             $emailTemplate = str_replace('{GUEST_NAME}', $name, $emailTemplate);
             $emailTemplate = str_replace('{ROOM_NAME}', $roomName, $emailTemplate);
+            $emailTemplate = str_replace('{ENTRY_POINT_NAME}', $entryPointNamesList, $emailTemplate);
             $emailTemplate = str_replace('{ARRIVAL_DATETIME}', $arrivalDateTime, $emailTemplate);
             $emailTemplate = str_replace('{DEPARTURE_DATETIME}', $departureDateTime, $emailTemplate);
             $emailTemplate = str_replace('{ACCESS_CODE}', $accessCode, $emailTemplate);
@@ -94,6 +150,7 @@ try {
             $smsTemplate = $notificationSettings['sms_template'];
             $smsTemplate = str_replace('{GUEST_NAME}', $name, $smsTemplate);
             $smsTemplate = str_replace('{ROOM_NAME}', $roomName, $smsTemplate);
+            $smsTemplate = str_replace('{ENTRY_POINT_NAME}', $entryPointNamesList, $smsTemplate);
             $smsTemplate = str_replace('{ARRIVAL_DATETIME}', $arrivalDateTime, $smsTemplate);
             $smsTemplate = str_replace('{DEPARTURE_DATETIME}', $departureDateTime, $smsTemplate);
             $smsTemplate = str_replace('{ACCESS_CODE}', $accessCode, $smsTemplate);
@@ -112,7 +169,9 @@ try {
             'data' => [
                 'bookingId' => $bookingId,
                 'accessCode' => $accessCode,
-                'roomName' => $roomName
+                'roomName' => $roomName,
+                'entryPoints' => $entryPointNames,
+                'pinPosition' => $pinPosition
             ]
         ]);
     } else {
