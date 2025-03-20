@@ -1,6 +1,28 @@
 
 import './styles.css';
 
+// Setup error logging
+const logError = (error, context = '') => {
+  console.error(`[ERROR] ${context}:`, error);
+  
+  // You could also send errors to a server endpoint
+  // fetch('/api/log-error', {
+  //   method: 'POST',
+  //   headers: { 'Content-Type': 'application/json' },
+  //   body: JSON.stringify({ error: error.message, context, timestamp: new Date().toISOString() })
+  // }).catch(e => console.error('Failed to send error log:', e));
+};
+
+// Set up global error handler
+window.addEventListener('error', (event) => {
+  logError(event.error, 'Uncaught Exception');
+});
+
+// Set up promise rejection handler
+window.addEventListener('unhandledrejection', (event) => {
+  logError(event.reason, 'Unhandled Promise Rejection');
+});
+
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
   const appElement = document.getElementById('app');
@@ -43,13 +65,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data.success) {
         dbStatus.textContent = 'Database connected successfully!';
         dbStatus.className = 'status-message success';
+        console.log('[SUCCESS] Database connection verified:', data);
       } else {
         dbStatus.textContent = `Connection failed: ${data.message}`;
         dbStatus.className = 'status-message error';
+        logError(new Error(data.message), 'Database Connection');
       }
     } catch (error) {
       dbStatus.textContent = `Error: ${error.message}`;
       dbStatus.className = 'status-message error';
+      logError(error, 'Database Check Request');
     }
   });
 });
