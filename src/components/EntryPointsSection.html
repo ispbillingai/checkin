@@ -23,7 +23,7 @@
   function fetchEntryPoints() {
     console.log('EntryPointsSection.html: Fetching entry points from database');
     
-    fetch('/api/get_all_entry_points.php')
+    fetch('/api/get_entry_points.php')
       .then(response => response.json())
       .then(data => {
         console.log('EntryPointsSection.html: Entry points data received', data);
