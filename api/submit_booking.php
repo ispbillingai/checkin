@@ -51,54 +51,64 @@ function process_booking() {
         ];
     }
     
-    // Gather data
-    // secure_input() is called here, but its definition is in db_config.php
-    $guest_name  = secure_input($_POST['name']);
-    $email       = secure_input($_POST['email']);
-    $phone       = !empty($_POST['phone']) ? secure_input($_POST['phone']) : '';
-    $room_id     = secure_input($_POST['room']);
-    $pin_code    = secure_input($_POST['pin_code']);
-    $notes       = !empty($_POST['notes']) ? secure_input($_POST['notes']) : '';
+    // Gather data from POST
+    $guest_name     = secure_input($_POST['name']);
+    $email          = secure_input($_POST['email']);
+    $phone          = !empty($_POST['phone']) ? secure_input($_POST['phone']) : '';
+    $room_id        = secure_input($_POST['room']);
+    $pin_code       = secure_input($_POST['pin_code']);
+    $notes          = !empty($_POST['notes']) ? secure_input($_POST['notes']) : '';
 
     // Format arrival & departure datetime
     $arrival_datetime   = $_POST['arrival_date'] . ' ' . $_POST['arrival_time'] . ':00';
     $departure_datetime = $_POST['departure_date'] . ' ' . $_POST['departure_time'] . ':00';
     
-    // Build arrays of entry points & positions
+    // Build arrays of entry points & their positions
     $entry_ids       = [];
     $entry_positions = [];
     
     foreach ($_POST['entry_points'] as $entry_id) {
-        // Make sure position is provided
-        if (
-            !isset($_POST['positions'][$entry_id]) ||
-            empty($_POST['positions'][$entry_id])
-        ) {
+        if (empty($_POST['positions'][$entry_id])) {
             return [
                 'success' => false,
                 'message' => "Position is required for entry point ID {$entry_id}"
             ];
         }
-        $position = (int)$_POST['positions'][$entry_id];
-        if ($position < 1 || $position > 64) {
+        $pos = (int)$_POST['positions'][$entry_id];
+        if ($pos < 1 || $pos > 64) {
             return [
                 'success' => false,
                 'message' => 'Entry point position must be between 1 and 64'
             ];
         }
         $entry_ids[]       = $entry_id;
-        $entry_positions[] = $position;
+        $entry_positions[] = $pos;
     }
     
     // Convert arrays to comma-separated strings
     $entry_ids_str  = implode(',', $entry_ids);
     $positions_str  = implode(',', $entry_positions);
 
+    // Read & validate the room_position
+    // If you want it required, do additional checks here
+    $room_position = null;
+    if (!empty($_POST['room_position'])) {
+        $room_pos_val = (int)$_POST['room_position'];
+        // If you want to enforce same 1..64 range, do:
+        if ($room_pos_val < 1 || $room_pos_val > 64) {
+            return [
+                'success' => false,
+                'message' => 'Room position must be between 1 and 64'
+            ];
+        }
+        $room_position = $room_pos_val;
+    }
+
     // Start transaction
     $conn->begin_transaction();
     
     try {
-        // Optional: validate that this room actually exists in your rooms table
+        // Optional: validate that the selected room actually exists
         $stmt = $conn->prepare("SELECT id, name FROM rooms WHERE id = ?");
         $stmt->bind_param("s", $room_id);
         $stmt->execute();
@@ -108,17 +118,20 @@ function process_booking() {
         }
         $room = $result->fetch_assoc();
         
-        // Insert booking record (everything goes into `bookings`)
+        // Insert booking record
+        // Include `room_position` in the INSERT
         $sql = "
             INSERT INTO bookings
                 (room_id, entry_point_id, positions, guest_name, email, phone,
-                 arrival_datetime, departure_datetime, access_code, notes, status)
+                 arrival_datetime, departure_datetime, access_code, notes, status, room_position)
             VALUES
-                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
+                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?)
         ";
+        // Note the param types: 'ssssssssssi'
+        // The final one is an integer for $room_position
         $stmt = $conn->prepare($sql);
         $stmt->bind_param(
-            "ssssssssss",
+            "ssssssssssi",
             $room_id,
             $entry_ids_str,
             $positions_str,
@@ -128,7 +141,8 @@ function process_booking() {
             $arrival_datetime,
             $departure_datetime,
             $pin_code,
-            $notes
+            $notes,
+            $room_position
         );
         
         if (!$stmt->execute()) {
