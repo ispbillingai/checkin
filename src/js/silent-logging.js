@@ -52,3 +52,4 @@ window.console = {
 
 // Log that we're allowing entry points logs
 originalConsole.log('Silent logging enabled - Only Entry Points logs will appear');
+
