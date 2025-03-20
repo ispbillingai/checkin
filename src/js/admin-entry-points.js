@@ -1,484 +1,606 @@
 
-// Initialize Entry Points Management
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("Initializing entry points management");
-    
-    // Check if the entry points template is loaded
-    if (document.getElementById('entryPointsTableBody')) {
-        initEntryPointsManagement();
-    }
-});
+/**
+ * Admin Entry Points Management
+ */
 
-// Listen for template loaded event
-document.addEventListener('templateLoaded', function(e) {
-    if (e.detail && e.detail.templateId === 'entry-points-template') {
-        console.log("Entry points template loaded, initializing management");
-        setTimeout(initEntryPointsManagement, 100);
-    }
-});
+// Global state for entry points management
+let entryPoints = [];
+let rooms = [];
+let entryPointRooms = {};
+let currentEntryPoint = null;
 
-// Main initialization function
+// Initialize entry points management
 function initEntryPointsManagement() {
-    console.log("Setting up entry points management");
-    loadEntryPoints();
-    setupEntryPointEventListeners();
+  console.log('Initializing entry points management');
+  
+  // Load entry points
+  loadEntryPoints();
+  
+  // Set up event listeners
+  setupEntryPointsEventListeners();
 }
 
 // Load all entry points
 function loadEntryPoints() {
-    console.log("Loading entry points data");
-    const tableBody = document.getElementById('entryPointsTableBody');
-    
-    if (!tableBody) {
-        console.error("Entry points table body element not found");
-        return;
-    }
-    
-    tableBody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Loading entry points...</td></tr>';
-    
-    fetch('/api/get_entry_points.php')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                displayEntryPoints(data.entry_points);
-            } else {
-                showEntryPointsError('Error: ' + (data.message || 'Failed to load entry points'));
-            }
-        })
-        .catch(error => {
-            console.error("Error loading entry points:", error);
-            showEntryPointsError('Error loading entry points. Please try again.');
-        });
-}
-
-// Display entry points in the table
-function displayEntryPoints(entryPoints) {
-    console.log("Displaying entry points, count:", entryPoints.length);
-    const tableBody = document.getElementById('entryPointsTableBody');
-    
-    if (!tableBody) {
-        console.error("Entry points table body element not found");
-        return;
-    }
-    
-    if (entryPoints.length === 0) {
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="5" class="text-center py-8">
-                    <div class="flex flex-col items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
-                        <p class="text-gray-500 mb-2">No entry points found</p>
-                        <button id="addFirstEntryPointBtn" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                            Add Your First Entry Point
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
-        
-        // Add event listener to the "Add First Entry Point" button
-        const addFirstEntryPointBtn = document.getElementById('addFirstEntryPointBtn');
-        if (addFirstEntryPointBtn) {
-            addFirstEntryPointBtn.addEventListener('click', function() {
-                openEntryPointModal();
-            });
-        }
-        return;
-    }
-    
-    let html = '';
-    entryPoints.forEach(entryPoint => {
-        html += `
-            <tr>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    ${escapeHtml(entryPoint.id)}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    ${escapeHtml(entryPoint.name)}
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
-                    ${escapeHtml(entryPoint.description || 'No description')}
-                </td>
-                <td class="px-6 py-4 text-sm text-gray-500">
-                    <div class="connected-rooms-loading">Loading...</div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-right space-x-2">
-                    <button 
-                        class="edit-entry-point text-blue-600 hover:text-blue-900"
-                        data-entry-point-id="${escapeHtml(entryPoint.id)}">
-                        Edit
-                    </button>
-                    <button 
-                        class="delete-entry-point text-red-600 hover:text-red-900" 
-                        data-entry-point-id="${escapeHtml(entryPoint.id)}"
-                        data-entry-point-name="${escapeHtml(entryPoint.name)}">
-                        Delete
-                    </button>
-                </td>
-            </tr>
-        `;
-    });
-    
-    tableBody.innerHTML = html;
-    
-    // Fetch and display connected rooms for each entry point
-    entryPoints.forEach(entryPoint => {
-        loadConnectedRoomsForEntryPoint(entryPoint.id);
-    });
-    
-    // Add event listeners to buttons
-    setupEntryPointRowEventListeners();
-}
-
-// Load connected rooms for an entry point
-function loadConnectedRoomsForEntryPoint(entryPointId) {
-    fetch(`/api/get_entry_point.php?id=${encodeURIComponent(entryPointId)}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success && data.entry_point.connected_rooms) {
-                const rows = document.querySelectorAll(`tr button[data-entry-point-id="${entryPointId}"]`);
-                if (rows.length > 0) {
-                    const row = rows[0].closest('tr');
-                    const connectedRoomsCell = row.querySelector('.connected-rooms-loading');
-                    if (connectedRoomsCell) {
-                        if (data.entry_point.connected_rooms.length === 0) {
-                            connectedRoomsCell.innerHTML = '<span class="text-gray-400">No connected rooms</span>';
-                        } else {
-                            let roomsHtml = '';
-                            data.entry_point.connected_rooms.forEach((room, index) => {
-                                roomsHtml += `<span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">${escapeHtml(room.name)}</span>`;
-                            });
-                            connectedRoomsCell.innerHTML = roomsHtml;
-                        }
-                    }
-                }
-            }
-        })
-        .catch(error => {
-            console.error("Error loading connected rooms:", error);
-        });
-}
-
-// Setup event listeners for rows
-function setupEntryPointRowEventListeners() {
-    // Edit entry point buttons
-    document.querySelectorAll('.edit-entry-point').forEach(button => {
-        button.addEventListener('click', function() {
-            const entryPointId = this.getAttribute('data-entry-point-id');
-            editEntryPoint(entryPointId);
-        });
-    });
-    
-    // Delete entry point buttons
-    document.querySelectorAll('.delete-entry-point').forEach(button => {
-        button.addEventListener('click', function() {
-            const entryPointId = this.getAttribute('data-entry-point-id');
-            const entryPointName = this.getAttribute('data-entry-point-name');
-            openDeleteEntryPointModal(entryPointId, entryPointName);
-        });
-    });
-}
-
-// Setup event listeners for entry point management
-function setupEntryPointEventListeners() {
-    console.log("Setting up entry point event listeners");
-    
-    // Add Entry Point button
-    const addEntryPointBtn = document.getElementById('addEntryPointBtn');
-    if (addEntryPointBtn) {
-        addEntryPointBtn.addEventListener('click', function() {
-            openEntryPointModal();
-        });
-    }
-    
-    // Close modal button
-    const closeEntryPointModal = document.getElementById('closeEntryPointModal');
-    if (closeEntryPointModal) {
-        closeEntryPointModal.addEventListener('click', closeEntryPointModals);
-    }
-    
-    // Entry point form
-    const entryPointForm = document.getElementById('entryPointForm');
-    if (entryPointForm) {
-        entryPointForm.addEventListener('submit', handleEntryPointSubmit);
-    }
-    
-    // Cancel button
-    const cancelEntryPointBtn = document.getElementById('cancelEntryPointBtn');
-    if (cancelEntryPointBtn) {
-        cancelEntryPointBtn.addEventListener('click', closeEntryPointModals);
-    }
-    
-    // Delete modal buttons
-    const confirmDeleteEntryPointBtn = document.getElementById('confirmDeleteEntryPointBtn');
-    if (confirmDeleteEntryPointBtn) {
-        confirmDeleteEntryPointBtn.addEventListener('click', deleteEntryPoint);
-    }
-    
-    const cancelDeleteEntryPointBtn = document.getElementById('cancelDeleteEntryPointBtn');
-    if (cancelDeleteEntryPointBtn) {
-        cancelDeleteEntryPointBtn.addEventListener('click', closeEntryPointModals);
-    }
-    
-    // Load rooms for the checkboxes
-    loadRoomsForEntryPointModal();
-}
-
-// Load rooms for the checkboxes in the entry point modal
-function loadRoomsForEntryPointModal() {
-    const roomCheckboxes = document.getElementById('roomCheckboxes');
-    if (!roomCheckboxes) return;
-    
-    fetch('/api/get_all_rooms.php')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                roomCheckboxes.innerHTML = '';
-                
-                if (data.rooms.length === 0) {
-                    roomCheckboxes.innerHTML = '<p class="text-gray-500 text-sm">No rooms available. Please add rooms first.</p>';
-                    return;
-                }
-                
-                data.rooms.forEach(room => {
-                    roomCheckboxes.innerHTML += `
-                        <div class="flex items-center">
-                            <input type="checkbox" id="room-${escapeHtml(room.id)}" 
-                                   class="room-checkbox" value="${escapeHtml(room.id)}"
-                                   name="connected_rooms[]">
-                            <label for="room-${escapeHtml(room.id)}" class="ml-2 text-sm text-gray-700">
-                                ${escapeHtml(room.name)}
-                            </label>
-                        </div>
-                    `;
-                });
-            } else {
-                roomCheckboxes.innerHTML = '<p class="text-red-500 text-sm">Error loading rooms. Please try again.</p>';
-            }
-        })
-        .catch(error => {
-            console.error("Error loading rooms:", error);
-            roomCheckboxes.innerHTML = '<p class="text-red-500 text-sm">Error loading rooms. Please try again.</p>';
-        });
-}
-
-// Open the entry point modal
-function openEntryPointModal(entryPoint = null) {
-    console.log("Opening entry point modal", entryPoint);
-    
-    const modal = document.getElementById('entryPointModal');
-    const modalTitle = document.getElementById('entryPointModalTitle');
-    const entryPointId = document.getElementById('entryPointId');
-    const entryPointIdInput = document.getElementById('entryPointIdInput');
-    const entryPointName = document.getElementById('entryPointName');
-    const entryPointDescription = document.getElementById('entryPointDescription');
-    const entryPointMode = document.getElementById('entryPointMode');
-    
-    if (!modal) {
-        console.error("Entry point modal not found");
-        return;
-    }
-    
-    // Reset form
-    document.getElementById('entryPointForm').reset();
-    
-    // Uncheck all room checkboxes
-    document.querySelectorAll('.room-checkbox').forEach(checkbox => {
-        checkbox.checked = false;
-    });
-    
-    if (entryPoint) {
-        // Edit existing entry point
-        if (modalTitle) modalTitle.textContent = 'Edit Entry Point';
-        if (entryPointId) entryPointId.value = entryPoint.id;
-        if (entryPointIdInput) {
-            entryPointIdInput.value = entryPoint.id;
-            entryPointIdInput.readOnly = true;
-        }
-        if (entryPointName) entryPointName.value = entryPoint.name;
-        if (entryPointDescription) entryPointDescription.value = entryPoint.description || '';
-        if (entryPointMode) entryPointMode.value = 'update';
-        
-        // Check the connected rooms
-        if (entryPoint.connected_rooms) {
-            entryPoint.connected_rooms.forEach(room => {
-                const checkbox = document.getElementById(`room-${room.id}`);
-                if (checkbox) checkbox.checked = true;
-            });
-        }
-    } else {
-        // Add new entry point
-        if (modalTitle) modalTitle.textContent = 'Add New Entry Point';
-        if (entryPointIdInput) entryPointIdInput.readOnly = false;
-        if (entryPointMode) entryPointMode.value = 'create';
-    }
-    
-    // Show modal
-    modal.classList.remove('hidden');
-}
-
-// Close all entry point modals
-function closeEntryPointModals() {
-    const entryPointModal = document.getElementById('entryPointModal');
-    const deleteEntryPointModal = document.getElementById('deleteEntryPointModal');
-    
-    if (entryPointModal) entryPointModal.classList.add('hidden');
-    if (deleteEntryPointModal) deleteEntryPointModal.classList.add('hidden');
-}
-
-// Open delete entry point confirmation modal
-function openDeleteEntryPointModal(entryPointId, entryPointName) {
-    const modal = document.getElementById('deleteEntryPointModal');
-    const nameElement = document.getElementById('deleteEntryPointName');
-    const idInput = document.getElementById('deleteEntryPointId');
-    
-    if (!modal) {
-        console.error("Delete entry point modal not found");
-        return;
-    }
-    
-    if (nameElement) nameElement.textContent = entryPointName;
-    if (idInput) idInput.value = entryPointId;
-    
-    modal.classList.remove('hidden');
-}
-
-// Handle entry point form submission
-function handleEntryPointSubmit(event) {
-    event.preventDefault();
-    
-    const entryPointId = document.getElementById('entryPointId').value;
-    const entryPointIdInput = document.getElementById('entryPointIdInput').value;
-    const entryPointName = document.getElementById('entryPointName').value;
-    const entryPointDescription = document.getElementById('entryPointDescription').value;
-    const entryPointMode = document.getElementById('entryPointMode').value;
-    
-    // Get selected rooms
-    const selectedRooms = [];
-    document.querySelectorAll('.room-checkbox:checked').forEach(checkbox => {
-        selectedRooms.push(checkbox.value);
-    });
-    
-    // Validate inputs
-    if (!entryPointIdInput || !entryPointName) {
-        showEntryPointsError('ID and Name are required fields');
-        return;
-    }
-    
-    // Prepare form data
-    const formData = new FormData();
-    formData.append('action', entryPointMode);
-    formData.append('id', entryPointId || entryPointIdInput);
-    formData.append('name', entryPointName);
-    formData.append('description', entryPointDescription);
-    formData.append('connected_rooms', JSON.stringify(selectedRooms));
-    
-    // Send request to the server
-    fetch('/api/manage_entry_points.php', {
-        method: 'POST',
-        body: formData
+  console.log('Loading entry points');
+  const entryPointsList = document.getElementById('entryPointsList');
+  
+  if (!entryPointsList) {
+    console.error('Entry points list element not found');
+    return;
+  }
+  
+  entryPointsList.innerHTML = `
+    <tr>
+      <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+        <div class="flex justify-center items-center">
+          <svg class="animate-spin h-5 w-5 mr-3 text-blue-500" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Loading entry points...
+        </div>
+      </td>
+    </tr>
+  `;
+  
+  fetch('/api/get_all_entry_points.php')
+    .then(response => {
+      console.log(`Entry points API response status: ${response.status}`);
+      return response.json();
     })
-    .then(response => response.json())
     .then(data => {
-        if (data.success) {
-            showEntryPointsSuccess(`Entry point ${entryPointMode === 'update' ? 'updated' : 'created'} successfully`);
-            closeEntryPointModals();
-            loadEntryPoints();
-        } else {
-            showEntryPointsError('Error: ' + (data.message || `Failed to ${entryPointMode} entry point`));
-        }
+      console.log('Entry points data:', data);
+      
+      if (data.success && Array.isArray(data.entry_points)) {
+        entryPoints = data.entry_points;
+        renderEntryPointsList();
+      } else {
+        entryPointsList.innerHTML = `
+          <tr>
+            <td colspan="4" class="px-6 py-4 text-center text-sm text-red-500">
+              Failed to load entry points: ${data.message || 'Unknown error'}
+            </td>
+          </tr>
+        `;
+        console.error('Error loading entry points:', data.message);
+      }
     })
     .catch(error => {
-        console.error("Error saving entry point:", error);
-        showEntryPointsError('An unexpected error occurred. Please try again.');
+      console.error('Error loading entry points:', error);
+      entryPointsList.innerHTML = `
+        <tr>
+          <td colspan="4" class="px-6 py-4 text-center text-sm text-red-500">
+            Error loading entry points. Please try again.
+          </td>
+        </tr>
+      `;
     });
 }
 
-// Edit an entry point
-function editEntryPoint(entryPointId) {
-    console.log("Editing entry point:", entryPointId);
+// Render entry points list
+function renderEntryPointsList() {
+  console.log(`Rendering ${entryPoints.length} entry points`);
+  const entryPointsList = document.getElementById('entryPointsList');
+  
+  if (!entryPointsList) {
+    console.error('Entry points list element not found');
+    return;
+  }
+  
+  if (entryPoints.length === 0) {
+    entryPointsList.innerHTML = `
+      <tr>
+        <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+          No entry points found. Click "Add Entry Point" to create one.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
+  entryPointsList.innerHTML = '';
+  
+  entryPoints.forEach(entryPoint => {
+    const row = document.createElement('tr');
+    row.className = 'hover:bg-gray-50';
     
-    fetch(`/api/get_entry_point.php?id=${encodeURIComponent(entryPointId)}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                openEntryPointModal(data.entry_point);
-            } else {
-                showEntryPointsError('Error: ' + (data.message || 'Failed to load entry point details'));
-            }
-        })
-        .catch(error => {
-            console.error("Error fetching entry point details:", error);
-            showEntryPointsError('An error occurred while loading entry point details. Please try again.');
-        });
+    row.innerHTML = `
+      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        ${entryPoint.id}
+      </td>
+      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        ${entryPoint.name}
+      </td>
+      <td class="px-6 py-4 text-sm text-gray-500">
+        ${entryPoint.description || 'No description'}
+      </td>
+      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+        <div class="flex space-x-2">
+          <button class="edit-entry-point text-blue-600 hover:text-blue-900" data-id="${entryPoint.id}">
+            Edit
+          </button>
+          <button class="assign-rooms text-green-600 hover:text-green-900" data-id="${entryPoint.id}">
+            Assign Rooms
+          </button>
+          <button class="delete-entry-point text-red-600 hover:text-red-900" data-id="${entryPoint.id}">
+            Delete
+          </button>
+        </div>
+      </td>
+    `;
+    
+    entryPointsList.appendChild(row);
+  });
+  
+  // Add event listeners to action buttons
+  document.querySelectorAll('.edit-entry-point').forEach(button => {
+    button.addEventListener('click', handleEditEntryPoint);
+  });
+  
+  document.querySelectorAll('.assign-rooms').forEach(button => {
+    button.addEventListener('click', handleAssignRooms);
+  });
+  
+  document.querySelectorAll('.delete-entry-point').forEach(button => {
+    button.addEventListener('click', handleDeleteEntryPoint);
+  });
 }
 
-// Delete an entry point
-function deleteEntryPoint() {
-    const entryPointId = document.getElementById('deleteEntryPointId').value;
-    
-    if (!entryPointId) {
-        showEntryPointsError('Entry point ID is required for deletion');
-        return;
-    }
-    
-    // Prepare form data
-    const formData = new FormData();
-    formData.append('action', 'delete');
-    formData.append('id', entryPointId);
-    
-    // Send request to the server
-    fetch('/api/manage_entry_points.php', {
-        method: 'POST',
-        body: formData
+// Set up event listeners
+function setupEntryPointsEventListeners() {
+  console.log('Setting up entry points event listeners');
+  
+  // Add entry point button
+  const addEntryPointBtn = document.getElementById('addEntryPointBtn');
+  if (addEntryPointBtn) {
+    addEntryPointBtn.addEventListener('click', () => {
+      showEntryPointForm();
+    });
+  }
+  
+  // Cancel entry point form button
+  const cancelEntryPointBtn = document.getElementById('cancelEntryPointBtn');
+  if (cancelEntryPointBtn) {
+    cancelEntryPointBtn.addEventListener('click', () => {
+      hideEntryPointForm();
+    });
+  }
+  
+  // Save entry point form
+  const saveEntryPointForm = document.getElementById('saveEntryPointForm');
+  if (saveEntryPointForm) {
+    saveEntryPointForm.addEventListener('submit', handleSaveEntryPoint);
+  }
+  
+  // Cancel rooms form button
+  const cancelRoomsBtn = document.getElementById('cancelRoomsBtn');
+  if (cancelRoomsBtn) {
+    cancelRoomsBtn.addEventListener('click', () => {
+      hideRoomsForm();
+    });
+  }
+  
+  // Save rooms assignments form
+  const assignRoomsForm = document.getElementById('assignRoomsForm');
+  if (assignRoomsForm) {
+    assignRoomsForm.addEventListener('submit', handleSaveRoomAssignments);
+  }
+  
+  // Confirmation dialog buttons
+  const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+  if (cancelDeleteBtn) {
+    cancelDeleteBtn.addEventListener('click', () => {
+      hideConfirmationDialog();
+    });
+  }
+  
+  const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+  if (confirmDeleteBtn) {
+    confirmDeleteBtn.addEventListener('click', confirmDeleteEntryPoint);
+  }
+}
+
+// Show entry point form for adding or editing
+function showEntryPointForm(entryPoint = null) {
+  console.log('Showing entry point form', entryPoint);
+  currentEntryPoint = entryPoint;
+  
+  const entryPointForm = document.getElementById('entryPointForm');
+  const formTitle = document.getElementById('formTitle');
+  const entryPointId = document.getElementById('entryPointId');
+  const entryPointName = document.getElementById('entryPointName');
+  const entryPointDescription = document.getElementById('entryPointDescription');
+  
+  // Hide rooms form if it's open
+  hideRoomsForm();
+  
+  if (entryPoint) {
+    // Editing existing entry point
+    formTitle.textContent = 'Edit Entry Point';
+    entryPointId.value = entryPoint.id;
+    entryPointName.value = entryPoint.name;
+    entryPointDescription.value = entryPoint.description || '';
+  } else {
+    // Adding new entry point
+    formTitle.textContent = 'Add New Entry Point';
+    entryPointId.value = '';
+    entryPointName.value = '';
+    entryPointDescription.value = '';
+  }
+  
+  entryPointForm.classList.remove('hidden');
+  entryPointName.focus();
+}
+
+// Hide entry point form
+function hideEntryPointForm() {
+  console.log('Hiding entry point form');
+  const entryPointForm = document.getElementById('entryPointForm');
+  entryPointForm.classList.add('hidden');
+  currentEntryPoint = null;
+}
+
+// Handle save entry point form submission
+function handleSaveEntryPoint(event) {
+  event.preventDefault();
+  console.log('Saving entry point');
+  
+  const form = event.target;
+  const formData = new FormData(form);
+  
+  const id = formData.get('id');
+  const name = formData.get('name');
+  const description = formData.get('description');
+  
+  const entryPointData = {
+    id: id || null,
+    name: name,
+    description: description
+  };
+  
+  console.log('Entry point data:', entryPointData);
+  
+  // Simulate API call
+  const action = id ? 'update' : 'create';
+  
+  const requestData = new FormData();
+  requestData.append('action', action);
+  requestData.append('entry_point', JSON.stringify(entryPointData));
+  
+  fetch('/api/manage_entry_points.php', {
+    method: 'POST',
+    body: requestData
+  })
+    .then(response => {
+      console.log(`Entry point ${action} API response status: ${response.status}`);
+      return response.json();
     })
-    .then(response => response.json())
     .then(data => {
-        if (data.success) {
-            showEntryPointsSuccess('Entry point deleted successfully');
-            closeEntryPointModals();
-            loadEntryPoints();
-        } else {
-            showEntryPointsError('Error: ' + (data.message || 'Failed to delete entry point'));
-        }
+      console.log(`Entry point ${action} response:`, data);
+      
+      if (data.success) {
+        // Show success message
+        showToast('success', `Entry point ${id ? 'updated' : 'created'} successfully`);
+        
+        // Reload entry points
+        loadEntryPoints();
+        
+        // Hide form
+        hideEntryPointForm();
+      } else {
+        // Show error message
+        showToast('error', `Failed to ${id ? 'update' : 'create'} entry point: ${data.message}`);
+      }
     })
     .catch(error => {
-        console.error("Error deleting entry point:", error);
-        showEntryPointsError('An unexpected error occurred. Please try again.');
+      console.error(`Error ${action} entry point:`, error);
+      showToast('error', `Error ${id ? 'updating' : 'creating'} entry point. Please try again.`);
     });
 }
 
-// Show success message
-function showEntryPointsSuccess(message) {
-    if (typeof showToast === 'function') {
-        showToast('success', message);
-    } else {
-        alert(message);
-    }
+// Handle edit entry point button click
+function handleEditEntryPoint(event) {
+  const entryPointId = event.target.getAttribute('data-id');
+  console.log(`Edit entry point: ${entryPointId}`);
+  
+  const entryPoint = entryPoints.find(ep => ep.id === entryPointId);
+  
+  if (entryPoint) {
+    showEntryPointForm(entryPoint);
+  } else {
+    console.error(`Entry point with ID ${entryPointId} not found`);
+    showToast('error', 'Entry point not found');
+  }
 }
 
-// Show error message
-function showEntryPointsError(message) {
-    if (typeof showToast === 'function') {
-        showToast('error', message);
-    } else {
-        alert(message);
-    }
+// Handle assign rooms button click
+function handleAssignRooms(event) {
+  const entryPointId = event.target.getAttribute('data-id');
+  console.log(`Assign rooms to entry point: ${entryPointId}`);
+  
+  const entryPoint = entryPoints.find(ep => ep.id === entryPointId);
+  
+  if (!entryPoint) {
+    console.error(`Entry point with ID ${entryPointId} not found`);
+    showToast('error', 'Entry point not found');
+    return;
+  }
+  
+  // Hide entry point form if it's open
+  hideEntryPointForm();
+  
+  // Show rooms form
+  const entryPointRoomsForm = document.getElementById('entryPointRoomsForm');
+  const roomsFormTitle = document.getElementById('roomsFormTitle');
+  const assignEntryPointId = document.getElementById('assignEntryPointId');
+  const roomCheckboxes = document.getElementById('roomCheckboxes');
+  
+  roomsFormTitle.textContent = `Assign Rooms to ${entryPoint.name}`;
+  assignEntryPointId.value = entryPoint.id;
+  
+  roomCheckboxes.innerHTML = `
+    <div class="animate-pulse">
+      <div class="h-5 bg-gray-200 rounded w-1/3 mb-2"></div>
+      <div class="h-5 bg-gray-200 rounded w-1/2 mb-2"></div>
+      <div class="h-5 bg-gray-200 rounded w-2/5 mb-2"></div>
+    </div>
+  `;
+  
+  entryPointRoomsForm.classList.remove('hidden');
+  
+  // Load rooms and room assignments
+  loadRoomsForEntryPoint(entryPoint.id);
 }
 
-// Helper function to escape HTML to prevent XSS
-function escapeHtml(str) {
-    if (!str) return '';
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+// Load rooms for assigning to entry point
+function loadRoomsForEntryPoint(entryPointId) {
+  console.log(`Loading rooms for entry point: ${entryPointId}`);
+  
+  // Load all rooms
+  fetch('/api/get_all_rooms.php')
+    .then(response => {
+      console.log(`Rooms API response status: ${response.status}`);
+      return response.json();
+    })
+    .then(data => {
+      console.log('Rooms data:', data);
+      
+      if (data.success && Array.isArray(data.rooms)) {
+        rooms = data.rooms;
+        
+        // Now load room assignments for this entry point
+        loadRoomAssignments(entryPointId);
+      } else {
+        const roomCheckboxes = document.getElementById('roomCheckboxes');
+        roomCheckboxes.innerHTML = `
+          <div class="text-center text-sm text-red-500">
+            Failed to load rooms: ${data.message || 'Unknown error'}
+          </div>
+        `;
+        console.error('Error loading rooms:', data.message);
+      }
+    })
+    .catch(error => {
+      console.error('Error loading rooms:', error);
+      const roomCheckboxes = document.getElementById('roomCheckboxes');
+      roomCheckboxes.innerHTML = `
+        <div class="text-center text-sm text-red-500">
+          Error loading rooms. Please try again.
+        </div>
+      `;
+    });
 }
 
-// Export functions for global use
+// Load room assignments for entry point
+function loadRoomAssignments(entryPointId) {
+  console.log(`Loading room assignments for entry point: ${entryPointId}`);
+  
+  // Simulate API call to get room assignments
+  fetch(`/api/get_entry_points.php?entry_point_id=${entryPointId}`)
+    .then(response => {
+      console.log(`Room assignments API response status: ${response.status}`);
+      return response.json();
+    })
+    .then(data => {
+      console.log('Room assignments data:', data);
+      
+      let assignedRoomIds = [];
+      
+      if (data.success && data.room_assignments) {
+        assignedRoomIds = data.room_assignments.map(ra => ra.room_id);
+      }
+      
+      // Render room checkboxes
+      renderRoomCheckboxes(assignedRoomIds);
+    })
+    .catch(error => {
+      console.error('Error loading room assignments:', error);
+      
+      // Render room checkboxes without assignments
+      renderRoomCheckboxes([]);
+    });
+}
+
+// Render room checkboxes for assignment
+function renderRoomCheckboxes(assignedRoomIds = []) {
+  console.log(`Rendering room checkboxes with assigned rooms: ${assignedRoomIds.join(', ')}`);
+  const roomCheckboxes = document.getElementById('roomCheckboxes');
+  
+  if (!roomCheckboxes) {
+    console.error('Room checkboxes element not found');
+    return;
+  }
+  
+  if (rooms.length === 0) {
+    roomCheckboxes.innerHTML = `
+      <div class="text-center text-sm text-gray-500">
+        No rooms found. Please create rooms first.
+      </div>
+    `;
+    return;
+  }
+  
+  roomCheckboxes.innerHTML = '';
+  
+  rooms.forEach(room => {
+    const isChecked = assignedRoomIds.includes(room.id);
+    
+    const div = document.createElement('div');
+    div.className = 'flex items-center';
+    
+    div.innerHTML = `
+      <input type="checkbox" id="room_${room.id}" name="rooms[]" value="${room.id}" 
+        class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+        ${isChecked ? 'checked' : ''}>
+      <label for="room_${room.id}" class="ml-2 block text-sm text-gray-900">
+        ${room.name} ${room.description ? `- ${room.description}` : ''}
+      </label>
+    `;
+    
+    roomCheckboxes.appendChild(div);
+  });
+}
+
+// Hide rooms form
+function hideRoomsForm() {
+  console.log('Hiding rooms form');
+  const entryPointRoomsForm = document.getElementById('entryPointRoomsForm');
+  entryPointRoomsForm.classList.add('hidden');
+}
+
+// Handle save room assignments form submission
+function handleSaveRoomAssignments(event) {
+  event.preventDefault();
+  console.log('Saving room assignments');
+  
+  const form = event.target;
+  const formData = new FormData(form);
+  
+  const entryPointId = formData.get('entryPointId');
+  const selectedRoomIds = formData.getAll('rooms[]');
+  
+  console.log(`Entry point ID: ${entryPointId}`);
+  console.log(`Selected room IDs: ${selectedRoomIds.join(', ')}`);
+  
+  const requestData = new FormData();
+  requestData.append('action', 'assign_rooms');
+  requestData.append('entry_point_id', entryPointId);
+  requestData.append('room_ids', JSON.stringify(selectedRoomIds));
+  
+  fetch('/api/manage_entry_points.php', {
+    method: 'POST',
+    body: requestData
+  })
+    .then(response => {
+      console.log(`Assign rooms API response status: ${response.status}`);
+      return response.json();
+    })
+    .then(data => {
+      console.log('Assign rooms response:', data);
+      
+      if (data.success) {
+        // Show success message
+        showToast('success', 'Room assignments saved successfully');
+        
+        // Hide form
+        hideRoomsForm();
+      } else {
+        // Show error message
+        showToast('error', `Failed to save room assignments: ${data.message}`);
+      }
+    })
+    .catch(error => {
+      console.error('Error saving room assignments:', error);
+      showToast('error', 'Error saving room assignments. Please try again.');
+    });
+}
+
+// Handle delete entry point button click
+function handleDeleteEntryPoint(event) {
+  const entryPointId = event.target.getAttribute('data-id');
+  console.log(`Delete entry point: ${entryPointId}`);
+  
+  const entryPoint = entryPoints.find(ep => ep.id === entryPointId);
+  
+  if (!entryPoint) {
+    console.error(`Entry point with ID ${entryPointId} not found`);
+    showToast('error', 'Entry point not found');
+    return;
+  }
+  
+  // Show confirmation dialog
+  const confirmationDialog = document.getElementById('confirmationDialog');
+  const confirmationMessage = document.getElementById('confirmationMessage');
+  
+  confirmationMessage.textContent = `Are you sure you want to delete the entry point "${entryPoint.name}"? This action cannot be undone.`;
+  confirmDeleteBtn.setAttribute('data-id', entryPoint.id);
+  
+  confirmationDialog.classList.remove('hidden');
+}
+
+// Hide confirmation dialog
+function hideConfirmationDialog() {
+  console.log('Hiding confirmation dialog');
+  const confirmationDialog = document.getElementById('confirmationDialog');
+  confirmationDialog.classList.add('hidden');
+}
+
+// Confirm delete entry point
+function confirmDeleteEntryPoint() {
+  const entryPointId = document.getElementById('confirmDeleteBtn').getAttribute('data-id');
+  console.log(`Confirming delete entry point: ${entryPointId}`);
+  
+  const requestData = new FormData();
+  requestData.append('action', 'delete');
+  requestData.append('entry_point_id', entryPointId);
+  
+  fetch('/api/manage_entry_points.php', {
+    method: 'POST',
+    body: requestData
+  })
+    .then(response => {
+      console.log(`Delete entry point API response status: ${response.status}`);
+      return response.json();
+    })
+    .then(data => {
+      console.log('Delete entry point response:', data);
+      
+      if (data.success) {
+        // Show success message
+        showToast('success', 'Entry point deleted successfully');
+        
+        // Reload entry points
+        loadEntryPoints();
+      } else {
+        // Show error message
+        showToast('error', `Failed to delete entry point: ${data.message}`);
+      }
+      
+      // Hide confirmation dialog
+      hideConfirmationDialog();
+    })
+    .catch(error => {
+      console.error('Error deleting entry point:', error);
+      showToast('error', 'Error deleting entry point. Please try again.');
+      
+      // Hide confirmation dialog
+      hideConfirmationDialog();
+    });
+}
+
+// Show toast message
+function showToast(type, message) {
+  console.log(`Showing toast: ${type} - ${message}`);
+  
+  // Use global toast function if available
+  if (typeof window.showToastMessage === 'function') {
+    window.showToastMessage(type, message);
+  } else {
+    // Fallback for testing
+    alert(`${type.toUpperCase()}: ${message}`);
+  }
+}
+
+// Export function for use in other modules
 window.initEntryPointsManagement = initEntryPointsManagement;
-window.loadEntryPoints = loadEntryPoints;

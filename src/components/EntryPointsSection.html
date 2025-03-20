@@ -1,0 +1,69 @@
+
+<!-- Entry Points Section HTML -->
+<div class="fade-in entry-points-section mb-20" style="animation-delay: 0.5s">
+  <div class="text-center mb-10">
+    <h2 class="text-3xl font-bold text-gray-800 mb-2">Available Entry Points</h2>
+    <p class="text-lg text-gray-600 max-w-2xl mx-auto">Choose the entry points you'll need for your stay</p>
+  </div>
+  
+  <div id="entryPointsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <!-- Entry points will be populated here -->
+    <div class="col-span-full text-center text-gray-500">
+      <div class="animate-pulse">
+        <div class="h-6 bg-gray-200 rounded mb-2 mx-auto w-1/4"></div>
+        <div class="h-4 bg-gray-200 rounded mb-4 mx-auto w-1/2"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="h-5 bg-gray-200 rounded mb-4 w-3/4"></div>
+            <div class="h-4 bg-gray-200 rounded mb-4"></div>
+            <div class="h-10 bg-gray-200 rounded"></div>
+          </div>
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="h-5 bg-gray-200 rounded mb-4 w-3/4"></div>
+            <div class="h-4 bg-gray-200 rounded mb-4"></div>
+            <div class="h-10 bg-gray-200 rounded"></div>
+          </div>
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="h-5 bg-gray-200 rounded mb-4 w-3/4"></div>
+            <div class="h-4 bg-gray-200 rounded mb-4"></div>
+            <div class="h-10 bg-gray-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Initialize entry points section if the function is available
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('EntryPointsSection.html: DOM content loaded');
+    
+    // Check if the initEntryPointsSection function is available
+    if (typeof window.initEntryPointsSection === 'function') {
+      console.log('EntryPointsSection.html: Calling initEntryPointsSection');
+      window.initEntryPointsSection();
+    } else {
+      console.error('EntryPointsSection.html: initEntryPointsSection function not found');
+      
+      // Add a script to load the entry points data module if not already loaded
+      if (!document.querySelector('script[src="/src/js/entry-points-data.js"]')) {
+        console.log('EntryPointsSection.html: Loading entry-points-data.js script');
+        const script = document.createElement('script');
+        script.src = '/src/js/entry-points-data.js';
+        script.onload = function() {
+          console.log('EntryPointsSection.html: entry-points-data.js loaded, initializing section');
+          if (typeof window.initEntryPointsSection === 'function') {
+            window.initEntryPointsSection();
+          }
+        };
+        script.onerror = function() {
+          console.error('EntryPointsSection.html: Failed to load entry-points-data.js');
+          document.getElementById('entryPointsContainer').innerHTML = 
+            '<div class="col-span-full text-center text-red-500">Failed to load entry points. Please refresh the page.</div>';
+        };
+        document.body.appendChild(script);
+      }
+    }
+  });
+</script>

@@ -157,8 +157,12 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    console.log('BookingForm.html: DOM content loaded');
+    
     // Wait a bit to ensure all components are loaded
     setTimeout(function() {
+      console.log('BookingForm.html: Initializing form');
+      
       // Initialize date inputs with default values
       initializeDateInputs();
       
@@ -174,6 +178,7 @@
   });
 
   function initializeDateInputs() {
+    console.log('BookingForm.html: Initializing date inputs');
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -189,38 +194,56 @@
       
       arrivalInput.value = formatDateTimeForInput(today);
       departureInput.value = formatDateTimeForInput(tomorrow);
+      console.log('BookingForm.html: Date inputs initialized successfully');
+    } else {
+      console.error('BookingForm.html: Failed to find date input elements');
     }
   }
 
   function loadRooms() {
+    console.log('BookingForm.html: Loading rooms');
     const roomSelect = document.getElementById('room');
     if (!roomSelect) {
+      console.error('BookingForm.html: Room select element not found');
       setTimeout(loadRooms, 500);
       return;
     }
     
-    // EXAMPLE direct fetch for get_rooms.php
+    // Use shared populateRoomSelects function if available
+    if (typeof window.populateRoomSelects === 'function') {
+      console.log('BookingForm.html: Using global populateRoomSelects function');
+      window.populateRoomSelects();
+      return;
+    }
+    
+    // Fallback to direct API fetch
+    console.log('BookingForm.html: Falling back to direct API fetch for rooms');
     fetch('/api/get_rooms.php')
       .then(response => {
+        console.log(`BookingForm.html: Rooms API response status: ${response.status}`);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         return response.json();
       })
       .then(data => {
+        console.log('BookingForm.html: Rooms API data received:', data);
         if (data.success && data.rooms) {
           populateRooms(data.rooms);
         } else {
+          console.warn('BookingForm.html: No rooms in API response, falling back to demo rooms');
           // Fallback to demo rooms
           loadDemoRooms();
         }
       })
       .catch(error => {
+        console.error('BookingForm.html: Error fetching rooms:', error);
         loadDemoRooms(); // fallback
       });
   }
 
   function loadDemoRooms() {
+    console.log('BookingForm.html: Loading demo rooms');
     const roomSelect = document.getElementById('room');
     if (!roomSelect) return;
     
@@ -233,6 +256,7 @@
   }
 
   function populateRooms(rooms) {
+    console.log(`BookingForm.html: Populating ${rooms.length} rooms`);
     const roomSelect = document.getElementById('room');
     if (!roomSelect) return;
     
@@ -265,20 +289,36 @@
         descElem.classList.add('hidden');
       }
     });
+    
+    console.log('BookingForm.html: Rooms populated successfully');
   }
 
   function loadAllEntryPoints() {
+    console.log('BookingForm.html: Loading all entry points');
     const entryPointsContainer = document.getElementById('entryPointsCheckboxes');
-    if (!entryPointsContainer) return;
+    if (!entryPointsContainer) {
+      console.error('BookingForm.html: Entry points container not found');
+      return;
+    }
     
     entryPointsContainer.innerHTML = '<p class="text-gray-500 text-sm">Loading entry points...</p>';
     
-    // *** IMPORTANT: Adjust this path if your script is /src/api/get_entry_points.php
+    // Use the shared populateEntryPointCheckboxes function if available
+    if (typeof window.populateEntryPointCheckboxes === 'function') {
+      console.log('BookingForm.html: Using global populateEntryPointCheckboxes function');
+      window.populateEntryPointCheckboxes();
+      return;
+    }
+    
+    // Fallback to direct API call
+    console.log('BookingForm.html: Falling back to direct API fetch for entry points');
     fetch('/api/get_entry_points.php')
       .then(response => {
+        console.log(`BookingForm.html: Entry points API response status: ${response.status}`);
         return response.json();
       })
       .then(data => {
+        console.log('BookingForm.html: Entry points API data received:', data);
         if (data.success && data.entry_points && data.entry_points.length > 0) {
           entryPointsContainer.innerHTML = '';
           
@@ -314,17 +354,22 @@
             div.appendChild(label);
             entryPointsContainer.appendChild(div);
           });
+          
+          console.log('BookingForm.html: Entry points populated successfully');
         } else {
+          console.warn('BookingForm.html: No entry points in API response, falling back to demo');
           // No data or error => fallback to demo
           createDemoEntryPoints();
         }
       })
       .catch(error => {
+        console.error('BookingForm.html: Error fetching entry points:', error);
         createDemoEntryPoints();
       });
   }
 
   function createDemoEntryPoints() {
+    console.log('BookingForm.html: Creating demo entry points');
     const entryPointsContainer = document.getElementById('entryPointsCheckboxes');
     entryPointsContainer.innerHTML = '<p class="text-yellow-500 text-sm mb-2">Using demo entry points:</p>';
     
@@ -364,18 +409,24 @@
       div.appendChild(label);
       entryPointsContainer.appendChild(div);
     });
+    
+    console.log('BookingForm.html: Demo entry points created successfully');
   }
 
   function setupEventListeners() {
+    console.log('BookingForm.html: Setting up event listeners');
+    
     // Generate PIN button
     const generatePinButton = document.getElementById('generatePinButton');
     if (generatePinButton) {
       generatePinButton.addEventListener('click', function() {
+        console.log('BookingForm.html: Generate PIN button clicked');
         const pinCode = Math.floor(1000 + Math.random() * 9000).toString();
         document.getElementById('pinCode').value = pinCode;
         if (window.showToastMessage) {
           window.showToastMessage('success', `PIN code ${pinCode} generated.`);
         }
+        console.log(`BookingForm.html: Generated PIN code: ${pinCode}`);
       });
     }
     
@@ -384,6 +435,7 @@
     if (bookingForm) {
       bookingForm.addEventListener('submit', function(e) {
         e.preventDefault();
+        console.log('BookingForm.html: Form submission started');
         
         // Ensure entry points selected
         const selectedEntryPoints = [];
@@ -391,7 +443,10 @@
           selectedEntryPoints.push(checkbox.value);
         });
         
+        console.log(`BookingForm.html: Selected entry points: ${selectedEntryPoints.join(', ')}`);
+        
         if (selectedEntryPoints.length === 0) {
+          console.error('BookingForm.html: No entry points selected');
           if (window.showToastMessage) {
             window.showToastMessage('error', 'Please select at least one entry point');
           }
@@ -400,6 +455,12 @@
         
         const submitButton = document.getElementById('submitButton');
         const formData = new FormData(this);
+        
+        // Log form data for debugging
+        console.log('BookingForm.html: Form data collected:');
+        for (let [key, value] of formData.entries()) {
+          console.log(`  ${key}: ${value}`);
+        }
         
         // Remove entryPoints[] from FormData and add as JSON string
         document.querySelectorAll('input[name="entryPoints[]"]').forEach(input => {
@@ -410,6 +471,7 @@
         const arrival = new Date(formData.get('arrivalDateTime'));
         const departure = new Date(formData.get('departureDateTime'));
         if (departure <= arrival) {
+          console.error('BookingForm.html: Departure date is before or equal to arrival date');
           if (window.showToastMessage) {
             window.showToastMessage('error', 'Departure must be after arrival.');
           }
@@ -417,6 +479,7 @@
         }
         
         if (!formData.get('pinPosition')) {
+          console.error('BookingForm.html: No PIN position selected');
           if (window.showToastMessage) {
             window.showToastMessage('error', 'Please select a PIN position.');
           }
@@ -424,6 +487,7 @@
         }
         
         if (!formData.get('pinCode')) {
+          console.error('BookingForm.html: No PIN code entered');
           if (window.showToastMessage) {
             window.showToastMessage('error', 'Please enter or generate a PIN code.');
           }
@@ -431,6 +495,7 @@
         }
         
         if (!/^\d{4,6}$/.test(formData.get('pinCode'))) {
+          console.error('BookingForm.html: Invalid PIN code format');
           if (window.showToastMessage) {
             window.showToastMessage('error', 'PIN code must be 4-6 digits.');
           }
@@ -449,14 +514,21 @@
           </svg>
         `;
         
+        console.log('BookingForm.html: Submitting form to API');
+        
         // Post to process_booking
         fetch('/api/process_booking.php', { method: 'POST', body: formData })
-          .then(response => response.json())
+          .then(response => {
+            console.log(`BookingForm.html: API response status: ${response.status}`);
+            return response.json();
+          })
           .then(data => {
+            console.log('BookingForm.html: API response data:', data);
             submitButton.disabled = false;
             submitButton.textContent = 'Create Booking';
             
             if (data.success) {
+              console.log(`BookingForm.html: Booking created successfully with access code: ${data.data.accessCode}`);
               if (window.showToastMessage) {
                 window.showToastMessage('success','Booking Created',
                   `Booking created with access code: ${data.data.accessCode}`
@@ -469,12 +541,14 @@
                 '<p class="text-gray-500 text-sm">Loading entry points...</p>';
               loadAllEntryPoints();
             } else {
+              console.error(`BookingForm.html: Booking creation failed: ${data.message}`);
               if (window.showToastMessage) {
                 window.showToastMessage('error', data.message || 'Error creating booking.');
               }
             }
           })
           .catch(error => {
+            console.error('BookingForm.html: Error processing booking:', error);
             submitButton.disabled = false;
             submitButton.textContent = 'Create Booking';
             if (window.showToastMessage) {

@@ -6,8 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Room Booking System</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <!-- Silent logging script to disable ALL console output -->
-  <script src="/src/js/silent-logging.js"></script>
+  <!-- Debugging mode script - enables console logs for this page -->
+  <script>
+    // Re-enable console for debugging
+    (function() {
+      const originalConsole = window.console;
+      window.console = originalConsole;
+      console.log('Console logging enabled for HomePage.html');
+    })();
+  </script>
 </head>
 <body class="bg-gray-50 min-h-screen">
   <!-- Include Header -->
@@ -24,7 +31,10 @@
     <!-- Include Booking Form -->
     <div id="booking-form-container"></div>
     
-    <!-- Include Rooms Section (below booking form) -->
+    <!-- Include Entry Points Section (above rooms) -->
+    <div id="entry-points-section-container"></div>
+    
+    <!-- Include Rooms Section -->
     <div id="rooms-section-container"></div>
   </main>
   
@@ -40,25 +50,30 @@
   <!-- Load utility scripts first -->
   <script src="/public/js/toast-utils.js"></script>
   <script src="/src/js/rooms-data.js"></script>
+  <script src="/src/js/entry-points-data.js"></script>
   <script src="/src/js/booking-form.js"></script>
   
   <script>
     // Function to load component into container
     function loadComponent(containerId, componentPath) {
+      console.log(`Loading component: ${componentPath} into ${containerId}`);
       const container = document.getElementById(containerId);
       if (!container) {
+        console.error(`Container not found: ${containerId}`);
         return;
       }
       
       fetch(componentPath)
         .then(response => {
           if (!response.ok) {
+            console.error(`Failed to load ${componentPath}: ${response.status} ${response.statusText}`);
             throw new Error(`Failed to load ${componentPath}`);
           }
           return response.text();
         })
         .then(html => {
           container.innerHTML = html;
+          console.log(`Component loaded successfully: ${componentPath}`);
           
           // Execute scripts in the component
           const scripts = container.querySelectorAll('script');
@@ -76,17 +91,21 @@
           });
         })
         .catch(error => {
-          container.innerHTML = `<div class="text-red-500">Failed to load component</div>`;
+          console.error(`Error loading component ${componentPath}:`, error);
+          container.innerHTML = `<div class="text-red-500">Failed to load component: ${error.message}</div>`;
         });
     }
     
-    // Load all components when DOM is ready
+    // Log when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM content loaded, loading components');
+      
       // Load components
       loadComponent('header-container', '/src/components/Header.html');
       loadComponent('hero-banner-container', '/src/components/HeroBanner.html');
       loadComponent('intro-section-container', '/src/components/IntroSection.html');
       loadComponent('booking-form-container', '/src/components/BookingForm.html');
+      loadComponent('entry-points-section-container', '/src/components/EntryPointsSection.html');
       loadComponent('rooms-section-container', '/src/components/RoomsSection.html');
       loadComponent('footer-container', '/src/components/Footer.html');
       loadComponent('success-modal-container', '/src/components/SuccessModal.html');
