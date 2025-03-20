@@ -7,64 +7,33 @@
   </div>
   
   <div id="entryPointsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    <!-- Entry points will be loaded here dynamically -->
+    <!-- Entry points rendered here -->
   </div>
 </div>
 
 <script>
-  // Initialize entry points section
+  // Initialize entry points section immediately with default values
   document.addEventListener('DOMContentLoaded', function() {
-    console.log('EntryPointsSection.html: DOM content loaded - ENTRY POINTS LOG');
+    console.log('EntryPointsSection.html: DOM loaded - ENTRY POINTS LOG');
     
     // Clear any existing content
     const container = document.getElementById('entryPointsContainer');
     if (container) {
-      console.log('EntryPointsSection.html: Setting up entry points - ENTRY POINTS LOG');
-      
-      // Get demo entry points immediately while API loads
-      const demoEntryPoints = [
+      // Default entry points that will always show
+      const defaultEntryPoints = [
         { id: 'entry1', name: 'Main Entrance', description: 'Front door at the main lobby' },
         { id: 'entry2', name: 'Side Entrance', description: 'Side entrance near the parking lot' },
         { id: 'entry3', name: 'Back Entrance', description: 'Back entrance near the garden' }
       ];
       
-      // Show demo entry points immediately
-      renderEntryPointsDirectly(demoEntryPoints);
-      
-      // Try to load from API in background
-      if (typeof window.initEntryPointsSection === 'function') {
-        console.log('EntryPointsSection.html: Calling initEntryPointsSection - ENTRY POINTS LOG');
-        try {
-          window.initEntryPointsSection();
-        } catch (error) {
-          console.error('EntryPointsSection.html: Error in initEntryPointsSection - ENTRY POINTS LOG', error);
-          // We already have demo points showing, so no need to show an error
-        }
-      } else {
-        // Try to load the script if not found
-        const script = document.createElement('script');
-        script.src = '/src/js/entry-points-data.js';
-        script.onload = function() {
-          console.log('EntryPointsSection.html: entry-points-data.js loaded - ENTRY POINTS LOG');
-          
-          if (typeof window.initEntryPointsSection === 'function') {
-            try {
-              window.initEntryPointsSection();
-            } catch (error) {
-              console.error('EntryPointsSection.html: Error initializing after script load - ENTRY POINTS LOG', error);
-              // Already showing demo points
-            }
-          }
-        };
-        
-        document.body.appendChild(script);
-      }
+      // Always render these entry points immediately
+      renderEntryPointsDirectly(defaultEntryPoints);
     }
   });
   
-  // Function to render entry points directly as fallback
+  // Function to render entry points directly
   function renderEntryPointsDirectly(entryPoints) {
-    console.log(`EntryPointsSection.html: Rendering ${entryPoints.length} entry points directly - ENTRY POINTS LOG`);
+    console.log(`EntryPointsSection.html: Rendering entry points - ENTRY POINTS LOG`);
     const container = document.getElementById('entryPointsContainer');
     if (!container) return;
     
@@ -110,8 +79,13 @@
           const event = new Event('change');
           checkbox.dispatchEvent(event);
           console.log(`EntryPointsSection.html: Checked entry point checkbox for ${entryName} - ENTRY POINTS LOG`);
-        } else {
-          console.error(`EntryPointsSection.html: Could not find checkbox for entry point ${entryId} - ENTRY POINTS LOG`);
+        } 
+        
+        // Also update the entry points checkboxes area to show selected points
+        const entryPointsCheckboxes = document.getElementById('entryPointsCheckboxes');
+        if (entryPointsCheckboxes && entryPointsCheckboxes.innerHTML.includes('Loading entry points...')) {
+          // If it's still showing loading, replace with actual checkboxes
+          populateCheckboxesFromDefaults();
         }
         
         // Scroll to booking form
@@ -125,6 +99,52 @@
           window.showToastMessage('success', `${entryName} selected. Please complete your booking.`);
         }
       });
+    });
+  }
+  
+  // Helper function to populate checkboxes with default entry points
+  function populateCheckboxesFromDefaults() {
+    const entryPointsCheckboxes = document.getElementById('entryPointsCheckboxes');
+    if (!entryPointsCheckboxes) return;
+    
+    const defaultEntryPoints = [
+      { id: 'entry1', name: 'Main Entrance', description: 'Front door at the main lobby' },
+      { id: 'entry2', name: 'Side Entrance', description: 'Side entrance near the parking lot' },
+      { id: 'entry3', name: 'Back Entrance', description: 'Back entrance near the garden' }
+    ];
+    
+    entryPointsCheckboxes.innerHTML = '';
+    
+    defaultEntryPoints.forEach(entry => {
+      const checkboxId = `entryPoint_${entry.id}`;
+      
+      const div = document.createElement('div');
+      div.className = 'flex items-start mb-2';
+      
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = checkboxId;
+      checkbox.name = 'entryPoints[]';
+      checkbox.value = entry.id;
+      checkbox.className = 'mt-1 mr-2';
+      
+      const label = document.createElement('label');
+      label.htmlFor = checkboxId;
+      label.className = 'text-sm';
+      
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'font-medium block';
+      nameSpan.textContent = entry.name;
+      
+      const descSpan = document.createElement('span');
+      descSpan.className = 'text-xs text-gray-500';
+      descSpan.textContent = entry.description || 'No description available';
+      
+      label.appendChild(nameSpan);
+      label.appendChild(descSpan);
+      div.appendChild(checkbox);
+      div.appendChild(label);
+      entryPointsCheckboxes.appendChild(div);
     });
   }
 </script>
