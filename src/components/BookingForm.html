@@ -34,14 +34,7 @@
             class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-                <!-- Entry Points (NEW) -->
-                <div id="entryPointContainer" class="space-y-2">
-                  <label class="block text-sm font-medium text-gray-700">Select Entry Points</label>
-                  <div id="entryPointsCheckboxes" class="border border-gray-300 rounded-md p-3 max-h-48 overflow-y-auto">
-                    <p class="text-gray-500 text-sm">Loading entry points...</p>
-                  </div>
-                  <p class="text-xs text-gray-500">Select one or more entry points you will use to access the room</p>
-                </div>
+        
         <!-- Departure Date & Time -->
         <div class="space-y-2">
           <label for="departureDateTime" class="block text-sm font-medium text-gray-700">Departure Date & Time</label>
@@ -157,10 +150,6 @@
       // Initialize date inputs with default values
       initializeDateInputs();
       
-
-          // Load entry points from API (NEW)
-    loadAllEntryPoints();
-
       // Load rooms from API
       loadRooms();
       
@@ -168,89 +157,6 @@
       setupEventListeners();
     }, 1000);
   });
-
-  // NEW: function to load entry points from /api/get_entry_points.php
-  function loadAllEntryPoints() {
-    const entryPointsContainer = document.getElementById('entryPointsCheckboxes');
-    if (!entryPointsContainer) return;
-
-    entryPointsContainer.innerHTML = '<p class="text-gray-500 text-sm">Loading entry points...</p>';
-
-    // Adjust the path if your get_entry_points.php is elsewhere:
-    fetch('/api/get_entry_points.php')
-      .then(response => response.json())
-      .then(data => {
-        if (data.success && data.entry_points && data.entry_points.length > 0) {
-          entryPointsContainer.innerHTML = '';
-          data.entry_points.forEach(entry => {
-            const checkboxId = `entryPoint_${entry.id}`;
-            
-            // Container for each entry
-            const div = document.createElement('div');
-            div.className = 'mb-2';
-
-            // Checkbox
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.id = checkboxId;
-            checkbox.name = 'entryPoints[]';
-            checkbox.value = entry.id;
-            checkbox.className = 'mr-2';
-
-            // Label
-            const label = document.createElement('label');
-            label.htmlFor = checkboxId;
-            label.textContent = `${entry.name} – ${entry.description || 'No description'}`;
-
-            // Append to container
-            div.appendChild(checkbox);
-            div.appendChild(label);
-            entryPointsContainer.appendChild(div);
-          });
-        } else {
-          // If no data or error, create fallback demo entry points
-          createDemoEntryPoints();
-        }
-      })
-      .catch(() => {
-        // If fetch fails, create fallback demo entry points
-        createDemoEntryPoints();
-      });
-  }
-
-    // NEW: fallback if no real entry points come from the API
-    function createDemoEntryPoints() {
-    const entryPointsContainer = document.getElementById('entryPointsCheckboxes');
-    if (!entryPointsContainer) return;
-    entryPointsContainer.innerHTML = '';
-
-    const demo = [
-      { id: 'entry1', name: 'Main Entrance', description: 'Front door at the main lobby' },
-      { id: 'entry2', name: 'Side Entrance', description: 'Entrance near the parking lot' },
-      { id: 'entry3', name: 'Back Entrance', description: 'Entrance near the garden' }
-    ];
-
-    demo.forEach(entry => {
-      const checkboxId = `entryPoint_${entry.id}`;
-      const div = document.createElement('div');
-      div.className = 'mb-2';
-
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.id = checkboxId;
-      checkbox.name = 'entryPoints[]';
-      checkbox.value = entry.id;
-      checkbox.className = 'mr-2';
-
-      const label = document.createElement('label');
-      label.htmlFor = checkboxId;
-      label.textContent = `${entry.name} – ${entry.description}`;
-
-      div.appendChild(checkbox);
-      div.appendChild(label);
-      entryPointsContainer.appendChild(div);
-    });
-  }
 
   function initializeDateInputs() {
     console.log('BookingForm.html: Initializing date inputs');
