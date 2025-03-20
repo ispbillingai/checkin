@@ -12,37 +12,45 @@
 </div>
 
 <script>
-  // Initialize entry points section immediately with default values
   document.addEventListener('DOMContentLoaded', function() {
-    console.log('EntryPointsSection.html: DOM loaded - ENTRY POINTS LOG');
-    
-    // Clear any existing content
-    const container = document.getElementById('entryPointsContainer');
-    if (container) {
-      // Default entry points that will always show
-      const defaultEntryPoints = [
-        { id: 'entry1', name: 'Main Entrance', description: 'Front door at the main lobby' },
-        { id: 'entry2', name: 'Side Entrance', description: 'Side entrance near the parking lot' },
-        { id: 'entry3', name: 'Back Entrance', description: 'Back entrance near the garden' }
-      ];
-      
-      // Always render these entry points immediately
-      renderEntryPointsDirectly(defaultEntryPoints);
-    }
+    console.log('EntryPointsSection.html: DOM loaded');
+    fetchEntryPoints();
   });
+
+  function fetchEntryPoints() {
+    console.log('EntryPointsSection.html: Fetching entry points from database');
+    
+    fetch('/api/get_all_entry_points.php')
+      .then(response => response.json())
+      .then(data => {
+        console.log('EntryPointsSection.html: Entry points data received', data);
+        if (data.success && data.entry_points && data.entry_points.length > 0) {
+          renderEntryPoints(data.entry_points);
+        } else {
+          console.log('EntryPointsSection.html: No entry points returned, using demo data');
+          renderEntryPoints([
+            { id: 'entry1', name: 'Main Entrance', description: 'Front door at the main lobby' },
+            { id: 'entry2', name: 'Side Entrance', description: 'Side entrance near the parking lot' },
+            { id: 'entry3', name: 'Back Entrance', description: 'Back entrance near the garden' }
+          ]);
+        }
+      })
+      .catch(error => {
+        console.error('EntryPointsSection.html: Error fetching entry points', error);
+        renderEntryPoints([
+          { id: 'entry1', name: 'Main Entrance', description: 'Front door at the main lobby' },
+          { id: 'entry2', name: 'Side Entrance', description: 'Side entrance near the parking lot' },
+          { id: 'entry3', name: 'Back Entrance', description: 'Back entrance near the garden' }
+        ]);
+      });
+  }
   
-  // Function to render entry points directly
-  function renderEntryPointsDirectly(entryPoints) {
-    console.log(`EntryPointsSection.html: Rendering entry points - ENTRY POINTS LOG`);
+  function renderEntryPoints(entryPoints) {
+    console.log(`EntryPointsSection.html: Rendering ${entryPoints.length} entry points`);
     const container = document.getElementById('entryPointsContainer');
     if (!container) return;
     
     container.innerHTML = '';
-    
-    if (!entryPoints || entryPoints.length === 0) {
-      container.innerHTML = '<div class="col-span-full text-center text-gray-500">No entry points available. Please contact support.</div>';
-      return;
-    }
     
     entryPoints.forEach(entry => {
       const card = document.createElement('div');
@@ -66,20 +74,24 @@
     });
     
     // Add event listeners to buttons
+    addEntryPointButtonListeners();
+  }
+  
+  function addEntryPointButtonListeners() {
     document.querySelectorAll('.select-entry-point-btn').forEach(button => {
       button.addEventListener('click', function() {
         const entryId = this.getAttribute('data-entry-id');
         const entryName = this.getAttribute('data-entry-name');
-        console.log(`EntryPointsSection.html: Entry point selected: ${entryName} (${entryId}) - ENTRY POINTS LOG`);
+        console.log(`EntryPointsSection.html: Entry point selected: ${entryName} (${entryId})`);
         
-        // Find the corresponding entry point in the booking form
+        // Update the entry point select in the booking form
         const entryPointSelect = document.getElementById('entryPoint');
         if (entryPointSelect) {
           entryPointSelect.value = entryId;
           const event = new Event('change');
           entryPointSelect.dispatchEvent(event);
-          console.log(`EntryPointsSection.html: Selected entry point dropdown for ${entryName} - ENTRY POINTS LOG`);
-        } 
+          console.log(`EntryPointsSection.html: Selected entry point in dropdown: ${entryName}`);
+        }
         
         // Scroll to booking form
         const bookingForm = document.getElementById('bookingForm');

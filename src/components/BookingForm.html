@@ -164,11 +164,8 @@
   document.addEventListener('DOMContentLoaded', function() {
     console.log('BookingForm.html: DOM content loaded');
     
-    // Immediately display default entry points in the dropdown
-    const entryPointSelect = document.getElementById('entryPoint');
-    if (entryPointSelect) {
-      populateDefaultEntryPoints();
-    }
+    // Load entry points from database
+    loadEntryPoints();
     
     // Wait a bit to ensure all components are loaded
     setTimeout(function() {
@@ -185,32 +182,70 @@
     }, 1000);
   });
 
-  // Function to populate default entry points in the dropdown
-  function populateDefaultEntryPoints() {
-    console.log('BookingForm.html: Populating default entry points');
+  function loadEntryPoints() {
+    console.log('BookingForm.html: Loading entry points from database');
     const entryPointSelect = document.getElementById('entryPoint');
-    if (!entryPointSelect) return;
+    if (!entryPointSelect) {
+      console.error('BookingForm.html: Entry point select element not found');
+      return;
+    }
     
     // Clear any existing options except the first placeholder
     while (entryPointSelect.options.length > 1) {
       entryPointSelect.remove(1);
     }
     
-    const defaultEntryPoints = [
-      { id: 'entry1', name: 'Main Entrance', description: 'Front door at the main lobby' },
-      { id: 'entry2', name: 'Side Entrance', description: 'Side entrance near the parking lot' },
-      { id: 'entry3', name: 'Back Entrance', description: 'Back entrance near the garden' }
-    ];
-    
-    defaultEntryPoints.forEach(entry => {
-      const option = document.createElement('option');
-      option.value = entry.id;
-      option.textContent = entry.name;
-      if (entry.description) {
-        option.title = entry.description;
-      }
-      entryPointSelect.appendChild(option);
-    });
+    fetch('/api/get_all_entry_points.php')
+      .then(response => response.json())
+      .then(data => {
+        console.log('BookingForm.html: Entry points data received', data);
+        if (data.success && data.entry_points && data.entry_points.length > 0) {
+          data.entry_points.forEach(entry => {
+            const option = document.createElement('option');
+            option.value = entry.id;
+            option.textContent = entry.name;
+            if (entry.description) {
+              option.title = entry.description;
+            }
+            entryPointSelect.appendChild(option);
+          });
+        } else {
+          console.log('BookingForm.html: No entry points returned, using demo data');
+          const demoEntryPoints = [
+            { id: 'entry1', name: 'Main Entrance', description: 'Front door at the main lobby' },
+            { id: 'entry2', name: 'Side Entrance', description: 'Side entrance near the parking lot' },
+            { id: 'entry3', name: 'Back Entrance', description: 'Back entrance near the garden' }
+          ];
+          
+          demoEntryPoints.forEach(entry => {
+            const option = document.createElement('option');
+            option.value = entry.id;
+            option.textContent = entry.name;
+            if (entry.description) {
+              option.title = entry.description;
+            }
+            entryPointSelect.appendChild(option);
+          });
+        }
+      })
+      .catch(error => {
+        console.error('BookingForm.html: Error fetching entry points', error);
+        const demoEntryPoints = [
+          { id: 'entry1', name: 'Main Entrance', description: 'Front door at the main lobby' },
+          { id: 'entry2', name: 'Side Entrance', description: 'Side entrance near the parking lot' },
+          { id: 'entry3', name: 'Back Entrance', description: 'Back entrance near the garden' }
+        ];
+        
+        demoEntryPoints.forEach(entry => {
+          const option = document.createElement('option');
+          option.value = entry.id;
+          option.textContent = entry.name;
+          if (entry.description) {
+            option.title = entry.description;
+          }
+          entryPointSelect.appendChild(option);
+        });
+      });
   }
 
   function initializeDateInputs() {
@@ -530,3 +565,4 @@
     }
   }
 </script>
+
