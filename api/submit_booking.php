@@ -19,7 +19,7 @@ function process_booking() {
     }
     
     // Validate required fields
-    $required_fields = ['name', 'email', 'room', 'room_position', 'pin_code', 
+    $required_fields = ['name', 'email', 'room', 'pin_code', 
                         'arrival_date', 'arrival_time', 'departure_date', 'departure_time'];
     
     foreach ($required_fields as $field) {
@@ -39,21 +39,11 @@ function process_booking() {
         ];
     }
     
-    // Get entry points data
-    $entry_points_data = isset($_POST['entry_points_data']) ? json_decode($_POST['entry_points_data'], true) : [];
-    
-    if (empty($entry_points_data)) {
-        return [
-            'success' => false,
-            'message' => 'Entry points data is missing'
-        ];
-    }
-    
     // Secure input data
     $guest_name = secure_input($_POST['name']);
     $email = secure_input($_POST['email']);
+    $phone = isset($_POST['phone']) ? secure_input($_POST['phone']) : '';
     $room_id = secure_input($_POST['room']);
-    $room_position = (int)$_POST['room_position'];
     $pin_code = secure_input($_POST['pin_code']);
     $notes = isset($_POST['notes']) ? secure_input($_POST['notes']) : '';
     
@@ -61,11 +51,29 @@ function process_booking() {
     $arrival_datetime = $_POST['arrival_date'] . ' ' . $_POST['arrival_time'] . ':00';
     $departure_datetime = $_POST['departure_date'] . ' ' . $_POST['departure_time'] . ':00';
     
-    // Validate room position
-    if ($room_position < 1 || $room_position > 64) {
+    // Get entry points data from positions
+    $entry_points = [];
+    foreach ($_POST['entry_points'] as $entry_id) {
+        if (isset($_POST['positions'][$entry_id]) && !empty($_POST['positions'][$entry_id])) {
+            $position = (int)$_POST['positions'][$entry_id];
+            // Validate position
+            if ($position < 1 || $position > 64) {
+                return [
+                    'success' => false,
+                    'message' => 'Entry point position must be between 1 and 64'
+                ];
+            }
+            $entry_points[] = [
+                'id' => $entry_id,
+                'position' => $position
+            ];
+        }
+    }
+    
+    if (empty($entry_points)) {
         return [
             'success' => false,
-            'message' => 'Room position must be between 1 and 64'
+            'message' => 'No valid entry points with positions provided'
         ];
     }
     
@@ -86,9 +94,9 @@ function process_booking() {
         $room = $result->fetch_assoc();
         
         // Insert booking record
-        $stmt = $conn->prepare("INSERT INTO bookings (room_id, guest_name, email, arrival_datetime, departure_datetime, access_code, status) 
-                               VALUES (?, ?, ?, ?, ?, ?, 'active')");
-        $stmt->bind_param("ssssss", $room_id, $guest_name, $email, $arrival_datetime, $departure_datetime, $pin_code);
+        $stmt = $conn->prepare("INSERT INTO bookings (room_id, guest_name, email, phone, arrival_datetime, departure_datetime, access_code, status) 
+                               VALUES (?, ?, ?, ?, ?, ?, ?, 'active')");
+        $stmt->bind_param("sssssss", $room_id, $guest_name, $email, $phone, $arrival_datetime, $departure_datetime, $pin_code);
         
         if (!$stmt->execute()) {
             throw new Exception("Failed to create booking: " . $conn->error);
@@ -97,18 +105,17 @@ function process_booking() {
         $booking_id = $conn->insert_id;
         
         // Process entry points
-        foreach ($entry_points_data as $entry_point) {
+        foreach ($entry_points as $entry_point) {
             $entry_id = $entry_point['id'];
-            $position = (int)$entry_point['position'];
-            
-            // Validate entry point position
-            if ($position < 1 || $position > 64) {
-                throw new Exception("Entry point position must be between 1 and 64");
-            }
+            $position = $entry_point['position'];
             
             // Assign PIN to entry point at the specified position
-            if (!assign_pin_to_entry_points($booking_id, [$entry_id], $pin_code, $position)) {
-                throw new Exception("Failed to assign PIN to entry point");
+            $stmt = $conn->prepare("INSERT INTO entry_point_pins (entry_point_id, position, pin_code, booking_id) 
+                                   VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("sisi", $entry_id, $position, $pin_code, $booking_id);
+            
+            if (!$stmt->execute()) {
+                throw new Exception("Failed to assign PIN to entry point: " . $conn->error);
             }
         }
         
