@@ -1,11 +1,12 @@
 
 /**
- * Basic error logger for the admin dashboard
+ * Basic error logger for the admin dashboard - all logging removed
  */
 window.errorLogger = {
     logs: [],
+    
     /**
-     * Log an info message
+     * Log an info message - silenced
      * @param {string} message - The message to log
      * @param {object} context - Additional context for the log
      */
@@ -14,7 +15,7 @@ window.errorLogger = {
     },
     
     /**
-     * Log a warning message
+     * Log a warning message - silenced
      * @param {string} message - The message to log
      * @param {object} context - Additional context for the log
      */
@@ -23,7 +24,7 @@ window.errorLogger = {
     },
     
     /**
-     * Log an error message
+     * Log an error message - silenced
      * @param {string} message - The message to log
      * @param {object} context - Additional context for the log
      */
@@ -32,7 +33,7 @@ window.errorLogger = {
     },
     
     /**
-     * Log a message with specified level
+     * Log a message with specified level - silenced
      * @param {string} level - The log level (info, warning, error)
      * @param {string} message - The message to log
      * @param {object} context - Additional context for the log
@@ -48,10 +49,7 @@ window.errorLogger = {
         this.logs.push(entry);
         this.updateLogDisplay();
         
-        // Send error to server if it's an error
-        if (level === 'error') {
-            this.sendToServer(entry);
-        }
+        // No server logging
     },
     
     /**
@@ -94,22 +92,11 @@ window.errorLogger = {
     },
     
     /**
-     * Send a log entry to the server
+     * Send a log entry to the server - silenced
      * @param {object} entry - The log entry to send
      */
     sendToServer: function(entry) {
-        // Only if we're in a real browser environment
-        if (typeof fetch !== 'undefined') {
-            fetch('/api/log_client_error.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(entry)
-            }).catch(err => {
-                // Silently handle error
-            });
-        }
+        // No server logging
     },
     
     /**
@@ -129,7 +116,7 @@ window.errorLogger = {
     }
 };
 
-// Set up global error handler
+// Set up silenced global error handler
 window.addEventListener('error', function(event) {
     if (window.errorLogger) {
         window.errorLogger.error('Uncaught JavaScript error: ' + event.message, {

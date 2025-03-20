@@ -1,6 +1,6 @@
 
 /**
- * Debug Utilities
+ * Debug Utilities - All logging disabled
  * Provides debugging tools for development
  */
 (function() {
@@ -55,7 +55,7 @@
         document.getElementById('debug-reload-page').addEventListener('click', () => window.location.reload());
     }
     
-    // Toggle debug console
+    // Toggle debug console - no logging
     function toggleConsole() {
         let console = document.getElementById('debug-console');
         
@@ -84,61 +84,19 @@
         
         document.body.appendChild(console);
         
-        // Override console.log and similar methods
-        const originalLog = window.console.log;
-        const originalError = window.console.error;
-        const originalWarn = window.console.warn;
-        
-        window.console.log = function() {
-            originalLog.apply(console, arguments);
-            appendToDebugConsole('log', arguments);
-        };
-        
-        window.console.error = function() {
-            originalError.apply(console, arguments);
-            appendToDebugConsole('error', arguments);
-        };
-        
-        window.console.warn = function() {
-            originalWarn.apply(console, arguments);
-            appendToDebugConsole('warn', arguments);
-        };
+        // Override console methods with empty functions
+        const noOp = function() {};
+        window.console.log = noOp;
+        window.console.error = noOp;
+        window.console.warn = noOp;
     }
     
-    // Append message to debug console
+    // Append message to debug console - disabled
     function appendToDebugConsole(type, args) {
-        const console = document.getElementById('debug-console');
-        if (!console) return;
-        
-        const entry = document.createElement('div');
-        entry.style.borderBottom = '1px solid #333';
-        entry.style.padding = '4px 0';
-        
-        let color = 'white';
-        if (type === 'error') color = '#ff5f5f';
-        if (type === 'warn') color = '#ffcf5f';
-        
-        entry.style.color = color;
-        
-        const timestamp = new Date().toLocaleTimeString();
-        const argsArray = Array.from(args);
-        const message = argsArray.map(arg => {
-            if (typeof arg === 'object') {
-                try {
-                    return JSON.stringify(arg);
-                } catch (e) {
-                    return String(arg);
-                }
-            }
-            return String(arg);
-        }).join(' ');
-        
-        entry.textContent = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
-        console.appendChild(entry);
-        console.scrollTop = console.scrollHeight;
+        // Function disabled - no console output
     }
     
-    // Check script loading
+    // Check script loading - no logging
     function checkScripts() {
         const scripts = document.getElementsByTagName('script');
         for (let i = 0; i < scripts.length; i++) {
@@ -149,7 +107,7 @@
             
             fetch(src, { method: 'HEAD' })
                 .catch(error => {
-                    // Silently catch errors
+                    // Silent error handling
                 });
         }
         
@@ -163,7 +121,7 @@
             
             fetch(href, { method: 'HEAD' })
                 .catch(error => {
-                    // Silently catch errors
+                    // Silent error handling
                 });
         }
     }

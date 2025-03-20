@@ -48,19 +48,15 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
             ];
         }
         
-        // Return rooms as JSON with debugging info
+        // Return rooms as JSON without debugging info
         echo json_encode([
             'success' => true,
-            'rooms' => $rooms,
-            'debug_info' => [
-                'room_count' => count($rooms),
-                'timestamp' => date('Y-m-d H:i:s')
-            ]
+            'rooms' => $rooms
         ]);
     } catch (Exception $e) {
         echo json_encode([
             'success' => false,
-            'message' => 'Error fetching rooms: ' . $e->getMessage()
+            'message' => 'Error fetching rooms'
         ]);
     }
 } else {

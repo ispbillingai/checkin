@@ -9,10 +9,22 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
   
-  <!-- Error logger first -->
+  <!-- Error logger first - modified to remove logs -->
   <script src="/src/js/error-logger.js"></script>
-  <!-- Debug utilities -->
+  <!-- Debug utilities - modified to remove logs -->
   <script src="/src/js/debug.js"></script>
+  
+  <!-- Disable all console logs -->
+  <script>
+    window.console = {
+      log: function() {},
+      error: function() {},
+      warn: function() {},
+      info: function() {},
+      debug: function() {},
+      trace: function() {}
+    };
+  </script>
 </head>
 <body class="min-h-screen bg-white">
   <div class="p-8">
@@ -87,16 +99,13 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      console.log("AdminDashboardDebug loaded");
-      
       // Set environment info
       document.getElementById('current-url').textContent = window.location.href;
       document.getElementById('current-path').textContent = window.location.pathname;
       document.getElementById('user-agent').textContent = navigator.userAgent;
       
-      // Test function for resources
+      // Test function for resources - no logging
       function testResource(url, name) {
-        console.log(`Testing resource: ${name} (${url})`);
         const results = document.getElementById('test-results');
         const resultItem = document.createElement('div');
         resultItem.className = 'py-1 border-b';
@@ -114,8 +123,6 @@
             }
           })
           .then(text => {
-            console.log(`${name} content (first 100 chars):`, text.substring(0, 100));
-            
             // Add detailed info for JavaScript files
             if (url.endsWith('.js')) {
               const detailItem = document.createElement('div');
@@ -139,7 +146,6 @@
             }
           })
           .catch(error => {
-            console.error(`Error testing ${name}:`, error);
             const errorItem = document.createElement('div');
             errorItem.className = 'ml-4 text-xs text-red-600';
             errorItem.textContent = `Error: ${error.message}`;
@@ -198,7 +204,7 @@
         }
       }
       
-      // Run template check
+      // Run template check without logging
       checkTemplates();
     });
   </script>

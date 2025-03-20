@@ -24,6 +24,17 @@
       to { transform: scale(1); opacity: 1; }
     }
   </style>
+  <script>
+    // Disable all console methods
+    window.console = {
+      log: function() {},
+      error: function() {},
+      warn: function() {},
+      info: function() {},
+      debug: function() {},
+      trace: function() {}
+    };
+  </script>
 </head>
 <body class="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-b from-blue-50 to-white">
   <div 
@@ -112,8 +123,8 @@
     </div>
   </div>
 
-  <!-- Debug Panel - Now visible by default for debugging -->
-  <div id="debugPanel" class="fixed bottom-4 right-4 w-96 bg-white border border-gray-300 rounded-lg shadow-lg z-50">
+  <!-- Debug Panel - Now hidden by default -->
+  <div id="debugPanel" class="fixed bottom-4 right-4 w-96 bg-white border border-gray-300 rounded-lg shadow-lg z-50 hidden">
     <div class="p-3 bg-gray-100 border-b flex items-center justify-between">
       <h3 class="font-medium text-sm">Debug Information</h3>
       <div>
@@ -128,45 +139,26 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Debug panel functionality
+      // Disable console methods
+      window.console = {
+        log: function() {},
+        error: function() {},
+        warn: function() {},
+        info: function() {},
+        debug: function() {},
+        trace: function() {}
+      };
+      
+      // Debug panel functionality - all logging disabled
       const debugPanel = document.getElementById('debugPanel');
       const debugContent = document.getElementById('debugContent');
       const clearDebugBtn = document.getElementById('clearDebugBtn');
       const closeDebugBtn = document.getElementById('closeDebugBtn');
       
-      // Initialize debug log
+      // Initialize debug log - silenced
       function debugLog(message, type = 'info') {
-        const timestamp = new Date().toLocaleTimeString();
-        const logElement = document.createElement('div');
-        logElement.className = 'py-1';
-        
-        // Set color based on type
-        let color = 'text-green-400'; // Default for info
-        if (type === 'error') color = 'text-red-400';
-        if (type === 'warn') color = 'text-yellow-400';
-        
-        logElement.innerHTML = `<span class="text-gray-500">[${timestamp}]</span> <span class="${color}">${message}</span>`;
-        debugContent.appendChild(logElement);
-        debugContent.scrollTop = debugContent.scrollHeight; // Auto-scroll to bottom
+        // Function disabled - no debug logging
       }
-      
-      // Override console methods to redirect to debug panel
-      const originalConsoleLog = console.log;
-      const originalConsoleError = console.error;
-      const originalConsoleWarn = console.warn;
-      
-      // Disable console logging completely
-      console.log = function() {
-        // Do nothing to prevent logs
-      };
-      
-      console.error = function() {
-        // Do nothing to prevent error logs
-      };
-      
-      console.warn = function() {
-        // Do nothing to prevent warning logs
-      };
       
       // Clear debug logs
       clearDebugBtn.addEventListener('click', function() {
@@ -176,14 +168,6 @@
       // Close debug panel
       closeDebugBtn.addEventListener('click', function() {
         debugPanel.classList.add('hidden');
-      });
-      
-      // Show debug panel with keyboard shortcut (Ctrl+Shift+D)
-      document.addEventListener('keydown', function(e) {
-        if (e.ctrlKey && e.shiftKey && e.key === 'D') {
-          debugPanel.classList.toggle('hidden');
-          e.preventDefault();
-        }
       });
       
       // Login form submission
@@ -254,7 +238,7 @@
         }
       };
       
-      // Function to generate a PIN code for demonstration
+      // Function to generate a PIN code for demonstration - no logging
       function generatePinCode() {
         // Simulate a random position
         const randomPosition = Math.floor(Math.random() * 64) + 1;

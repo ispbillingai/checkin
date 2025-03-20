@@ -64,7 +64,7 @@ try {
         $stmt->close();
     }
 } catch (Exception $e) {
-    // Continue processing - don't exit
+    // Silent error handling
 }
 
 // Return success

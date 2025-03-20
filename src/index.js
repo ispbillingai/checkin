@@ -21,38 +21,11 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   } catch (error) {
-    // Try to log the error if the logger exists
-    if (window.logClientError) {
-      window.logClientError(`Routing error: ${error.message}`, "error", {
-        path: path,
-        stack: error.stack
-      });
-    }
+    // Silent error handling
   }
 });
 
-// Add global error logging if not in production
-if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-  // Add a check for JS files loading
-  function checkScriptLoading() {
-    const scripts = document.getElementsByTagName('script');
-    for (let i = 0; i < scripts.length; i++) {
-      const src = scripts[i].src;
-      if (src) {
-        // Create a test request to check if the script exists
-        fetch(src, { method: 'HEAD' })
-          .catch(error => {
-            // Silently catch errors
-          });
-      }
-    }
-  }
-  
-  // Run the check after a delay to ensure page has loaded
-  setTimeout(checkScriptLoading, 1000);
-}
-
-// Debug info for the admin dashboard
+// Debug info for the admin dashboard - no logging
 window.getDashboardDebugInfo = function() {
   return {
     url: window.location.href,
