@@ -1,6 +1,6 @@
 
 /**
- * Room data fetching and rendering utility
+ * Room data fetching and rendering utility - No logging version
  */
 
 // Function to fetch rooms data with enhanced error handling

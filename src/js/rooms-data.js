@@ -1,6 +1,6 @@
 
 /**
- * Room data fetching and rendering utility
+ * Room data fetching and rendering utility - No logging version
  */
 
 // Store rooms data globally to share between components
@@ -53,7 +53,7 @@ function fetchRoomsData() {
           throw new Error(data.message || 'Failed to load rooms data');
         }
       } catch (e) {
-        // If parsing fails, log the response text and throw an error
+        // If parsing fails, throw an error
         throw new Error("Server returned invalid JSON response");
       }
     })
