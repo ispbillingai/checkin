@@ -6,13 +6,53 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Room Booking System</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <!-- Debugging mode script - enables console logs for this page -->
+  <!-- Debugging mode script - enables console logs for this page but filters for entry points only -->
   <script>
-    // Re-enable console for debugging
+    // Re-enable console for debugging but filter logs
     (function() {
       const originalConsole = window.console;
-      window.console = originalConsole;
-      console.log('Console logging enabled for HomePage.html');
+      
+      // Override console methods to filter logs
+      window.console = {
+        log: function(message) {
+          if (typeof message === 'string' && message.toLowerCase().includes('entry points')) {
+            originalConsole.log(message);
+          }
+        },
+        error: function(message) {
+          if (typeof message === 'string' && message.toLowerCase().includes('entry points')) {
+            originalConsole.error(message);
+          }
+        },
+        warn: function(message) {
+          if (typeof message === 'string' && message.toLowerCase().includes('entry points')) {
+            originalConsole.warn(message);
+          }
+        },
+        info: function() {},
+        debug: function() {},
+        trace: function() {},
+        group: function() {},
+        groupEnd: function() {},
+        groupCollapsed: function() {},
+        time: function() {},
+        timeEnd: function() {},
+        timeLog: function() {},
+        assert: function() {},
+        clear: function() {},
+        count: function() {},
+        countReset: function() {},
+        dir: function() {},
+        dirxml: function() {},
+        exception: function() {},
+        profile: function() {},
+        profileEnd: function() {},
+        table: function() {},
+        timeStamp: function() {}
+      };
+      
+      // Log only this message
+      originalConsole.log('Console logging enabled for Entry Points only');
     })();
   </script>
 </head>
@@ -56,24 +96,33 @@
   <script>
     // Function to load component into container
     function loadComponent(containerId, componentPath) {
-      console.log(`Loading component: ${componentPath} into ${containerId}`);
+      if (componentPath.includes('EntryPointsSection')) {
+        console.log(`Loading component: ${componentPath} into ${containerId} - ENTRY POINTS LOG`);
+      }
+      
       const container = document.getElementById(containerId);
       if (!container) {
-        console.error(`Container not found: ${containerId}`);
+        if (containerId.includes('entry-points')) {
+          console.error(`Container not found: ${containerId} - ENTRY POINTS LOG`);
+        }
         return;
       }
       
       fetch(componentPath)
         .then(response => {
           if (!response.ok) {
-            console.error(`Failed to load ${componentPath}: ${response.status} ${response.statusText}`);
+            if (componentPath.includes('EntryPointsSection')) {
+              console.error(`Failed to load ${componentPath}: ${response.status} ${response.statusText} - ENTRY POINTS LOG`);
+            }
             throw new Error(`Failed to load ${componentPath}`);
           }
           return response.text();
         })
         .then(html => {
           container.innerHTML = html;
-          console.log(`Component loaded successfully: ${componentPath}`);
+          if (componentPath.includes('EntryPointsSection')) {
+            console.log(`Component loaded successfully: ${componentPath} - ENTRY POINTS LOG`);
+          }
           
           // Execute scripts in the component
           const scripts = container.querySelectorAll('script');
@@ -91,14 +140,16 @@
           });
         })
         .catch(error => {
-          console.error(`Error loading component ${componentPath}:`, error);
+          if (componentPath.includes('EntryPointsSection')) {
+            console.error(`Error loading component ${componentPath}: ${error} - ENTRY POINTS LOG`);
+          }
           container.innerHTML = `<div class="text-red-500">Failed to load component: ${error.message}</div>`;
         });
     }
     
     // Log when DOM is ready
     document.addEventListener('DOMContentLoaded', function() {
-      console.log('DOM content loaded, loading components');
+      console.log('DOM content loaded, loading components - ENTRY POINTS LOG');
       
       // Load components
       loadComponent('header-container', '/src/components/Header.html');

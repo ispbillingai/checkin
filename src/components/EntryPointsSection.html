@@ -37,28 +37,42 @@
 <script>
   // Initialize entry points section if the function is available
   document.addEventListener('DOMContentLoaded', function() {
-    console.log('EntryPointsSection.html: DOM content loaded');
+    console.log('EntryPointsSection.html: DOM content loaded - ENTRY POINTS LOG');
     
     // Check if the initEntryPointsSection function is available
     if (typeof window.initEntryPointsSection === 'function') {
-      console.log('EntryPointsSection.html: Calling initEntryPointsSection');
+      console.log('EntryPointsSection.html: Calling initEntryPointsSection - ENTRY POINTS LOG');
       window.initEntryPointsSection();
     } else {
-      console.error('EntryPointsSection.html: initEntryPointsSection function not found');
+      console.error('EntryPointsSection.html: initEntryPointsSection function not found - ENTRY POINTS LOG');
       
       // Add a script to load the entry points data module if not already loaded
       if (!document.querySelector('script[src="/src/js/entry-points-data.js"]')) {
-        console.log('EntryPointsSection.html: Loading entry-points-data.js script');
+        console.log('EntryPointsSection.html: Loading entry-points-data.js script - ENTRY POINTS LOG');
         const script = document.createElement('script');
         script.src = '/src/js/entry-points-data.js';
         script.onload = function() {
-          console.log('EntryPointsSection.html: entry-points-data.js loaded, initializing section');
+          console.log('EntryPointsSection.html: entry-points-data.js loaded, initializing section - ENTRY POINTS LOG');
           if (typeof window.initEntryPointsSection === 'function') {
             window.initEntryPointsSection();
+          } else {
+            console.error('EntryPointsSection.html: initEntryPointsSection function STILL not found after loading script - ENTRY POINTS LOG');
+            // Check if PHP error logs are active by forcing a fake API call with error logging
+            fetch('/api/get_entry_points.php?debug=true')
+              .then(response => {
+                console.log('EntryPointsSection.html: PHP API test response status: ' + response.status + ' - ENTRY POINTS LOG');
+                return response.text();
+              })
+              .then(text => {
+                console.log('EntryPointsSection.html: PHP API test response: ' + text.substring(0, 100) + ' - ENTRY POINTS LOG');
+              })
+              .catch(error => {
+                console.error('EntryPointsSection.html: PHP API test error: ' + error + ' - ENTRY POINTS LOG');
+              });
           }
         };
         script.onerror = function() {
-          console.error('EntryPointsSection.html: Failed to load entry-points-data.js');
+          console.error('EntryPointsSection.html: Failed to load entry-points-data.js - ENTRY POINTS LOG');
           document.getElementById('entryPointsContainer').innerHTML = 
             '<div class="col-span-full text-center text-red-500">Failed to load entry points. Please refresh the page.</div>';
         };

@@ -1,44 +1,60 @@
 
 /**
- * Basic error logger for the admin dashboard - all logging removed
+ * Basic error logger for the admin dashboard - Only logs entry points related messages
  */
 window.errorLogger = {
     logs: [],
     
     /**
-     * Log an info message - silenced
+     * Log an info message - entry points only
      * @param {string} message - The message to log
      * @param {object} context - Additional context for the log
      */
     info: function(message, context = {}) {
-        this.logMessage('info', message, context);
+        if (typeof message === 'string' && message.toLowerCase().includes('entry points')) {
+            console.log(`[INFO - ENTRY POINTS LOG] ${message}`, context);
+            this.logMessage('info', message, context);
+        }
     },
     
     /**
-     * Log a warning message - silenced
+     * Log a warning message - entry points only
      * @param {string} message - The message to log
      * @param {object} context - Additional context for the log
      */
     warn: function(message, context = {}) {
-        this.logMessage('warning', message, context);
+        if (typeof message === 'string' && message.toLowerCase().includes('entry points')) {
+            console.warn(`[WARN - ENTRY POINTS LOG] ${message}`, context);
+            this.logMessage('warning', message, context);
+        }
     },
     
     /**
-     * Log an error message - silenced
+     * Log an error message - entry points only
      * @param {string} message - The message to log
      * @param {object} context - Additional context for the log
      */
     error: function(message, context = {}) {
-        this.logMessage('error', message, context);
+        if (typeof message === 'string' && message.toLowerCase().includes('entry points')) {
+            console.error(`[ERROR - ENTRY POINTS LOG] ${message}`, context);
+            this.logMessage('error', message, context);
+            
+            // Send PHP error logs for entry points
+            this.sendPHPErrorLog(message, context);
+        }
     },
     
     /**
-     * Log a message with specified level - silenced
+     * Log a message with specified level - entry points only
      * @param {string} level - The log level (info, warning, error)
      * @param {string} message - The message to log
      * @param {object} context - Additional context for the log
      */
     logMessage: function(level, message, context = {}) {
+        if (typeof message !== 'string' || !message.toLowerCase().includes('entry points')) {
+            return;
+        }
+        
         const entry = {
             timestamp: new Date().toISOString(),
             level: level,
@@ -48,8 +64,41 @@ window.errorLogger = {
         
         this.logs.push(entry);
         this.updateLogDisplay();
+    },
+    
+    /**
+     * Send PHP error log - specifically for entry points
+     * @param {string} message - Error message
+     * @param {object} context - Error context
+     */
+    sendPHPErrorLog: function(message, context = {}) {
+        // Only log entry points errors to PHP
+        if (typeof message !== 'string' || !message.toLowerCase().includes('entry points')) {
+            return;
+        }
         
-        // No server logging
+        fetch('/api/log_client_error.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                level: 'error',
+                message: `ENTRY POINTS ERROR: ${message}`,
+                details: context,
+                timestamp: new Date().toISOString()
+            })
+        })
+        .then(response => {
+            console.log(`PHP Error logging response: ${response.status} - ENTRY POINTS LOG`);
+            return response.json();
+        })
+        .then(data => {
+            console.log(`PHP Error log stored: ${data.success} - ENTRY POINTS LOG`);
+        })
+        .catch(error => {
+            console.error(`Failed to send PHP error log: ${error} - ENTRY POINTS LOG`);
+        });
     },
     
     /**
@@ -61,7 +110,13 @@ window.errorLogger = {
         
         container.innerHTML = '';
         
-        this.logs.slice(-50).forEach(log => {
+        // Only display entry points logs
+        const entryPointsLogs = this.logs.filter(log => 
+            typeof log.message === 'string' && 
+            log.message.toLowerCase().includes('entry points')
+        );
+        
+        entryPointsLogs.slice(-50).forEach(log => {
             const logItem = document.createElement('div');
             logItem.className = 'mb-2 p-2 border-l-4 text-sm';
             
@@ -80,7 +135,7 @@ window.errorLogger = {
             // Create log content
             logItem.innerHTML = `
                 <div class="flex items-center justify-between">
-                    <span class="font-medium">${log.level.toUpperCase()}</span>
+                    <span class="font-medium">${log.level.toUpperCase()} - ENTRY POINTS</span>
                     <span class="text-xs text-gray-500">${time}</span>
                 </div>
                 <div>${log.message}</div>
@@ -92,34 +147,37 @@ window.errorLogger = {
     },
     
     /**
-     * Send a log entry to the server - silenced
-     * @param {object} entry - The log entry to send
-     */
-    sendToServer: function(entry) {
-        // No server logging
-    },
-    
-    /**
-     * Download logs as a JSON file
+     * Download logs as a JSON file - only entry points logs
      */
     downloadLogs: function() {
-        const data = JSON.stringify(this.logs, null, 2);
+        // Filter for entry points logs only
+        const entryPointsLogs = this.logs.filter(log => 
+            typeof log.message === 'string' && 
+            log.message.toLowerCase().includes('entry points')
+        );
+        
+        const data = JSON.stringify(entryPointsLogs, null, 2);
         const blob = new Blob([data], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'admin-dashboard-logs.json';
+        a.download = 'entry-points-logs.json';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
     }
 };
 
-// Set up silenced global error handler
+// Set up global error handler for entry points only
 window.addEventListener('error', function(event) {
-    if (window.errorLogger) {
-        window.errorLogger.error('Uncaught JavaScript error: ' + event.message, {
+    // Only log errors from entry points related scripts
+    const isEntryPointsRelated = 
+        (event.filename && event.filename.toLowerCase().includes('entry-points')) ||
+        (event.message && event.message.toLowerCase().includes('entry points'));
+    
+    if (window.errorLogger && isEntryPointsRelated) {
+        window.errorLogger.error(`Uncaught JavaScript error in entry points: ${event.message}`, {
             filename: event.filename,
             line: event.lineno,
             column: event.colno,
