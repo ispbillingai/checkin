@@ -21,6 +21,28 @@ window.addEventListener('unhandledrejection', (event) => {
   logError(event.reason, 'Unhandled Promise Rejection');
 });
 
+// Generate a random PIN code
+const generatePinCode = (length = 6) => {
+  const min = Math.pow(10, length - 1);
+  const max = Math.pow(10, length) - 1;
+  return Math.floor(min + Math.random() * (max - min + 1)).toString();
+};
+
+// Set minimum departure date based on arrival date
+const updateDepartureDateMin = () => {
+  const arrivalDateInput = document.getElementById('arrival-date');
+  const departureDateInput = document.getElementById('departure-date');
+  
+  if (arrivalDateInput && departureDateInput && arrivalDateInput.value) {
+    departureDateInput.min = arrivalDateInput.value;
+    
+    // If departure date is before arrival date, update it
+    if (departureDateInput.value && departureDateInput.value < arrivalDateInput.value) {
+      departureDateInput.value = arrivalDateInput.value;
+    }
+  }
+};
+
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
   // Add database connection check functionality
@@ -90,6 +112,26 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Handle PIN code generation
+  const generatePinBtn = document.getElementById('generate-pin');
+  const pinCodeInput = document.getElementById('pin-code');
+  
+  if (generatePinBtn && pinCodeInput) {
+    generatePinBtn.addEventListener('click', () => {
+      pinCodeInput.value = generatePinCode(6);
+    });
+  }
+
+  // Handle arrival date changes
+  const arrivalDateInput = document.getElementById('arrival-date');
+  if (arrivalDateInput) {
+    arrivalDateInput.addEventListener('change', updateDepartureDateMin);
+    
+    // Set minimum arrival date to today
+    const today = new Date().toISOString().split('T')[0];
+    arrivalDateInput.min = today;
+  }
+
   // Handle booking form submission
   const bookingForm = document.getElementById('booking-form');
   const bookingStatus = document.getElementById('booking-status');
@@ -130,12 +172,46 @@ document.addEventListener('DOMContentLoaded', () => {
           throw new Error('Please provide a position for each selected entry point');
         }
         
+        // Validate dates and times
+        const arrivalDate = document.getElementById('arrival-date').value;
+        const arrivalTime = document.getElementById('arrival-time').value;
+        const departureDate = document.getElementById('departure-date').value;
+        const departureTime = document.getElementById('departure-time').value;
+        
+        if (!arrivalDate || !arrivalTime) {
+          throw new Error('Please specify arrival date and time');
+        }
+        
+        if (!departureDate || !departureTime) {
+          throw new Error('Please specify departure date and time');
+        }
+        
+        const arrivalDateTime = new Date(`${arrivalDate}T${arrivalTime}`);
+        const departureDateTime = new Date(`${departureDate}T${departureTime}`);
+        
+        if (departureDateTime <= arrivalDateTime) {
+          throw new Error('Departure time must be after arrival time');
+        }
+        
+        // Validate PIN code
+        const pinCode = document.getElementById('pin-code').value;
+        if (!pinCode) {
+          throw new Error('Please provide a PIN code or generate one');
+        }
+        
+        if (!/^\d{4,6}$/.test(pinCode)) {
+          throw new Error('PIN code must be 4-6 digits');
+        }
+        
         bookingStatus.textContent = 'Submitting booking...';
         bookingStatus.className = 'mt-4 p-3 rounded bg-gray-100 text-gray-600';
         
-        // In a real application, you would send this data to your server
+        // Get form data
         const formData = new FormData(bookingForm);
-        const bookingData = Object.fromEntries(formData.entries());
+        
+        // Add arrival and departure datetime
+        formData.append('arrival_datetime', `${arrivalDate} ${arrivalTime}:00`);
+        formData.append('departure_datetime', `${departureDate} ${departureTime}:00`);
         
         // Get selected entry points and their positions
         const entryPoints = [];
@@ -148,17 +224,22 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         });
         
-        // Add entry points data to booking data
-        bookingData.entryPointsData = entryPoints;
-        bookingData.roomPosition = roomPosition.value;
+        // Add entry points data as JSON
+        formData.append('entry_points_data', JSON.stringify(entryPoints));
+        formData.append('room_position', roomPosition.value);
         
-        console.log('[INFO] Booking data:', bookingData);
+        // Submit the booking to our new PHP endpoint
+        const response = await fetch('/api/submit_booking.php', {
+          method: 'POST',
+          body: formData
+        });
         
-        // Simulate a successful booking for now
-        setTimeout(() => {
-          bookingStatus.textContent = 'Booking submitted successfully!';
+        const result = await response.json();
+        
+        if (result.success) {
+          bookingStatus.textContent = result.message || 'Booking submitted successfully!';
           bookingStatus.className = 'mt-4 p-3 rounded bg-green-100 text-green-700';
-          console.log('[SUCCESS] Booking completed:', bookingData);
+          console.log('[SUCCESS] Booking completed:', result);
           bookingForm.reset();
           
           // Reset position inputs to hidden
@@ -167,7 +248,9 @@ document.addEventListener('DOMContentLoaded', () => {
           });
           // Reset room position input to hidden
           roomPositionInput.classList.add('hidden');
-        }, 1500);
+        } else {
+          throw new Error(result.message || 'Failed to submit booking');
+        }
       } catch (error) {
         bookingStatus.textContent = `Error: ${error.message}`;
         bookingStatus.className = 'mt-4 p-3 rounded bg-red-100 text-red-700';
