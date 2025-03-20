@@ -25,31 +25,6 @@ window.addEventListener('unhandledrejection', (event) => {
 
 // Initialize the application
 document.addEventListener('DOMContentLoaded', () => {
-  const appElement = document.getElementById('app');
-  
-  // Render our simple homepage
-  appElement.innerHTML = `
-    <div class="container">
-      <header class="header">
-        <h1>Welcome to Our Booking System</h1>
-        <p class="subtitle">A simple way to manage your bookings</p>
-      </header>
-      
-      <main class="main-content">
-        <div class="card">
-          <h2>Our Services</h2>
-          <p>We provide an easy way to manage room bookings and access codes.</p>
-          <button class="btn" id="check-db-btn">Check Database Connection</button>
-          <div id="db-status" class="status-message"></div>
-        </div>
-      </main>
-      
-      <footer class="footer">
-        <p>&copy; ${new Date().getFullYear()} Booking System. All rights reserved.</p>
-      </footer>
-    </div>
-  `;
-  
   // Add database connection check functionality
   const checkDbBtn = document.getElementById('check-db-btn');
   const dbStatus = document.getElementById('db-status');
@@ -77,4 +52,51 @@ document.addEventListener('DOMContentLoaded', () => {
       logError(error, 'Database Check Request');
     }
   });
+
+  // Handle booking form submission
+  const bookingForm = document.getElementById('booking-form');
+  const bookingStatus = document.getElementById('booking-status');
+
+  if (bookingForm) {
+    bookingForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      
+      try {
+        bookingStatus.textContent = 'Submitting booking...';
+        bookingStatus.className = 'status-message loading';
+        
+        // In a real application, you would send this data to your server
+        const formData = new FormData(bookingForm);
+        const bookingData = Object.fromEntries(formData.entries());
+        
+        console.log('[INFO] Booking data:', bookingData);
+        
+        // Simulate a successful booking for now
+        setTimeout(() => {
+          bookingStatus.textContent = 'Booking submitted successfully!';
+          bookingStatus.className = 'status-message success';
+          bookingForm.reset();
+        }, 1500);
+        
+        // In a real application, you would do something like this:
+        // const response = await fetch('/api/bookings.php', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify(bookingData)
+        // });
+        // const data = await response.json();
+        // if (data.success) {
+        //   bookingStatus.textContent = 'Booking submitted successfully!';
+        //   bookingStatus.className = 'status-message success';
+        //   bookingForm.reset();
+        // } else {
+        //   throw new Error(data.message);
+        // }
+      } catch (error) {
+        bookingStatus.textContent = `Error: ${error.message}`;
+        bookingStatus.className = 'status-message error';
+        logError(error, 'Booking Submission');
+      }
+    });
+  }
 });
