@@ -8,6 +8,9 @@
   
   <div id="entryPointsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     <!-- Entry points rendered here -->
+    <div class="col-span-full text-center text-gray-500">
+      Loading available entry points...
+    </div>
   </div>
 </div>
 
@@ -73,7 +76,7 @@
       container.appendChild(card);
     });
     
-    // Add event listeners to buttons
+    // Add event listeners to buttons after adding all cards to DOM
     addEntryPointButtonListeners();
   }
   
@@ -88,6 +91,7 @@
         const entryPointSelect = document.getElementById('entryPoint');
         if (entryPointSelect) {
           entryPointSelect.value = entryId;
+          // Trigger change event
           const event = new Event('change');
           entryPointSelect.dispatchEvent(event);
           console.log(`EntryPointsSection.html: Selected entry point in dropdown: ${entryName}`);
