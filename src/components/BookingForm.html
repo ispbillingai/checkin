@@ -24,11 +24,17 @@
         
         <!-- Entry Points -->
         <div id="entryPointContainer" class="space-y-2">
-          <label class="block text-sm font-medium text-gray-700">Select Entry Points</label>
-          <div id="entryPointsCheckboxes" class="border border-gray-300 rounded-md p-3 max-h-48 overflow-y-auto">
-            <!-- We'll immediately show default entry points instead of loading message -->
-          </div>
-          <p class="text-xs text-gray-500">Select one or more entry points you will use to access the room</p>
+          <label for="entryPoint" class="block text-sm font-medium text-gray-700">Select Entry Point</label>
+          <select 
+            id="entryPoint" 
+            name="entryPoint" 
+            required
+            class="w-full h-11 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select an entry point</option>
+            <!-- Entry points will be populated here -->
+          </select>
+          <p class="text-xs text-gray-500">Select an entry point you will use to access the room</p>
         </div>
         
         <!-- PIN Position -->
@@ -158,10 +164,10 @@
   document.addEventListener('DOMContentLoaded', function() {
     console.log('BookingForm.html: DOM content loaded');
     
-    // Immediately display default entry points
-    const entryPointsCheckboxes = document.getElementById('entryPointsCheckboxes');
-    if (entryPointsCheckboxes) {
-      createDefaultEntryPoints();
+    // Immediately display default entry points in the dropdown
+    const entryPointSelect = document.getElementById('entryPoint');
+    if (entryPointSelect) {
+      populateDefaultEntryPoints();
     }
     
     // Wait a bit to ensure all components are loaded
@@ -179,13 +185,16 @@
     }, 1000);
   });
 
-  // Function to create default entry points immediately
-  function createDefaultEntryPoints() {
-    console.log('BookingForm.html: Creating default entry points');
-    const entryPointsCheckboxes = document.getElementById('entryPointsCheckboxes');
-    if (!entryPointsCheckboxes) return;
+  // Function to populate default entry points in the dropdown
+  function populateDefaultEntryPoints() {
+    console.log('BookingForm.html: Populating default entry points');
+    const entryPointSelect = document.getElementById('entryPoint');
+    if (!entryPointSelect) return;
     
-    entryPointsCheckboxes.innerHTML = '';
+    // Clear any existing options except the first placeholder
+    while (entryPointSelect.options.length > 1) {
+      entryPointSelect.remove(1);
+    }
     
     const defaultEntryPoints = [
       { id: 'entry1', name: 'Main Entrance', description: 'Front door at the main lobby' },
@@ -194,35 +203,13 @@
     ];
     
     defaultEntryPoints.forEach(entry => {
-      const checkboxId = `entryPoint_${entry.id}`;
-      
-      const div = document.createElement('div');
-      div.className = 'flex items-start mb-2';
-      
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.id = checkboxId;
-      checkbox.name = 'entryPoints[]';
-      checkbox.value = entry.id;
-      checkbox.className = 'mt-1 mr-2';
-      
-      const label = document.createElement('label');
-      label.htmlFor = checkboxId;
-      label.className = 'text-sm';
-      
-      const nameSpan = document.createElement('span');
-      nameSpan.className = 'font-medium block';
-      nameSpan.textContent = entry.name;
-      
-      const descSpan = document.createElement('span');
-      descSpan.className = 'text-xs text-gray-500';
-      descSpan.textContent = entry.description;
-      
-      label.appendChild(nameSpan);
-      label.appendChild(descSpan);
-      div.appendChild(checkbox);
-      div.appendChild(label);
-      entryPointsCheckboxes.appendChild(div);
+      const option = document.createElement('option');
+      option.value = entry.id;
+      option.textContent = entry.name;
+      if (entry.description) {
+        option.title = entry.description;
+      }
+      entryPointSelect.appendChild(option);
     });
   }
 
@@ -433,18 +420,15 @@
         e.preventDefault();
         console.log('BookingForm.html: Form submission started');
         
-        // Ensure entry points selected
-        const selectedEntryPoints = [];
-        document.querySelectorAll('input[name="entryPoints[]"]:checked').forEach(checkbox => {
-          selectedEntryPoints.push(checkbox.value);
-        });
+        // Get selected entry point
+        const entryPoint = document.getElementById('entryPoint').value;
         
-        console.log(`BookingForm.html: Selected entry points: ${selectedEntryPoints.join(', ')}`);
+        console.log(`BookingForm.html: Selected entry point: ${entryPoint}`);
         
-        if (selectedEntryPoints.length === 0) {
-          console.error('BookingForm.html: No entry points selected');
+        if (!entryPoint) {
+          console.error('BookingForm.html: No entry point selected');
           if (window.showToastMessage) {
-            window.showToastMessage('error', 'Please select at least one entry point');
+            window.showToastMessage('error', 'Please select an entry point');
           }
           return;
         }
@@ -457,12 +441,6 @@
         for (let [key, value] of formData.entries()) {
           console.log(`  ${key}: ${value}`);
         }
-        
-        // Remove entryPoints[] from FormData and add as JSON string
-        document.querySelectorAll('input[name="entryPoints[]"]').forEach(input => {
-          formData.delete('entryPoints[]');
-        });
-        formData.append('entryPoints', JSON.stringify(selectedEntryPoints));
         
         const arrival = new Date(formData.get('arrivalDateTime'));
         const departure = new Date(formData.get('departureDateTime'));
@@ -532,10 +510,7 @@
               }
               bookingForm.reset();
               initializeDateInputs();
-              // Clear the entry points checkboxes
-              document.getElementById('entryPointsCheckboxes').innerHTML =
-                '<p class="text-gray-500 text-sm">Loading entry points...</p>';
-              loadAllEntryPoints();
+              populateDefaultEntryPoints();
             } else {
               console.error(`BookingForm.html: Booking creation failed: ${data.message}`);
               if (window.showToastMessage) {
