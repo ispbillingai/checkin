@@ -1,26 +1,16 @@
 
 <?php
-// Enable error reporting
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
-
 // Start session
 session_start();
 
 // Include database configuration
 require_once 'db_config.php';
 
-error_log("Verify access endpoint hit");
-
 // Check if this is an admin authentication check (no URL parameters)
 if (!isset($_GET['room']) && !isset($_GET['entry']) && !isset($_GET['code'])) {
-    error_log("Admin authentication check");
-    
     // Check if user is logged in and is admin
     $isLoggedIn = isset($_SESSION['user_id']);
     $isAdmin = isset($_SESSION['is_admin']) && $_SESSION['is_admin'] == 1;
-    
-    error_log("User logged in: " . ($isLoggedIn ? "Yes" : "No") . ", Is admin: " . ($isAdmin ? "Yes" : "No"));
     
     // Return authentication status
     echo json_encode([
@@ -38,10 +28,7 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['entry']) && isset($_GET[
     $code = isset($_GET['code']) ? secure_input($_GET['code']) : '';
     $position = isset($_GET['position']) ? intval($_GET['position']) : null;
     
-    error_log("Verifying entry access - Entry ID: $entry_point_id, Code length: " . strlen($code) . ", Position: " . ($position !== null ? $position : "Not specified"));
-    
     if (empty($entry_point_id) || empty($code)) {
-        error_log("Missing parameters - Entry ID or Code");
         echo json_encode([
             'success' => false,
             'message' => 'Missing parameters'
@@ -52,7 +39,6 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['entry']) && isset($_GET[
     try {
         // Get current datetime
         $now = date('Y-m-d H:i:s');
-        error_log("Checking access for current time: $now");
         
         // First, check if there's a direct match in the entry_point_pins table
         if ($position !== null) {
@@ -87,22 +73,17 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['entry']) && isset($_GET[
         }
         
         if (!$stmt) {
-            error_log("Failed to prepare pin statement: " . $conn->error);
             throw new Exception("Database prepare failed");
         }
         
         if (!$stmt->execute()) {
-            error_log("Failed to execute pin statement: " . $stmt->error);
             throw new Exception("Database execute failed");
         }
         
         $result = $stmt->get_result();
-        error_log("Pin query executed. Found matches: " . $result->num_rows);
         
         // If no results found with the pin check, fallback to the original booking check
         if ($result->num_rows === 0) {
-            error_log("No pins found, checking bookings table as fallback");
-            
             // Prepare the original SQL statement
             $stmt = $conn->prepare("SELECT b.*, r.name as room_name, e.name as entry_name 
                                    FROM bookings b 
@@ -112,24 +93,20 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['entry']) && isset($_GET[
                                    AND b.arrival_date_time <= ? AND b.departure_date_time >= ?");
             
             if (!$stmt) {
-                error_log("Failed to prepare booking statement: " . $conn->error);
                 throw new Exception("Database prepare failed");
             }
             
             $stmt->bind_param("ssss", $entry_point_id, $code, $now, $now);
             
             if (!$stmt->execute()) {
-                error_log("Failed to execute booking statement: " . $stmt->error);
                 throw new Exception("Database execute failed");
             }
             
             $result = $stmt->get_result();
-            error_log("Booking query executed. Found matches: " . $result->num_rows);
         }
         
         if ($result->num_rows > 0) {
             $booking = $result->fetch_assoc();
-            error_log("Access granted for booking ID: " . $booking['id']);
             
             // Log the successful access
             $access_log_stmt = $conn->prepare("INSERT INTO access_logs (booking_id, entry_point_id, access_datetime, access_result, ip_address) 
@@ -150,8 +127,6 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['entry']) && isset($_GET[
                 ]
             ]);
         } else {
-            error_log("Access denied - No valid booking or pin found for Entry: $entry_point_id, Code: $code");
-            
             // Log the failed access attempt
             $access_log_stmt = $conn->prepare("INSERT INTO access_logs (booking_id, entry_point_id, access_datetime, access_result, ip_address) 
                                               VALUES (0, ?, ?, 'denied', ?)");
@@ -165,7 +140,6 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['entry']) && isset($_GET[
             ]);
         }
     } catch (Exception $e) {
-        error_log("Exception in verify_access.php: " . $e->getMessage());
         echo json_encode([
             'success' => false,
             'message' => 'Server error occurred'
@@ -173,7 +147,6 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['entry']) && isset($_GET[
     }
 } else {
     // If we get here, it's not a room access check but also doesn't have the proper parameters
-    error_log("Invalid request to verify_access.php: " . $_SERVER["REQUEST_METHOD"]);
     echo json_encode([
         'success' => false,
         'message' => 'Invalid request parameters'
@@ -181,5 +154,4 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['entry']) && isset($_GET[
 }
 
 $conn->close();
-error_log("Connection closed in verify_access.php");
 ?>

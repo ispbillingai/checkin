@@ -9,9 +9,6 @@ require_once 'db_config.php';
 // Set content type header
 header('Content-Type: application/json');
 
-// Add detailed error logging
-error_log("get_all_entry_points.php called");
-
 // Check if user is logged in (only required for admin functions)
 if (!isset($_SESSION['user_id']) && !($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1')) {
     echo json_encode([
@@ -36,12 +33,8 @@ try {
         $entry_points[] = $row;
     }
 
-    // Log the number of entry points found
-    error_log("Found " . count($entry_points) . " entry points");
-
     // If no entry points found, provide demo data for testing
     if (count($entry_points) === 0 && ($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1')) {
-        error_log("No entry points found, providing demo data");
         $entry_points = [
             [
                 'id' => 'entry1',
@@ -71,9 +64,6 @@ try {
         ]
     ]);
 } catch (Exception $e) {
-    // Log the error
-    error_log("Error in get_all_entry_points.php: " . $e->getMessage());
-    
     // Return error response
     echo json_encode([
         'success' => false,

@@ -21,9 +21,6 @@ if (!isset($_SESSION['user_id']) && !($_SERVER['HTTP_HOST'] == 'localhost' || $_
 
 // Handle GET request for all room details
 if ($_SERVER["REQUEST_METHOD"] == "GET") {
-    // Add debug information
-    error_log("get_all_rooms.php called - getting all rooms");
-    
     try {
         // Prepare SQL statement to get all room information
         $stmt = $conn->prepare("SELECT id, name, description, fixed_passcode, reset_hours FROM rooms ORDER BY name ASC");
@@ -43,7 +40,6 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
         
         // If on localhost with no rooms, provide demo data
         if (($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1') && count($rooms) === 0) {
-            error_log("No rooms found in database, providing demo data");
             $rooms = [
                 [
                     'id' => 'demo1',
@@ -104,8 +100,6 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
             ]
         ]);
     } catch (Exception $e) {
-        // Log the error and return a JSON error response
-        error_log("Error in get_all_rooms.php: " . $e->getMessage());
         echo json_encode([
             'success' => false,
             'message' => 'Error fetching rooms: ' . $e->getMessage()

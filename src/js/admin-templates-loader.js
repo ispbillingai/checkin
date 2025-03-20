@@ -1,8 +1,6 @@
 
 // Admin templates loader
 window.loadAdminTemplates = function() {
-  console.log("Loading admin templates");
-  
   const templates = [
     { id: 'sidebar-template', url: '/src/pages/templates/sidebar-template.html', targetId: 'sidebar-content' },
     { id: 'bookings-template', url: '/src/pages/templates/bookings-template.html', targetId: 'bookingsSection' },
@@ -23,8 +21,6 @@ window.loadAdminTemplates = function() {
   });
   
   function loadTemplate(templateId, url, targetId) {
-    console.log(`Loading template: ${templateId} from ${url}`);
-    
     fetch(url, {
       method: 'GET',
       headers: {
@@ -40,13 +36,10 @@ window.loadAdminTemplates = function() {
       return response.text();
     })
     .then(html => {
-      console.log(`Template ${templateId} loaded successfully`);
-      
       // Get the target element to insert the template
       const targetElement = document.getElementById(targetId);
       
       if (!targetElement) {
-        console.error(`Target element with ID ${targetId} not found`);
         return;
       }
       
@@ -64,7 +57,6 @@ window.loadAdminTemplates = function() {
         },
         bubbles: true 
       });
-      console.log(`Template loaded event: ${templateId} loaded into ${targetId}`);
       document.dispatchEvent(event);
       
       // If the template is the sidebar, explicitly initialize it
@@ -80,20 +72,18 @@ window.loadAdminTemplates = function() {
       
       // Check if all templates have been loaded
       if (loadedCount === templates.length) {
-        console.log("All templates loaded successfully");
-        
         // Dispatch a custom event to notify that all templates have been loaded
         const allLoadedEvent = new CustomEvent('allTemplatesLoaded');
         document.dispatchEvent(allLoadedEvent);
       }
     })
     .catch(error => {
-      console.error(`Error loading template ${templateId}:`, error);
+      // Error handled silently
     });
   }
 };
 
 // Export for external use
 window.loadAdminTemplates = window.loadAdminTemplates || function() {
-  console.error("Admin templates loader not properly initialized");
+  // Admin templates loader not properly initialized
 };

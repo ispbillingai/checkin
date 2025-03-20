@@ -4,18 +4,13 @@
  * Provides debugging tools for development
  */
 (function() {
-    console.log("Debug utilities initialized");
-    
     // Only enable in development environments
     const isDevelopment = window.location.hostname === 'localhost' || 
                           window.location.hostname === '127.0.0.1';
     
     if (!isDevelopment) {
-        console.log("Production environment detected, debug utilities disabled");
         return;
     }
-    
-    console.log("Development environment detected, enabling debug utilities");
     
     // Create debug toolbar
     function createDebugToolbar() {
@@ -145,8 +140,6 @@
     
     // Check script loading
     function checkScripts() {
-        console.log("Checking script loading status...");
-        
         const scripts = document.getElementsByTagName('script');
         for (let i = 0; i < scripts.length; i++) {
             const script = scripts[i];
@@ -156,14 +149,10 @@
             
             fetch(src, { method: 'HEAD' })
                 .then(response => {
-                    if (response.ok) {
-                        console.log(`✅ Script loaded: ${src}`);
-                    } else {
-                        console.error(`❌ Script failed (${response.status}): ${src}`);
-                    }
+                    // No need to log success or failure
                 })
                 .catch(error => {
-                    console.error(`❌ Script error: ${src}`, error);
+                    // No need to log error
                 });
         }
         
@@ -177,14 +166,10 @@
             
             fetch(href, { method: 'HEAD' })
                 .then(response => {
-                    if (response.ok) {
-                        console.log(`✅ Stylesheet loaded: ${href}`);
-                    } else {
-                        console.error(`❌ Stylesheet failed (${response.status}): ${href}`);
-                    }
+                    // No need to log success or failure
                 })
                 .catch(error => {
-                    console.error(`❌ Stylesheet error: ${href}`, error);
+                    // No need to log error
                 });
         }
     }
@@ -193,6 +178,4 @@
     document.addEventListener('DOMContentLoaded', function() {
         setTimeout(createDebugToolbar, 500);
     });
-    
-    console.log("Debug utilities setup complete");
 })();

@@ -1,12 +1,9 @@
+
 <?php
 require_once 'db_config.php';
 
 // Return JSON in all cases
 header('Content-Type: application/json');
-
-// Extra debugging (dev only)
-// ini_set('display_errors', 1);
-// error_reporting(E_ALL);
 
 try {
     // Only handle GET

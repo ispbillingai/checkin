@@ -29,7 +29,6 @@ window.errorLogger = {
      */
     error: function(message, context = {}) {
         this.logMessage('error', message, context);
-        console.error(message, context);
     },
     
     /**
@@ -108,7 +107,7 @@ window.errorLogger = {
                 },
                 body: JSON.stringify(entry)
             }).catch(err => {
-                console.error('Failed to send log to server:', err);
+                // Silently handle error
             });
         }
     },
@@ -141,5 +140,3 @@ window.addEventListener('error', function(event) {
         });
     }
 });
-
-console.log("Error logger initialized");
