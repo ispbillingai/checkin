@@ -57,6 +57,21 @@ const fetchEntryPoints = async () => {
   }
 };
 
+// Fetch rooms from the database
+const fetchRooms = async () => {
+  try {
+    const response = await fetch('/api/get_rooms.php');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.success ? data.rooms : [];
+  } catch (error) {
+    logError(error, 'Fetching Rooms');
+    return [];
+  }
+};
+
 // Fetch entry points for a specific room
 const fetchRoomEntryPoints = async (roomId) => {
   if (!roomId) return [];
@@ -72,6 +87,26 @@ const fetchRoomEntryPoints = async (roomId) => {
     logError(error, 'Fetching Room Entry Points');
     return [];
   }
+};
+
+// Populate rooms select dropdown with data from database
+const populateRoomsDropdown = (rooms) => {
+  const roomSelect = document.getElementById('room');
+  if (!roomSelect) return;
+  
+  // Keep the default option and clear any existing options
+  roomSelect.innerHTML = '<option value="">-- Select a Room --</option>';
+  
+  // Add each room as an option
+  rooms.forEach(room => {
+    const option = document.createElement('option');
+    option.value = room.id;
+    option.textContent = room.name;
+    if (room.description) {
+      option.title = room.description;
+    }
+    roomSelect.appendChild(option);
+  });
 };
 
 // Populate entry points container with data from database
@@ -154,6 +189,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
   }
+
+  // Fetch rooms from database and populate dropdown
+  const rooms = await fetchRooms();
+  populateRoomsDropdown(rooms);
 
   // Handle room selection to show position input and load room-specific entry points
   const roomSelect = document.getElementById('room');
@@ -327,3 +366,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 });
+
