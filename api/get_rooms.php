@@ -9,9 +9,6 @@ session_start();
 // Set content type to JSON first
 header('Content-Type: application/json');
 
-// Add detailed error logging
-error_log("Fetching rooms from database");
-
 // Handle get rooms request
 if ($_SERVER["REQUEST_METHOD"] == "GET") {
     try {
@@ -29,12 +26,8 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
             ];
         }
         
-        // Log room count for debugging
-        error_log("Found " . count($rooms) . " rooms in database");
-        
         // Check if rooms were found
         if (count($rooms) === 0) {
-            error_log("No rooms found in database. Creating fallback demo rooms.");
             // Return sample rooms data if no rooms found
             $rooms = [
                 [
@@ -65,8 +58,6 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
             ]
         ]);
     } catch (Exception $e) {
-        // Log the error and return an error response
-        error_log("Error in get_rooms.php: " . $e->getMessage());
         echo json_encode([
             'success' => false,
             'message' => 'Error fetching rooms: ' . $e->getMessage()

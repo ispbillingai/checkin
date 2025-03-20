@@ -3,10 +3,7 @@
 let sidebarInitialized = false;
 
 function initializeSidebar() {
-  console.log("Initializing sidebar");
-  
   if (sidebarInitialized) {
-    console.log("Sidebar already initialized, skipping");
     return;
   }
   
@@ -14,8 +11,6 @@ function initializeSidebar() {
   const sectionButtons = document.querySelectorAll('[data-section]');
   
   if (sectionButtons.length === 0) {
-    console.log("No section buttons found in sidebar");
-    
     // Set up a MutationObserver to detect when sidebar content is loaded
     const sidebarContent = document.getElementById('sidebar-content');
     
@@ -23,7 +18,6 @@ function initializeSidebar() {
       const observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
           if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-            console.log("Sidebar content populated via MutationObserver");
             // Attempt to attach event listeners after content is loaded
             attachSidebarEventListeners();
             observer.disconnect();
@@ -38,7 +32,6 @@ function initializeSidebar() {
   }
   
   attachSidebarEventListeners();
-  console.log("Sidebar initialization complete");
   sidebarInitialized = true;
 }
 
@@ -46,11 +39,8 @@ function attachSidebarEventListeners() {
   const sectionButtons = document.querySelectorAll('[data-section]');
   
   if (sectionButtons.length === 0) {
-    console.log("No section buttons found when trying to attach event listeners");
     return;
   }
-  
-  console.log(`Found ${sectionButtons.length} section buttons in sidebar`);
   
   // Attach click event to each button
   sectionButtons.forEach(button => {
@@ -61,7 +51,6 @@ function attachSidebarEventListeners() {
     newButton.addEventListener('click', function(e) {
       e.preventDefault();
       const sectionName = this.getAttribute('data-section');
-      console.log(`Sidebar button clicked: ${sectionName}`);
       
       // Remove active class from all buttons
       sectionButtons.forEach(btn => {
@@ -83,8 +72,6 @@ function attachSidebarEventListeners() {
       const targetSection = document.getElementById(`${sectionName}Section`);
       if (targetSection) {
         targetSection.classList.remove('hidden');
-      } else {
-        console.error(`Section ${sectionName}Section not found`);
       }
     });
   });
@@ -101,7 +88,6 @@ document.addEventListener('DOMContentLoaded', function() {
   // Fallback initialization after a delay in case templates are loaded async
   setTimeout(function() {
     if (!sidebarInitialized) {
-      console.log("Fallback sidebar initialization");
       initializeSidebar();
     }
   }, 1000);

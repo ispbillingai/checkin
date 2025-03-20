@@ -25,16 +25,10 @@ function secure_input($data) {
 
 // Handle get bookings request
 if ($_SERVER["REQUEST_METHOD"] == "GET") {
-    // Add debug information
-    error_log("get_bookings.php called - retrieving bookings");
-    
     try {
         // Get date from query string
         $date = isset($_GET['date']) ? secure_input($_GET['date']) : date('Y-m-d');
         $room_id = isset($_GET['room']) ? secure_input($_GET['room']) : null;
-        
-        // Debug received parameters
-        error_log("Received parameters: date = $date, room_id = " . ($room_id ?: "all"));
         
         // Base SQL query
         $sql = "SELECT b.id, r.name as room_name, b.room_id, b.guest_name, b.email, b.phone, 
@@ -55,9 +49,6 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
         
         // Add order by
         $sql .= " ORDER BY b.arrival_datetime ASC";
-        
-        error_log("SQL Query: " . $sql);
-        error_log("Query params: date=" . $date . ", room_id=" . ($room_id ?: "all"));
         
         // Prepare and execute statement
         $stmt = $conn->prepare($sql);
@@ -81,8 +72,6 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
                 'createdAt' => $row['created_at']
             ];
         }
-        
-        error_log("Found " . count($bookings) . " bookings for date: $date");
         
         // If in demo mode (localhost) and no bookings found, add some sample bookings
         if (($_SERVER['HTTP_HOST'] == 'localhost' || $_SERVER['HTTP_HOST'] == '127.0.0.1') && count($bookings) === 0) {
@@ -135,8 +124,6 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
                     'createdAt' => date('Y-m-d H:i:s')
                 ]
             ];
-            
-            error_log("Generated demo bookings for testing");
         }
         
         // Return bookings as JSON
@@ -146,9 +133,6 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
             'date' => $date
         ]);
     } catch (Exception $e) {
-        // Log the error
-        error_log("Error in get_bookings.php: " . $e->getMessage());
-        
         // Return error response
         echo json_encode([
             'success' => false,

@@ -13,11 +13,8 @@ window.roomsData = window.roomsData || {
 
 // Function to fetch rooms data with enhanced error handling
 function fetchRoomsData() {
-  console.log("Fetching rooms data...");
-  
   // If we're already loading, return the existing promise
   if (window.roomsData.isLoading) {
-    console.log("Already fetching rooms data, waiting for existing request");
     return new Promise((resolve) => {
       const checkInterval = setInterval(() => {
         if (!window.roomsData.isLoading) {
@@ -30,7 +27,6 @@ function fetchRoomsData() {
   
   // If we already have rooms data, return it
   if (window.roomsData.hasLoaded && window.roomsData.rooms) {
-    console.log("Using cached rooms data");
     return Promise.resolve(window.roomsData.rooms);
   }
   
@@ -48,24 +44,20 @@ function fetchRoomsData() {
       try {
         // Try to parse as JSON
         const data = JSON.parse(text);
-        console.log("Rooms data response:", data);
         if (data.success) {
           window.roomsData.rooms = data.rooms;
           window.roomsData.hasLoaded = true;
           return data.rooms;
         } else {
           // If API returns an error message
-          console.error("API Error:", data.message);
           throw new Error(data.message || 'Failed to load rooms data');
         }
       } catch (e) {
         // If parsing fails, log the response text and throw an error
-        console.error("Invalid JSON response:", text);
         throw new Error("Server returned invalid JSON response");
       }
     })
     .catch(error => {
-      console.error("Error fetching rooms:", error);
       window.roomsData.error = error.message;
       
       // Return demo data as fallback
@@ -73,7 +65,6 @@ function fetchRoomsData() {
       window.roomsData.rooms = demoRooms;
       window.roomsData.hasLoaded = true;
       
-      console.log("Using fallback demo room data");
       return demoRooms;
     })
     .finally(() => {
@@ -106,13 +97,10 @@ function getDemoRooms() {
 function renderRooms(rooms) {
   const roomsContainer = document.getElementById('roomsContainer');
   if (!roomsContainer) {
-    console.error("Rooms container element not found");
-    
     // Try again after a short delay if possible
     setTimeout(() => {
       const retryContainer = document.getElementById('roomsContainer');
       if (retryContainer) {
-        console.log("Found rooms container on retry");
         renderRoomsToContainer(retryContainer, rooms);
       }
     }, 500);
@@ -185,8 +173,6 @@ function renderRoomsToContainer(container, rooms) {
 
 // Initialize rooms section
 function initRoomsSection() {
-  console.log("Initializing rooms section");
-  
   // Fetch and render rooms
   fetchRoomsData()
     .then(rooms => {
@@ -198,7 +184,6 @@ function initRoomsSection() {
 function populateRoomSelects() {
   const roomSelects = document.querySelectorAll('select[id="room"]');
   if (!roomSelects.length) {
-    console.log("No room select elements found");
     return;
   }
   
@@ -221,8 +206,6 @@ function populateRoomSelects() {
         option.textContent = room.name;
         select.appendChild(option);
       });
-      
-      console.log(`Populated ${rooms.length} rooms in select dropdown`);
     });
   });
 }

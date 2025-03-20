@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -154,22 +155,17 @@
       const originalConsoleError = console.error;
       const originalConsoleWarn = console.warn;
       
+      // Disable console logging completely
       console.log = function() {
-        const args = Array.from(arguments).join(' ');
-        debugLog(args);
-        originalConsoleLog.apply(console, arguments);
+        // Do nothing to prevent logs
       };
       
       console.error = function() {
-        const args = Array.from(arguments).join(' ');
-        debugLog(args, 'error');
-        originalConsoleError.apply(console, arguments);
+        // Do nothing to prevent error logs
       };
       
       console.warn = function() {
-        const args = Array.from(arguments).join(' ');
-        debugLog(args, 'warn');
-        originalConsoleWarn.apply(console, arguments);
+        // Do nothing to prevent warning logs
       };
       
       // Clear debug logs
@@ -187,12 +183,8 @@
         if (e.ctrlKey && e.shiftKey && e.key === 'D') {
           debugPanel.classList.toggle('hidden');
           e.preventDefault();
-          debugLog('Debug panel toggled');
         }
       });
-      
-      // Add console log for debugging
-      debugLog("Login page initialized");
       
       // Login form submission
       document.getElementById('loginForm').addEventListener('submit', function(e) {
@@ -201,8 +193,6 @@
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
         const loginButton = document.getElementById('loginButton');
-        
-        debugLog(`Login attempt with username: ${username}`);
         
         // Disable button and show loading state
         loginButton.disabled = true;
@@ -220,22 +210,18 @@
               (username === 'user' && password === 'user')) {
             
             updatePinInfo('Login successful', 'You have been signed in.', 'success');
-            debugLog('Login successful');
             
             // Generate a PIN code and position for demonstration
             generatePinCode();
             
             // Redirect based on role using absolute paths to our HTML files
             if (username === 'admin') {
-              debugLog("Redirecting to admin dashboard");
               setTimeout(() => { window.location.href = '/src/pages/AdminDashboard.html'; }, 1000);
             } else {
-              debugLog("Redirecting to booking page");
               setTimeout(() => { window.location.href = '/src/pages/HomePage.html'; }, 1000);
             }
           } else {
             updatePinInfo('Login failed', 'Invalid username or password.', 'error');
-            debugLog('Login failed - invalid credentials', 'error');
             loginButton.disabled = false;
             loginButton.textContent = 'Sign In';
           }
@@ -247,8 +233,6 @@
         const pinInfoMessage = document.getElementById('pinInfoMessage');
         const pinCodeDisplay = document.getElementById('pinCodeDisplay');
         const positionDisplay = document.getElementById('positionDisplay');
-        
-        debugLog(`Updating PIN info: ${title} - ${message}`);
         
         // Set content
         pinInfoMessage.textContent = message;
@@ -272,8 +256,6 @@
       
       // Function to generate a PIN code for demonstration
       function generatePinCode() {
-        debugLog('Generating PIN code for demonstration');
-        
         // Simulate a random position
         const randomPosition = Math.floor(Math.random() * 64) + 1;
         
@@ -287,8 +269,6 @@
         })
         .then(response => response.json())
         .then(data => {
-          debugLog('PIN generation response:', data);
-          
           if (data.success) {
             updatePinInfo(
               'PIN Code Generated', 
@@ -306,7 +286,6 @@
           }
         })
         .catch(error => {
-          debugLog('PIN generation error:', error);
           updatePinInfo(
             'PIN Generation Error', 
             'An error occurred while generating your PIN code.', 

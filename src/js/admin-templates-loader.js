@@ -1,89 +1,87 @@
 
-// Admin templates loader
-window.loadAdminTemplates = function() {
-  const templates = [
-    { id: 'sidebar-template', url: '/src/pages/templates/sidebar-template.html', targetId: 'sidebar-content' },
-    { id: 'bookings-template', url: '/src/pages/templates/bookings-template.html', targetId: 'bookingsSection' },
-    { id: 'rooms-template', url: '/src/pages/templates/rooms-template.html', targetId: 'roomsSection' },
-    { id: 'passcodes-template', url: '/src/pages/templates/passcodes-template.html', targetId: 'passcodesSection' },
-    { id: 'database-template', url: '/src/pages/templates/database-template.html', targetId: 'databaseSection' },
-    { id: 'admin-header-template', url: '/src/pages/templates/admin-header-template.html', targetId: 'admin-header' },
-    { id: 'users-template', url: '/src/pages/templates/users-template.html', targetId: 'usersSection' },
-    { id: 'settings-template', url: '/src/pages/templates/settings-template.html', targetId: 'settingsSection' },
-    { id: 'email-templates-template', url: '/src/pages/templates/email-templates-template.html', targetId: 'emailTemplatesSection' },
-    { id: 'sms-templates-template', url: '/src/pages/templates/sms-templates-template.html', targetId: 'smsTemplatesSection' }
-  ];
-  
-  let loadedCount = 0;
-  
-  templates.forEach(template => {
-    loadTemplate(template.id, template.url, template.targetId);
-  });
-  
-  function loadTemplate(templateId, url, targetId) {
-    fetch(url, {
-      method: 'GET',
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      }
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      return response.text();
-    })
-    .then(html => {
-      // Get the target element to insert the template
-      const targetElement = document.getElementById(targetId);
-      
-      if (!targetElement) {
-        return;
-      }
-      
-      // Set the HTML content
-      targetElement.innerHTML = html;
-      
-      // Increment the counter
-      loadedCount++;
-      
-      // Dispatch a custom event to notify that the template has been loaded
-      const event = new CustomEvent('templateLoaded', { 
-        detail: { 
-          templateId: templateId,
-          targetId: targetId
-        },
-        bubbles: true 
-      });
-      document.dispatchEvent(event);
-      
-      // If the template is the sidebar, explicitly initialize it
-      if (templateId === 'sidebar-template') {
-        setTimeout(function() {
-          if (window.attachSidebarEventListeners) {
-            window.attachSidebarEventListeners();
-          } else if (window.initializeSidebar) {
-            window.initializeSidebar();
-          }
-        }, 200);
-      }
-      
-      // Check if all templates have been loaded
-      if (loadedCount === templates.length) {
-        // Dispatch a custom event to notify that all templates have been loaded
-        const allLoadedEvent = new CustomEvent('allTemplatesLoaded');
-        document.dispatchEvent(allLoadedEvent);
-      }
-    })
-    .catch(error => {
-      // Error handled silently
-    });
+// Function to load templates
+async function loadTemplates() {
+  try {
+    // Load sidebar template
+    const sidebarResponse = await fetch('../pages/templates/sidebar-template.html');
+    const sidebarTemplate = await sidebarResponse.text();
+    document.getElementById('sidebar-template-container').innerHTML = sidebarTemplate;
+    document.getElementById('sidebar-content').innerHTML = sidebarTemplate;
+    
+    // Load bookings template
+    const bookingsResponse = await fetch('../pages/templates/bookings-template.html');
+    const bookingsTemplate = await bookingsResponse.text();
+    document.getElementById('bookings-template-container').innerHTML = bookingsTemplate;
+    document.getElementById('bookingsSection').innerHTML = bookingsTemplate;
+    
+    // Load rooms template
+    const roomsResponse = await fetch('../pages/templates/rooms-template.html');
+    const roomsTemplate = await roomsResponse.text();
+    document.getElementById('rooms-template-container').innerHTML = roomsTemplate;
+    document.getElementById('roomsSection').innerHTML = roomsTemplate;
+    
+    // Load entry points template
+    const entryPointsResponse = await fetch('../pages/templates/entry-points-template.html');
+    const entryPointsTemplate = await entryPointsResponse.text();
+    document.getElementById('entry-points-template-container').innerHTML = entryPointsTemplate;
+    document.getElementById('entryPointsSection').innerHTML = entryPointsTemplate;
+    
+    // Load passcodes template
+    const passcodesResponse = await fetch('../pages/templates/passcodes-template.html');
+    const passcodesTemplate = await passcodesResponse.text();
+    document.getElementById('passcodes-template-container').innerHTML = passcodesTemplate;
+    document.getElementById('passcodesSection').innerHTML = passcodesTemplate;
+    
+    // Load database template
+    const databaseResponse = await fetch('../pages/templates/database-template.html');
+    const databaseTemplate = await databaseResponse.text();
+    document.getElementById('database-template-container').innerHTML = databaseTemplate;
+    document.getElementById('databaseSection').innerHTML = databaseTemplate;
+    
+    // Load room setting template
+    const roomSettingResponse = await fetch('../pages/templates/room-setting-template.html');
+    const roomSettingTemplate = await roomSettingResponse.text();
+    document.getElementById('room-setting-template-container').innerHTML = roomSettingTemplate;
+    
+    // Load database table template
+    const databaseTableResponse = await fetch('../pages/templates/database-table-template.html');
+    const databaseTableTemplate = await databaseTableResponse.text();
+    document.getElementById('database-table-template-container').innerHTML = databaseTableTemplate;
+    
+    // Initialize all components after templates are loaded
+    initializeComponents();
+  } catch (error) {
+    // Silent error
   }
-};
+}
 
-// Export for external use
-window.loadAdminTemplates = window.loadAdminTemplates || function() {
-  // Admin templates loader not properly initialized
-};
+// Function to initialize components after templates are loaded
+function initializeComponents() {
+  // Initialize bookings functionality if the script is loaded
+  if (typeof initializeBookings === 'function') {
+    initializeBookings();
+  }
+  
+  // Initialize rooms functionality if the script is loaded
+  if (typeof initializeRooms === 'function') {
+    initializeRooms();
+  }
+  
+  // Initialize entry points functionality if the script is loaded
+  if (typeof initEntryPointsManagement === 'function') {
+    initEntryPointsManagement();
+  }
+  
+  // Initialize passcodes functionality if the script is loaded
+  if (typeof initializePasscodes === 'function') {
+    initializePasscodes();
+  }
+  
+  // Initialize database functionality if the script is loaded
+  if (typeof initializeDatabase === 'function') {
+    initializeDatabase();
+  }
+}
+
+// Load templates when the DOM content is loaded
+document.addEventListener('DOMContentLoaded', loadTemplates);

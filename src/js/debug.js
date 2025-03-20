@@ -148,11 +148,8 @@
             if (!src) continue;
             
             fetch(src, { method: 'HEAD' })
-                .then(response => {
-                    // No need to log success or failure
-                })
                 .catch(error => {
-                    // No need to log error
+                    // Silently catch errors
                 });
         }
         
@@ -165,11 +162,8 @@
             if (!href || link.rel !== 'stylesheet') continue;
             
             fetch(href, { method: 'HEAD' })
-                .then(response => {
-                    // No need to log success or failure
-                })
                 .catch(error => {
-                    // No need to log error
+                    // Silently catch errors
                 });
         }
     }

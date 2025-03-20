@@ -41,11 +41,8 @@ if (window.location.hostname === 'localhost' || window.location.hostname === '12
       if (src) {
         // Create a test request to check if the script exists
         fetch(src, { method: 'HEAD' })
-          .then(response => {
-            // No need to log anything
-          })
           .catch(error => {
-            // No need to log anything
+            // Silently catch errors
           });
       }
     }

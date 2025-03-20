@@ -27,7 +27,6 @@ $jsonData = json_decode($rawData, true);
 
 // Validate the input
 if (json_last_error() !== JSON_ERROR_NONE) {
-    log_error("Invalid JSON received: " . $rawData);
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Invalid JSON']);
     exit;
@@ -35,25 +34,16 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 
 // Make sure required fields are present
 if (!isset($jsonData['message']) || !isset($jsonData['level'])) {
-    log_error("Missing required fields in client error log", $jsonData);
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Missing required fields']);
     exit;
 }
 
-// Log the error to our custom log file
+// Extract client data
 $clientMessage = $jsonData['message'];
 $clientLevel = $jsonData['level'];
 $clientDetails = $jsonData['details'] ?? null;
 $clientTimestamp = $jsonData['timestamp'] ?? date('Y-m-d H:i:s');
-
-// Log to our server-side log
-$logMessage = log_error("CLIENT ($clientLevel): $clientMessage", [
-    'details' => $clientDetails,
-    'timestamp' => $clientTimestamp,
-    'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown',
-    'ip' => $_SERVER['REMOTE_ADDR'] ?? 'Unknown'
-]);
 
 // Store in database if we have a client_logs table
 $storeInDb = false;
@@ -74,7 +64,6 @@ try {
         $stmt->close();
     }
 } catch (Exception $e) {
-    log_error("Error storing client log in database: " . $e->getMessage());
     // Continue processing - don't exit
 }
 
@@ -83,7 +72,6 @@ http_response_code(200);
 echo json_encode([
     'success' => true, 
     'message' => 'Log recorded',
-    'stored_in_db' => $storeInDb,
-    'log_entry' => $logMessage
+    'stored_in_db' => $storeInDb
 ]);
 ?>

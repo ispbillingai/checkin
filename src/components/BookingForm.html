@@ -1,3 +1,4 @@
+
 <!-- Booking Form HTML -->
 <div class="fade-in booking-form" style="animation-delay: 0.4s">
   <div class="bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden">
@@ -156,8 +157,6 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    console.log("Booking form script loaded");
-    
     // Wait a bit to ensure all components are loaded
     setTimeout(function() {
       // Initialize date inputs with default values
@@ -194,10 +193,8 @@
   }
 
   function loadRooms() {
-    console.log("Loading rooms from API");
     const roomSelect = document.getElementById('room');
     if (!roomSelect) {
-      console.log("Room select element not found, will try again later");
       setTimeout(loadRooms, 500);
       return;
     }
@@ -205,30 +202,25 @@
     // EXAMPLE direct fetch for get_rooms.php
     fetch('/api/get_rooms.php')
       .then(response => {
-        console.log("Room API response status:", response.status);
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
         return response.json();
       })
       .then(data => {
-        console.log("Room API data:", data);
         if (data.success && data.rooms) {
           populateRooms(data.rooms);
         } else {
-          console.error('Failed to load rooms:', data.message);
           // Fallback to demo rooms
           loadDemoRooms();
         }
       })
       .catch(error => {
-        console.error('Error loading rooms:', error);
         loadDemoRooms(); // fallback
       });
   }
 
   function loadDemoRooms() {
-    console.log("Loading demo rooms for booking form");
     const roomSelect = document.getElementById('room');
     if (!roomSelect) return;
     
@@ -284,11 +276,9 @@
     // *** IMPORTANT: Adjust this path if your script is /src/api/get_entry_points.php
     fetch('/api/get_entry_points.php')
       .then(response => {
-        console.log("get_entry_points.php status:", response.status);
         return response.json();
       })
       .then(data => {
-        console.log("get_entry_points.php data:", data);
         if (data.success && data.entry_points && data.entry_points.length > 0) {
           entryPointsContainer.innerHTML = '';
           
@@ -330,7 +320,6 @@
         }
       })
       .catch(error => {
-        console.error("get_entry_points.php fetch failed:", error);
         createDemoEntryPoints();
       });
   }
@@ -378,8 +367,6 @@
   }
 
   function setupEventListeners() {
-    console.log("Setting up event listeners");
-    
     // Generate PIN button
     const generatePinButton = document.getElementById('generatePinButton');
     if (generatePinButton) {
@@ -419,9 +406,6 @@
           formData.delete('entryPoints[]');
         });
         formData.append('entryPoints', JSON.stringify(selectedEntryPoints));
-        
-        console.log("Form submission - room:", formData.get('room'));
-        console.log("Form submission - entryPoints:", formData.get('entryPoints'));
         
         const arrival = new Date(formData.get('arrivalDateTime'));
         const departure = new Date(formData.get('departureDateTime'));
@@ -491,7 +475,6 @@
             }
           })
           .catch(error => {
-            console.error('Error processing booking:', error);
             submitButton.disabled = false;
             submitButton.textContent = 'Create Booking';
             if (window.showToastMessage) {

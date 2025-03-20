@@ -21,9 +21,6 @@ if (!isset($_SESSION['user_id']) && !($_SERVER['HTTP_HOST'] == 'localhost' || $_
 
 // Handle GET request for a specific room
 if ($_SERVER["REQUEST_METHOD"] == "GET") {
-    // Add debug information
-    error_log("get_room.php called - getting specific room");
-    
     try {
         // Validate room ID parameter
         if (!isset($_GET['id']) || empty($_GET['id'])) {
@@ -93,8 +90,6 @@ if ($_SERVER["REQUEST_METHOD"] == "GET") {
             'room' => $room
         ]);
     } catch (Exception $e) {
-        // Log the error and return a JSON error response
-        error_log("Error in get_room.php: " . $e->getMessage());
         echo json_encode([
             'success' => false,
             'message' => 'Error fetching room: ' . $e->getMessage()

@@ -19,10 +19,6 @@ if (!isset($_SESSION['user_id']) && !($_SERVER['HTTP_HOST'] == 'localhost' || $_
 // Set content type to JSON
 header('Content-Type: application/json');
 
-// Log POST data for debugging
-error_log("manage_rooms.php - Request received");
-error_log("POST data: " . json_encode($_POST));
-
 // Handle POST request for room management
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Get operation mode (create, update, delete) - check both mode and action fields
@@ -33,13 +29,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $mode = $_POST['action'];
     }
     
-    // Log request data for debugging
-    error_log("manage_rooms.php - Request received with mode: " . $mode);
-    error_log("POST data: " . json_encode($_POST));
-    
     // Validate mode
     if (!in_array($mode, ['create', 'update', 'delete'])) {
-        error_log("Invalid operation mode: " . $mode);
         echo json_encode([
             'success' => false,
             'message' => 'Invalid operation mode'
@@ -113,7 +104,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Update existing room
         // Validate required fields
         if (!isset($_POST['id']) || (!isset($_POST['roomName']) && !isset($_POST['name']))) {
-            error_log("Update room failed: Room ID or Name missing");
             echo json_encode([
                 'success' => false,
                 'message' => 'Room ID and Name are required'
@@ -130,14 +120,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $reset_hours = isset($_POST['resetHours']) ? intval($_POST['resetHours']) : 
                       (isset($_POST['reset_hours']) ? intval($_POST['reset_hours']) : 2);
         
-        error_log("Updating room with ID: " . $room_id);
-        error_log("Room data: " . json_encode([
-            'name' => $room_name,
-            'description' => $description,
-            'fixed_passcode' => $fixed_passcode,
-            'reset_hours' => $reset_hours
-        ]));
-        
         // Update room
         $stmt = $conn->prepare("UPDATE rooms SET name = ?, description = ?, fixed_passcode = ?, reset_hours = ? WHERE id = ?");
         $stmt->bind_param("sssis", $room_name, $description, $fixed_passcode, $reset_hours, $room_id);
@@ -148,7 +130,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 'message' => 'Room updated successfully'
             ]);
         } else {
-            error_log("Room update failed: " . $conn->error);
             echo json_encode([
                 'success' => false,
                 'message' => 'Failed to update room: ' . $conn->error
