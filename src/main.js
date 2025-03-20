@@ -1,6 +1,4 @@
 
-import './styles.css';
-
 // Setup error logging
 const logError = (error, context = '') => {
   console.error(`[ERROR] ${context}:`, error);
