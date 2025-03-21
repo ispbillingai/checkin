@@ -8,7 +8,7 @@ header('Content-Type: application/json');
 
 try {
     // Query to get all entry points
-    $query = "SELECT id, name, description 
+    $query = "SELECT id, name, description, ip_address 
               FROM entry_points
               ORDER BY name";
     

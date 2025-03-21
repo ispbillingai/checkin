@@ -31,6 +31,7 @@ if (empty($data['id']) || empty($data['name'])) {
 $entry_point_id = secure_input($data['id']);
 $entry_point_name = secure_input($data['name']);
 $entry_point_description = isset($data['description']) ? secure_input($data['description']) : '';
+$entry_point_ip_address = isset($data['ip_address']) ? secure_input($data['ip_address']) : null;
 
 try {
     // Check if entry point ID already exists
@@ -49,9 +50,9 @@ try {
     }
     
     // Insert new entry point
-    $query = "INSERT INTO entry_points (id, name, description) VALUES (?, ?, ?)";
+    $query = "INSERT INTO entry_points (id, name, description, ip_address) VALUES (?, ?, ?, ?)";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("sss", $entry_point_id, $entry_point_name, $entry_point_description);
+    $stmt->bind_param("ssss", $entry_point_id, $entry_point_name, $entry_point_description, $entry_point_ip_address);
     
     if ($stmt->execute()) {
         echo json_encode([

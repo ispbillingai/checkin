@@ -31,6 +31,7 @@ if (empty($data['id']) || empty($data['name'])) {
 $room_id = secure_input($data['id']);
 $room_name = secure_input($data['name']);
 $room_description = isset($data['description']) ? secure_input($data['description']) : '';
+$room_ip_address = isset($data['ip_address']) ? secure_input($data['ip_address']) : null;
 
 try {
     // Check if room exists
@@ -49,9 +50,9 @@ try {
     }
     
     // Update room
-    $query = "UPDATE rooms SET name = ?, description = ? WHERE id = ?";
+    $query = "UPDATE rooms SET name = ?, description = ?, ip_address = ? WHERE id = ?";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("sss", $room_name, $room_description, $room_id);
+    $stmt->bind_param("ssss", $room_name, $room_description, $room_ip_address, $room_id);
     
     if ($stmt->execute()) {
         echo json_encode([

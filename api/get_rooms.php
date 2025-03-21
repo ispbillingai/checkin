@@ -8,7 +8,7 @@ header('Content-Type: application/json');
 
 try {
     // Query to get all rooms
-    $query = "SELECT id, name, description, fixed_passcode, reset_hours 
+    $query = "SELECT id, name, description, fixed_passcode, reset_hours, ip_address 
               FROM rooms
               ORDER BY name";
     

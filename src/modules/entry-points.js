@@ -47,6 +47,7 @@ const loadEntryPoints = async () => {
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${entryPoint.id}</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${entryPoint.name}</td>
           <td class="px-6 py-4 text-sm text-gray-500">${entryPoint.description || 'No description'}</td>
+          <td class="px-6 py-4 text-sm text-gray-500">${entryPoint.ip_address || 'Not set'}</td>
           <td class="px-6 py-4 text-sm text-gray-500">${roomsHtml}</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
             <button class="text-blue-600 hover:text-blue-800 mr-2 edit-entry-point-btn" data-entry-point='${JSON.stringify(entryPoint)}'>
@@ -66,7 +67,7 @@ const loadEntryPoints = async () => {
     } else {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="5" class="px-6 py-4 text-center text-gray-500">No entry points found</td>
+          <td colspan="6" class="px-6 py-4 text-center text-gray-500">No entry points found</td>
         </tr>
       `;
     }
@@ -96,6 +97,7 @@ const addEntryPointEventListeners = () => {
       document.getElementById('entry-point-id').readOnly = true;
       document.getElementById('entry-point-name').value = entryPoint.name;
       document.getElementById('entry-point-description').value = entryPoint.description || '';
+      document.getElementById('entry-point-ip-address').value = entryPoint.ip_address || '';
       document.getElementById('entry-point-form').setAttribute('data-mode', 'edit');
       showModal('entry-point-modal');
     });
@@ -130,6 +132,7 @@ const saveEntryPoint = async () => {
     const entryPointId = document.getElementById('entry-point-id').value.trim();
     const entryPointName = document.getElementById('entry-point-name').value.trim();
     const entryPointDescription = document.getElementById('entry-point-description').value.trim();
+    const entryPointIpAddress = document.getElementById('entry-point-ip-address').value.trim();
     
     if (!entryPointId || !entryPointName) {
       showToast('Entry Point ID and Name are required', 'error');
@@ -139,7 +142,8 @@ const saveEntryPoint = async () => {
     const entryPointData = {
       id: entryPointId,
       name: entryPointName,
-      description: entryPointDescription
+      description: entryPointDescription,
+      ip_address: entryPointIpAddress
     };
     
     const endpoint = mode === 'add' ? '/api/add_entry_point.php' : '/api/update_entry_point.php';
