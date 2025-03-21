@@ -19,7 +19,7 @@ $entry_point_id = $_GET['entry_point_id'];
 
 try {
     // Query to get all rooms associated with this entry point
-    $query = "SELECT r.id, r.name, r.description
+    $query = "SELECT r.id, r.name, r.description, r.ip_address
               FROM rooms r
               JOIN room_entry_points rep ON r.id = rep.room_id
               WHERE rep.entry_point_id = ?";
@@ -34,7 +34,8 @@ try {
         $rooms[] = [
             'id' => $row['id'],
             'name' => $row['name'],
-            'description' => $row['description']
+            'description' => $row['description'],
+            'ip_address' => $row['ip_address']
         ];
     }
     
