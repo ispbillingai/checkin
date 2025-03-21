@@ -31,6 +31,7 @@ if (empty($data['id']) || empty($data['name'])) {
 $room_id = secure_input($data['id']);
 $room_name = secure_input($data['name']);
 $room_description = isset($data['description']) ? secure_input($data['description']) : '';
+$room_ip_address = isset($data['ip_address']) ? secure_input($data['ip_address']) : null;
 
 try {
     // Check if room ID already exists
@@ -49,9 +50,9 @@ try {
     }
     
     // Insert new room
-    $query = "INSERT INTO rooms (id, name, description) VALUES (?, ?, ?)";
+    $query = "INSERT INTO rooms (id, name, description, ip_address) VALUES (?, ?, ?, ?)";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("sss", $room_id, $room_name, $room_description);
+    $stmt->bind_param("ssss", $room_id, $room_name, $room_description, $room_ip_address);
     
     if ($stmt->execute()) {
         echo json_encode([

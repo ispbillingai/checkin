@@ -31,6 +31,7 @@ if (empty($data['id']) || empty($data['name'])) {
 $entry_point_id = secure_input($data['id']);
 $entry_point_name = secure_input($data['name']);
 $entry_point_description = isset($data['description']) ? secure_input($data['description']) : '';
+$entry_point_ip_address = isset($data['ip_address']) ? secure_input($data['ip_address']) : null;
 
 try {
     // Check if entry point exists
@@ -49,9 +50,9 @@ try {
     }
     
     // Update entry point
-    $query = "UPDATE entry_points SET name = ?, description = ? WHERE id = ?";
+    $query = "UPDATE entry_points SET name = ?, description = ?, ip_address = ? WHERE id = ?";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("sss", $entry_point_name, $entry_point_description, $entry_point_id);
+    $stmt->bind_param("ssss", $entry_point_name, $entry_point_description, $entry_point_ip_address, $entry_point_id);
     
     if ($stmt->execute()) {
         echo json_encode([

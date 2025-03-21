@@ -30,6 +30,7 @@ const loadRooms = async () => {
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${room.id}</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${room.name}</td>
           <td class="px-6 py-4 text-sm text-gray-500">${room.description || 'No description'}</td>
+          <td class="px-6 py-4 text-sm text-gray-500">${room.ip_address || 'Not set'}</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
             <button class="text-blue-600 hover:text-blue-800 mr-2 edit-room-btn" data-room='${JSON.stringify(room)}'>
               <i class="fas fa-edit"></i> Edit
@@ -48,7 +49,7 @@ const loadRooms = async () => {
     } else {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="4" class="px-6 py-4 text-center text-gray-500">No rooms found</td>
+          <td colspan="5" class="px-6 py-4 text-center text-gray-500">No rooms found</td>
         </tr>
       `;
     }
@@ -78,6 +79,7 @@ const addRoomEventListeners = () => {
       document.getElementById('room-id').readOnly = true;
       document.getElementById('room-name').value = room.name;
       document.getElementById('room-description').value = room.description || '';
+      document.getElementById('room-ip-address').value = room.ip_address || '';
       document.getElementById('room-form').setAttribute('data-mode', 'edit');
       showModal('room-modal');
     });
@@ -112,6 +114,7 @@ const saveRoom = async () => {
     const roomId = document.getElementById('room-id').value.trim();
     const roomName = document.getElementById('room-name').value.trim();
     const roomDescription = document.getElementById('room-description').value.trim();
+    const roomIpAddress = document.getElementById('room-ip-address').value.trim();
     
     if (!roomId || !roomName) {
       showToast('Room ID and Name are required', 'error');
@@ -121,7 +124,8 @@ const saveRoom = async () => {
     const roomData = {
       id: roomId,
       name: roomName,
-      description: roomDescription
+      description: roomDescription,
+      ip_address: roomIpAddress
     };
     
     const endpoint = mode === 'add' ? '/api/add_room.php' : '/api/update_room.php';

@@ -94,6 +94,7 @@ window.editRoom = (roomId) => {
     document.getElementById('room-id').readOnly = true;
     document.getElementById('room-name').value = room.name;
     document.getElementById('room-description').value = room.description || '';
+    document.getElementById('room-ip-address').value = room.ip_address || '';
     document.getElementById('room-form').setAttribute('data-mode', 'edit');
     document.getElementById('room-modal').classList.remove('hidden');
     document.body.classList.add('modal-open');
@@ -109,6 +110,7 @@ window.editEntryPoint = (entryPointId) => {
     document.getElementById('entry-point-id').readOnly = true;
     document.getElementById('entry-point-name').value = entryPoint.name;
     document.getElementById('entry-point-description').value = entryPoint.description || '';
+    document.getElementById('entry-point-ip-address').value = entryPoint.ip_address || '';
     document.getElementById('entry-point-form').setAttribute('data-mode', 'edit');
     document.getElementById('entry-point-modal').classList.remove('hidden');
     document.body.classList.add('modal-open');
