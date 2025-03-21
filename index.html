@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Booking System</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap">
   <!-- Add Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -13,109 +14,190 @@
   <style>
     body {
       font-family: 'Inter', sans-serif;
+      background-color: #f8f9fa;
+    }
+    .playfair {
+      font-family: 'Playfair Display', serif;
+    }
+    .hero-section {
+      background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&q=80&w=2000');
+      background-size: cover;
+      background-position: center;
+      height: 400px;
+    }
+    .booking-form-container {
+      background-color: white;
+      border-radius: 1rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      position: relative;
+      top: -50px;
+      margin-bottom: -50px;
+    }
+    .form-section-header {
+      border-bottom: 2px solid #f3f4f6;
+      padding-bottom: 0.75rem;
+      margin-bottom: 1.5rem;
     }
   </style>
 </head>
-<body class="bg-gray-50">
+<body>
   <div id="app">
-    <div class="container mx-auto px-4 py-8">
-      <header class="text-center mb-12">
-        <h1 class="text-3xl font-bold text-blue-600 mb-2">Welcome to Our Booking System</h1>
-        <p class="text-gray-600">A simple way to manage your bookings</p>
-      </header>
-      
-      <main class="max-w-3xl mx-auto">
-        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 class="text-xl font-semibold text-blue-600 mb-4">Our Services</h2>
-          <p class="mb-6">We provide an easy way to manage room bookings and access codes.</p>
-          <button id="check-db-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors">
-            Check Database Connection
-          </button>
-          <div id="db-status" class="mt-4 p-3 rounded"></div>
-        </div>
-
-        <div class="bg-white rounded-lg shadow-md p-6">
-          <h2 class="text-xl font-semibold text-blue-600 mb-4">Make a Booking</h2>
+    <!-- Hero Section -->
+    <div class="hero-section flex flex-col justify-center items-center text-white">
+      <h1 class="text-5xl font-bold playfair mb-4 text-center">Welcome to Our Booking System</h1>
+      <p class="text-xl max-w-2xl text-center">Experience seamless room booking with our easy-to-use platform</p>
+    </div>
+    
+    <div class="container mx-auto px-4">
+      <!-- Main Content -->
+      <main class="max-w-4xl mx-auto">
+        <!-- Booking Form Card -->
+        <div class="booking-form-container p-8">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+            <div class="text-center p-4 rounded-lg bg-blue-50 hover:bg-blue-100 transition duration-300">
+              <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-blue-800 mb-2">Select Dates</h3>
+              <p class="text-blue-600">Choose your arrival and departure dates</p>
+            </div>
+            
+            <div class="text-center p-4 rounded-lg bg-blue-50 hover:bg-blue-100 transition duration-300">
+              <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-blue-800 mb-2">Choose a Room</h3>
+              <p class="text-blue-600">Select your preferred room and entry points</p>
+            </div>
+            
+            <div class="text-center p-4 rounded-lg bg-blue-50 hover:bg-blue-100 transition duration-300">
+              <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-blue-800 mb-2">Set PIN Code</h3>
+              <p class="text-blue-600">Create a secure PIN for access</p>
+            </div>
+          </div>
+          
+          <h2 class="text-2xl font-semibold playfair text-blue-700 mb-6">Book Your Room</h2>
+          
           <form id="booking-form">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="form-section-header">
+              <h3 class="text-lg font-medium text-blue-600">Personal Information</h3>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
               <div>
                 <label for="name" class="block mb-1 font-medium text-gray-700">Full Name</label>
-                <input type="text" id="name" name="name" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                <input type="text" id="name" name="name" required 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
               </div>
               
               <div>
                 <label for="email" class="block mb-1 font-medium text-gray-700">Email Address</label>
-                <input type="email" id="email" name="email" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                <input type="email" id="email" name="email" required 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
               </div>
             </div>
             
-            <div class="mb-4">
+            <div class="mb-8">
               <label for="phone" class="block mb-1 font-medium text-gray-700">Phone Number</label>
-              <input type="tel" id="phone" name="phone" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Enter your phone number">
+              <input type="tel" id="phone" name="phone" required 
+                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200" 
+                     placeholder="Enter your phone number">
             </div>
             
-            <div class="mb-4">
+            <div class="form-section-header">
+              <h3 class="text-lg font-medium text-blue-600">Room Selection</h3>
+            </div>
+            
+            <div class="mb-8">
               <label for="room" class="block mb-1 font-medium text-gray-700">Select Room</label>
               <div class="flex items-center">
-                <select id="room" name="room" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                <select id="room" name="room" required 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
                   <option value="">-- Select a Room --</option>
                 </select>
                 <div id="room-position-input" class="hidden ml-4">
                   <label for="room-position" class="text-sm text-gray-600">Position:</label>
-                  <input type="number" id="room-position" name="room_position" min="1" max="64" class="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                  <input type="number" id="room-position" name="room_position" min="1" max="64" 
+                         class="w-20 px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
                 </div>
               </div>
             </div>
 
-            <div class="mb-4">
+            <div class="mb-8">
               <label class="block mb-1 font-medium text-gray-700">Entry Points</label>
-              <div id="entry-points-container" class="space-y-2">
+              <div id="entry-points-container" class="p-4 bg-gray-50 rounded-lg space-y-2">
                 <!-- Entry points will be dynamically populated here -->
                 <p class="text-gray-500">Please select a room to see available entry points.</p>
               </div>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="form-section-header">
+              <h3 class="text-lg font-medium text-blue-600">Booking Dates</h3>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
               <div>
                 <label for="arrival-date" class="block mb-1 font-medium text-gray-700">Arrival Date</label>
-                <input type="date" id="arrival-date" name="arrival_date" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                <input type="date" id="arrival-date" name="arrival_date" required 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
               </div>
               
               <div>
                 <label for="arrival-time" class="block mb-1 font-medium text-gray-700">Arrival Time</label>
-                <input type="time" id="arrival-time" name="arrival_time" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                <input type="time" id="arrival-time" name="arrival_time" required 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
               </div>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
               <div>
                 <label for="departure-date" class="block mb-1 font-medium text-gray-700">Departure Date</label>
-                <input type="date" id="departure-date" name="departure_date" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                <input type="date" id="departure-date" name="departure_date" required 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
               </div>
               
               <div>
                 <label for="departure-time" class="block mb-1 font-medium text-gray-700">Departure Time</label>
-                <input type="time" id="departure-time" name="departure_time" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+                <input type="time" id="departure-time" name="departure_time" required 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200">
               </div>
             </div>
             
-            <div class="mb-4">
+            <div class="form-section-header">
+              <h3 class="text-lg font-medium text-blue-600">Security</h3>
+            </div>
+            
+            <div class="mb-8">
               <label for="pin-code" class="block mb-1 font-medium text-gray-700">PIN Code</label>
               <div class="flex items-center space-x-2">
-                <input type="text" id="pin-code" name="pin_code" minlength="4" maxlength="6" pattern="[0-9]+" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Enter PIN (4-6 digits)">
-                <button type="button" id="generate-pin" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-2 rounded transition-colors">
+                <input type="text" id="pin-code" name="pin_code" minlength="4" maxlength="6" pattern="[0-9]+" 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200" 
+                       placeholder="Enter PIN (4-6 digits)">
+                <button type="button" id="generate-pin" 
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-lg transition-colors">
                   Generate PIN
                 </button>
               </div>
               <p class="text-sm text-gray-500 mt-1">Enter a 4-6 digit PIN or click Generate to create one automatically</p>
             </div>
             
-            <div class="mb-6">
+            <div class="mb-8">
               <label for="notes" class="block mb-1 font-medium text-gray-700">Additional Notes</label>
-              <textarea id="notes" name="notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"></textarea>
+              <textarea id="notes" name="notes" rows="3" 
+                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200"></textarea>
             </div>
             
-            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded transition-colors">
+            <button type="submit" 
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors shadow-md hover:shadow-lg">
               Submit Booking
             </button>
           </form>
@@ -123,10 +205,47 @@
         </div>
       </main>
       
-      <footer class="text-center text-gray-600 mt-12">
+      <!-- Features Section -->
+      <section class="max-w-4xl mx-auto mt-20 mb-16">
+        <h2 class="text-3xl font-bold playfair text-center text-blue-700 mb-10">Why Choose Our Booking System</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="bg-white p-6 rounded-lg shadow-md transform hover:scale-105 transition duration-300">
+            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold mb-2 text-gray-800">Quick & Easy</h3>
+            <p class="text-gray-600">Book your room in minutes with our streamlined process.</p>
+          </div>
+          
+          <div class="bg-white p-6 rounded-lg shadow-md transform hover:scale-105 transition duration-300">
+            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold mb-2 text-gray-800">Secure Access</h3>
+            <p class="text-gray-600">Custom PIN codes ensure only authorized access to rooms.</p>
+          </div>
+          
+          <div class="bg-white p-6 rounded-lg shadow-md transform hover:scale-105 transition duration-300">
+            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold mb-2 text-gray-800">24/7 Support</h3>
+            <p class="text-gray-600">Our team is always available to assist with your booking needs.</p>
+          </div>
+        </div>
+      </section>
+      
+      <footer class="text-center text-gray-600 py-10 border-t border-gray-200">
         <p>&copy; <script>document.write(new Date().getFullYear())</script> Booking System. All rights reserved.</p>
         <div class="mt-2">
-          <a href="/admin.html" class="text-blue-500 hover:text-blue-700">Admin Panel</a>
+          <a href="/admin.html" class="text-blue-500 hover:text-blue-700 transition duration-200">Admin Panel</a>
         </div>
       </footer>
     </div>
