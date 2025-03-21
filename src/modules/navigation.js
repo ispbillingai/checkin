@@ -24,4 +24,33 @@ const showPanel = (panelId) => {
   }
 };
 
-export { showPanel };
+// Modal functions
+const showModal = (modalId) => {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.remove('hidden');
+    document.body.classList.add('modal-open');
+  }
+};
+
+const hideModal = (modalId) => {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.add('hidden');
+    document.body.classList.remove('modal-open');
+  }
+};
+
+// Clear form fields
+const clearForm = (formId) => {
+  const form = document.getElementById(formId);
+  if (form) {
+    form.reset();
+    // Clear any hidden fields or custom elements
+    form.querySelectorAll('input[type="hidden"]').forEach(input => {
+      input.value = '';
+    });
+  }
+};
+
+export { showPanel, showModal, hideModal, clearForm };

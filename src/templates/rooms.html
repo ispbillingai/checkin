@@ -16,17 +16,51 @@
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Entry Points</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
           </tr>
         </thead>
         <tbody id="rooms-table" class="bg-white divide-y divide-gray-200">
           <!-- Rooms will be loaded here -->
           <tr>
-            <td colspan="5" class="px-6 py-4 text-center text-gray-500">Loading rooms...</td>
+            <td colspan="4" class="px-6 py-4 text-center text-gray-500">Loading rooms...</td>
           </tr>
         </tbody>
       </table>
+    </div>
+  </div>
+  
+  <!-- Room Modal -->
+  <div id="room-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4 border-b pb-2">
+        <h3 id="room-form-title" class="text-xl font-semibold text-gray-800">Add New Room</h3>
+        <button class="close-modal text-gray-400 hover:text-gray-600">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <form id="room-form" data-mode="add" class="space-y-4">
+        <div>
+          <label for="room-id" class="block text-sm font-medium text-gray-700">Room ID</label>
+          <input id="room-id" type="text" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+          <p class="text-xs text-gray-500 mt-1">Unique identifier for the room. Cannot be changed after creation.</p>
+        </div>
+        <div>
+          <label for="room-name" class="block text-sm font-medium text-gray-700">Room Name</label>
+          <input id="room-name" type="text" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+        </div>
+        <div>
+          <label for="room-description" class="block text-sm font-medium text-gray-700">Description</label>
+          <textarea id="room-description" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" rows="3"></textarea>
+        </div>
+        <div class="flex justify-end space-x-2 pt-4 border-t">
+          <button type="button" class="close-modal px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors">
+            Cancel
+          </button>
+          <button type="button" id="save-room-btn" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+            Save Room
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
