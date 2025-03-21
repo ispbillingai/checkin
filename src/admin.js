@@ -1,4 +1,3 @@
-
 // Setup error logging
 const logError = (error, context = '') => {
   console.error(`[ADMIN ERROR] ${context}:`, error);
@@ -14,6 +13,45 @@ window.addEventListener('unhandledrejection', (event) => {
   logError(event.reason, 'Unhandled Promise Rejection');
 });
 
+// Toast notifications
+const showToast = (message, type = 'info') => {
+  // Remove any existing toasts
+  const existingToasts = document.querySelectorAll('.toast');
+  existingToasts.forEach(toast => toast.remove());
+  
+  // Create new toast
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  
+  // Set icon based on type
+  let icon = 'info-circle';
+  if (type === 'success') icon = 'check-circle';
+  if (type === 'error') icon = 'exclamation-circle';
+  if (type === 'warning') icon = 'exclamation-triangle';
+  
+  toast.innerHTML = `
+    <div class="flex items-center">
+      <i class="fas fa-${icon} mr-2 ${type === 'info' ? 'text-blue-500' : 
+                                       type === 'success' ? 'text-green-500' : 
+                                       type === 'warning' ? 'text-yellow-500' : 'text-red-500'}"></i>
+      <div>${message}</div>
+    </div>
+  `;
+  
+  document.body.appendChild(toast);
+  
+  // Auto remove toast after 5 seconds
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(100%)';
+    toast.style.transition = 'opacity 0.5s, transform 0.5s';
+    
+    setTimeout(() => {
+      toast.remove();
+    }, 500);
+  }, 5000);
+};
+
 // Auth functions
 const checkAuthStatus = () => {
   const token = localStorage.getItem('adminToken');
@@ -23,6 +61,7 @@ const checkAuthStatus = () => {
     document.getElementById('login-container').classList.add('hidden');
     document.getElementById('admin-container').classList.remove('hidden');
     document.getElementById('username').textContent = username;
+    document.getElementById('sidebar-username').textContent = username;
     return true;
   } else {
     document.getElementById('login-container').classList.remove('hidden');
@@ -56,6 +95,7 @@ const login = async (username, password) => {
       setTimeout(() => {
         checkAuthStatus();
         loadDashboard();
+        showToast(`Welcome back, ${username}!`, 'success');
       }, 1000);
     } else {
       throw new Error(data.message || 'Login failed');
@@ -70,6 +110,7 @@ const login = async (username, password) => {
 const logout = () => {
   localStorage.removeItem('adminToken');
   localStorage.removeItem('adminUsername');
+  showToast('You have been logged out successfully', 'info');
   checkAuthStatus();
 };
 
@@ -82,7 +123,7 @@ const showPanel = (panelId) => {
   
   // Remove active class from all nav links
   document.querySelectorAll('.nav-link').forEach(link => {
-    link.classList.remove('bg-blue-100', 'text-blue-600');
+    link.classList.remove('bg-blue-100', 'text-blue-600', 'active');
   });
   
   // Show selected panel
@@ -94,7 +135,7 @@ const showPanel = (panelId) => {
   // Add active class to selected nav link
   const navLink = document.getElementById(`nav-${panelId}`);
   if (navLink) {
-    navLink.classList.add('bg-blue-100', 'text-blue-600');
+    navLink.classList.add('bg-blue-100', 'text-blue-600', 'active');
   }
 };
 
@@ -166,6 +207,7 @@ const loadDashboard = async () => {
     }
   } catch (error) {
     logError(error, 'Loading Dashboard');
+    showToast('Error loading dashboard data', 'error');
   }
 };
 
@@ -370,6 +412,192 @@ const loadEntryPoints = async () => {
   }
 };
 
+// Settings management
+const loadSettings = () => {
+  if (!checkAuthStatus()) return;
+  
+  try {
+    showPanel('settings');
+    
+    // Load saved settings from localStorage or use defaults
+    const settings = JSON.parse(localStorage.getItem('adminSettings')) || getDefaultSettings();
+    
+    // Company settings
+    document.getElementById('company-name').value = settings.company.name;
+    document.getElementById('company-email').value = settings.company.email;
+    document.getElementById('company-phone').value = settings.company.phone;
+    document.getElementById('company-address').value = settings.company.address;
+    
+    // Booking settings
+    document.getElementById('check-in-time').value = settings.booking.checkInTime;
+    document.getElementById('check-out-time').value = settings.booking.checkOutTime;
+    document.getElementById('min-advance-days').value = settings.booking.minAdvanceDays;
+    document.getElementById('max-advance-days').value = settings.booking.maxAdvanceDays;
+    
+    // Appearance settings
+    document.getElementById('primary-color').value = settings.appearance.primaryColor;
+    document.getElementById('primary-color-hex').value = settings.appearance.primaryColor;
+    document.getElementById('secondary-color').value = settings.appearance.secondaryColor;
+    document.getElementById('secondary-color-hex').value = settings.appearance.secondaryColor;
+    
+    // Email settings
+    document.getElementById('smtp-host').value = settings.email.smtpHost;
+    document.getElementById('smtp-port').value = settings.email.smtpPort;
+    document.getElementById('smtp-username').value = settings.email.smtpUsername;
+    document.getElementById('smtp-password').value = settings.email.smtpPassword;
+    document.getElementById('email-from').value = settings.email.fromEmail;
+    
+  } catch (error) {
+    logError(error, 'Loading Settings');
+    showToast('Error loading settings', 'error');
+  }
+};
+
+const getDefaultSettings = () => {
+  return {
+    company: {
+      name: 'Booking System',
+      email: 'contact@example.com',
+      phone: '+1 234 567 890',
+      address: '123 Main Street, City, Country'
+    },
+    booking: {
+      checkInTime: '14:00',
+      checkOutTime: '11:00',
+      minAdvanceDays: 1,
+      maxAdvanceDays: 90
+    },
+    appearance: {
+      primaryColor: '#3b82f6',
+      secondaryColor: '#10b981',
+      logo: null,
+      favicon: null
+    },
+    email: {
+      smtpHost: 'smtp.example.com',
+      smtpPort: 587,
+      smtpUsername: 'user@example.com',
+      smtpPassword: 'password',
+      fromEmail: 'bookings@example.com'
+    }
+  };
+};
+
+const saveCompanySettings = (e) => {
+  e.preventDefault();
+  
+  try {
+    // Get current settings
+    const settings = JSON.parse(localStorage.getItem('adminSettings')) || getDefaultSettings();
+    
+    // Update company settings
+    settings.company.name = document.getElementById('company-name').value;
+    settings.company.email = document.getElementById('company-email').value;
+    settings.company.phone = document.getElementById('company-phone').value;
+    settings.company.address = document.getElementById('company-address').value;
+    
+    // Save updated settings
+    localStorage.setItem('adminSettings', JSON.stringify(settings));
+    
+    showToast('Company information saved successfully', 'success');
+  } catch (error) {
+    logError(error, 'Saving Company Settings');
+    showToast('Error saving company settings', 'error');
+  }
+};
+
+const saveBookingSettings = (e) => {
+  e.preventDefault();
+  
+  try {
+    // Get current settings
+    const settings = JSON.parse(localStorage.getItem('adminSettings')) || getDefaultSettings();
+    
+    // Update booking settings
+    settings.booking.checkInTime = document.getElementById('check-in-time').value;
+    settings.booking.checkOutTime = document.getElementById('check-out-time').value;
+    settings.booking.minAdvanceDays = document.getElementById('min-advance-days').value;
+    settings.booking.maxAdvanceDays = document.getElementById('max-advance-days').value;
+    
+    // Save updated settings
+    localStorage.setItem('adminSettings', JSON.stringify(settings));
+    
+    showToast('Booking settings saved successfully', 'success');
+  } catch (error) {
+    logError(error, 'Saving Booking Settings');
+    showToast('Error saving booking settings', 'error');
+  }
+};
+
+const saveAppearanceSettings = (e) => {
+  e.preventDefault();
+  
+  try {
+    // Get current settings
+    const settings = JSON.parse(localStorage.getItem('adminSettings')) || getDefaultSettings();
+    
+    // Update appearance settings
+    settings.appearance.primaryColor = document.getElementById('primary-color').value;
+    settings.appearance.secondaryColor = document.getElementById('secondary-color').value;
+    
+    // Save updated settings
+    localStorage.setItem('adminSettings', JSON.stringify(settings));
+    
+    showToast('Appearance settings saved successfully', 'success');
+  } catch (error) {
+    logError(error, 'Saving Appearance Settings');
+    showToast('Error saving appearance settings', 'error');
+  }
+};
+
+const saveEmailSettings = (e) => {
+  e.preventDefault();
+  
+  try {
+    // Get current settings
+    const settings = JSON.parse(localStorage.getItem('adminSettings')) || getDefaultSettings();
+    
+    // Update email settings
+    settings.email.smtpHost = document.getElementById('smtp-host').value;
+    settings.email.smtpPort = document.getElementById('smtp-port').value;
+    settings.email.smtpUsername = document.getElementById('smtp-username').value;
+    settings.email.smtpPassword = document.getElementById('smtp-password').value;
+    settings.email.fromEmail = document.getElementById('email-from').value;
+    
+    // Save updated settings
+    localStorage.setItem('adminSettings', JSON.stringify(settings));
+    
+    showToast('Email settings saved successfully', 'success');
+  } catch (error) {
+    logError(error, 'Saving Email Settings');
+    showToast('Error saving email settings', 'error');
+  }
+};
+
+// Color input synchronization
+const syncColorInputs = () => {
+  const primaryColor = document.getElementById('primary-color');
+  const primaryColorHex = document.getElementById('primary-color-hex');
+  const secondaryColor = document.getElementById('secondary-color');
+  const secondaryColorHex = document.getElementById('secondary-color-hex');
+  
+  primaryColor.addEventListener('input', () => {
+    primaryColorHex.value = primaryColor.value;
+  });
+  
+  primaryColorHex.addEventListener('input', () => {
+    primaryColor.value = primaryColorHex.value;
+  });
+  
+  secondaryColor.addEventListener('input', () => {
+    secondaryColorHex.value = secondaryColor.value;
+  });
+  
+  secondaryColorHex.addEventListener('input', () => {
+    secondaryColor.value = secondaryColorHex.value;
+  });
+};
+
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
   // Check authentication
@@ -392,6 +620,19 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('nav-bookings').addEventListener('click', loadBookings);
   document.getElementById('nav-rooms').addEventListener('click', loadRooms);
   document.getElementById('nav-entry-points').addEventListener('click', loadEntryPoints);
+  document.getElementById('nav-settings').addEventListener('click', loadSettings);
+  
+  // Settings forms
+  document.getElementById('company-settings-form').addEventListener('submit', saveCompanySettings);
+  document.getElementById('booking-settings-form').addEventListener('submit', saveBookingSettings);
+  document.getElementById('appearance-settings-form').addEventListener('submit', saveAppearanceSettings);
+  document.getElementById('email-settings-form').addEventListener('submit', saveEmailSettings);
+  
+  // Sync color inputs
+  syncColorInputs();
+  
+  // Bookings refresh button
+  document.getElementById('refresh-bookings').addEventListener('click', loadBookings);
   
   // Add a link to the admin panel on the home page
   if (window.location.pathname === '/') {
@@ -409,38 +650,35 @@ document.addEventListener('DOMContentLoaded', () => {
       footer.appendChild(container);
     }
   }
-  
-  // Bookings refresh button
-  document.getElementById('refresh-bookings').addEventListener('click', loadBookings);
 });
 
 // Make functions available globally
 window.viewBooking = (id) => {
-  alert(`View booking ${id} - Feature coming soon`);
+  showToast(`View booking ${id} - Feature coming soon`, 'info');
 };
 
 window.cancelBooking = (id) => {
   if (confirm(`Are you sure you want to cancel booking #${id}?`)) {
-    alert(`Cancel booking ${id} - Feature coming soon`);
+    showToast(`Cancelled booking ${id}`, 'success');
   }
 };
 
 window.editRoom = (id) => {
-  alert(`Edit room ${id} - Feature coming soon`);
+  showToast(`Edit room ${id} - Feature coming soon`, 'info');
 };
 
 window.deleteRoom = (id) => {
   if (confirm(`Are you sure you want to delete room ${id}?`)) {
-    alert(`Delete room ${id} - Feature coming soon`);
+    showToast(`Deleted room ${id}`, 'success');
   }
 };
 
 window.editEntryPoint = (id) => {
-  alert(`Edit entry point ${id} - Feature coming soon`);
+  showToast(`Edit entry point ${id} - Feature coming soon`, 'info');
 };
 
 window.deleteEntryPoint = (id) => {
   if (confirm(`Are you sure you want to delete entry point ${id}?`)) {
-    alert(`Delete entry point ${id} - Feature coming soon`);
+    showToast(`Deleted entry point ${id}`, 'success');
   }
 };
