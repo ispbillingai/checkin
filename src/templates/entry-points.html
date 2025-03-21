@@ -1,0 +1,32 @@
+
+<div id="panel-entry-points" class="admin-panel hidden">
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 flex items-center">
+      <i class="fas fa-key mr-2 text-blue-500"></i> Manage Entry Points
+    </h2>
+    <div class="mb-4 flex justify-end">
+      <button id="add-entry-point-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded transition-colors flex items-center">
+        <i class="fas fa-plus mr-1"></i> Add New Entry Point
+      </button>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Associated Rooms</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="entry-points-table" class="bg-white divide-y divide-gray-200">
+          <!-- Entry points will be loaded here -->
+          <tr>
+            <td colspan="5" class="px-6 py-4 text-center text-gray-500">Loading entry points...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

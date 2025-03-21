@@ -1,0 +1,51 @@
+
+<div id="panel-bookings" class="admin-panel hidden">
+  <div class="bg-white rounded-lg shadow-md p-6">
+    <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2 flex items-center">
+      <i class="fas fa-calendar-check mr-2 text-blue-500"></i> Manage Bookings
+    </h2>
+    <div class="flex flex-col sm:flex-row justify-between mb-4 space-y-2 sm:space-y-0">
+      <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+        <select id="booking-status-filter" class="px-3 py-2 border border-gray-300 rounded">
+          <option value="all">All Statuses</option>
+          <option value="active">Active</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <select id="booking-room-filter" class="px-3 py-2 border border-gray-300 rounded">
+          <option value="all">All Rooms</option>
+          <!-- Rooms will be loaded here -->
+        </select>
+      </div>
+      <div class="flex space-x-2">
+        <button id="refresh-bookings" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-3 py-2 rounded transition-colors flex items-center">
+          <i class="fas fa-sync-alt mr-1"></i> Refresh
+        </button>
+        <a href="/" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded transition-colors flex items-center">
+          <i class="fas fa-plus mr-1"></i> New Booking
+        </a>
+      </div>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Guest</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Arrival</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Departure</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="bookings-table" class="bg-white divide-y divide-gray-200">
+          <!-- Bookings will be loaded here -->
+          <tr>
+            <td colspan="7" class="px-6 py-4 text-center text-gray-500">Loading bookings...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

@@ -1,3 +1,6 @@
+// Import template loader
+import { loadTemplates } from './templates/template-loader.js';
+
 // Setup error logging
 const logError = (error, context = '') => {
   console.error(`[ADMIN ERROR] ${context}:`, error);
@@ -599,7 +602,15 @@ const syncColorInputs = () => {
 };
 
 // Initialize app
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // First load all templates
+  const templatesLoaded = await loadTemplates();
+  
+  if (!templatesLoaded) {
+    showToast('Failed to load templates. Please refresh the page.', 'error');
+    return;
+  }
+  
   // Check authentication
   if (checkAuthStatus()) {
     loadDashboard();
