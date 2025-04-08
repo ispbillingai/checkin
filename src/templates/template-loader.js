@@ -9,7 +9,8 @@ const loadTemplates = async () => {
       { id: 'bookings-template', path: '/src/templates/bookings.html' },
       { id: 'rooms-template', path: '/src/templates/rooms.html' },
       { id: 'entry-points-template', path: '/src/templates/entry-points.html' },
-      { id: 'settings-template', path: '/src/templates/settings.html' }
+      { id: 'settings-template', path: '/src/templates/settings.html' },
+      { id: 'staff-template', path: '/src/templates/staff.html' }
     ];
     
     for (const template of templates) {
