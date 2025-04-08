@@ -233,7 +233,7 @@ ALTER TABLE `rooms`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indexes for table `room_entry_points`
+-- Indexesss for table `room_entry_points`
 --
 ALTER TABLE `room_entry_points`
   ADD PRIMARY KEY (`id`),
