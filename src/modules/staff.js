@@ -1,4 +1,3 @@
-
 import { logError } from '../utils/error-utils.js';
 import { showToast } from '../utils/toast-utils.js';
 import { checkAuthStatus } from './auth.js';
@@ -60,6 +59,123 @@ const loadStaff = async () => {
   } catch (error) {
     logError(error, 'Loading Staff');
     showToast('Failed to load staff members', 'error');
+  }
+};
+
+// Add event listeners to staff buttons
+const addStaffEventListeners = () => {
+  // Add staff button
+  const addStaffBtn = document.getElementById('add-staff-btn');
+  if (addStaffBtn) {
+    addStaffBtn.addEventListener('click', () => {
+      clearForm('staff-form');
+      document.getElementById('staff-form-title').textContent = 'Add New Staff';
+      document.getElementById('staff-form').setAttribute('data-mode', 'add');
+      
+      // Reset checkboxes and positions
+      document.getElementById('access-all-rooms').checked = false;
+      document.getElementById('specific-rooms-container').style.display = 'block';
+      
+      document.querySelectorAll('.room-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+        const roomId = checkbox.value;
+        const positionInput = document.getElementById(`room-pos-${roomId}`);
+        if (positionInput) {
+          positionInput.disabled = true;
+          positionInput.value = "";
+        }
+      });
+      
+      document.querySelectorAll('.entry-point-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+        const entryId = checkbox.value;
+        const positionInput = document.getElementById(`entry-pos-${entryId}`);
+        if (positionInput) {
+          positionInput.disabled = true;
+          positionInput.value = "";
+        }
+      });
+      
+      showModal('staff-modal');
+    });
+  }
+  
+  // Edit staff buttons
+  document.querySelectorAll('.edit-staff-btn').forEach(button => {
+    button.addEventListener('click', () => {
+      const staffData = JSON.parse(button.getAttribute('data-staff'));
+      document.getElementById('staff-form-title').textContent = 'Edit Staff';
+      document.getElementById('staff-name').value = staffData.name;
+      document.getElementById('staff-email').value = staffData.email;
+      document.getElementById('staff-phone').value = staffData.phone || '';
+      document.getElementById('staff-password').value = ''; // Don't show password
+      
+      // Set access_all_rooms checkbox
+      const accessAllRooms = document.getElementById('access-all-rooms');
+      accessAllRooms.checked = staffData.access_all_rooms == 1;
+      
+      // Show/hide specific rooms container based on access_all_rooms
+      document.getElementById('specific-rooms-container').style.display = 
+        staffData.access_all_rooms == 1 ? 'none' : 'block';
+      
+      // Set selected rooms and positions
+      const roomIds = staffData.rooms ? staffData.rooms.split(',') : [];
+      const roomPositions = staffData.room_positions ? staffData.room_positions.split(',') : [];
+      
+      document.querySelectorAll('.room-checkbox').forEach(checkbox => {
+        const roomId = checkbox.value;
+        const index = roomIds.indexOf(roomId);
+        checkbox.checked = index !== -1;
+        
+        const positionInput = document.getElementById(`room-pos-${roomId}`);
+        if (positionInput) {
+          positionInput.disabled = index === -1;
+          positionInput.value = index !== -1 ? (roomPositions[index] || "1") : "";
+        }
+      });
+      
+      // Set selected entry points and positions
+      const entryIds = staffData.entry_points ? staffData.entry_points.split(',') : [];
+      const entryPositions = staffData.entry_point_positions ? staffData.entry_point_positions.split(',') : [];
+      
+      document.querySelectorAll('.entry-point-checkbox').forEach(checkbox => {
+        const entryId = checkbox.value;
+        const index = entryIds.indexOf(entryId);
+        checkbox.checked = index !== -1;
+        
+        const positionInput = document.getElementById(`entry-pos-${entryId}`);
+        if (positionInput) {
+          positionInput.disabled = index === -1;
+          positionInput.value = index !== -1 ? (entryPositions[index] || "1") : "";
+        }
+      });
+      
+      // Set form mode and staff ID
+      document.getElementById('staff-form').setAttribute('data-mode', 'edit');
+      document.getElementById('staff-form').setAttribute('data-staff-id', staffData.id);
+      
+      showModal('staff-modal');
+    });
+  });
+  
+  // Delete staff buttons
+  document.querySelectorAll('.delete-staff-btn').forEach(button => {
+    button.addEventListener('click', () => {
+      const staffId = button.getAttribute('data-id');
+      const staffName = button.getAttribute('data-name');
+      if (confirm(`Are you sure you want to delete staff member "${staffName}"?`)) {
+        deleteStaff(staffId);
+      }
+    });
+  });
+  
+  // Toggle access all rooms
+  const accessAllRoomsCheckbox = document.getElementById('access-all-rooms');
+  if (accessAllRoomsCheckbox) {
+    accessAllRoomsCheckbox.addEventListener('change', (e) => {
+      const specificRoomsContainer = document.getElementById('specific-rooms-container');
+      specificRoomsContainer.style.display = e.target.checked ? 'none' : 'block';
+    });
   }
 };
 
@@ -177,117 +293,6 @@ const loadEntryPointsForStaffForm = async () => {
     logError(error, 'Loading Entry Points for Staff Form');
     document.getElementById('entry-points-selection').innerHTML = '<p class="text-red-500 text-sm">Failed to load entry points</p>';
   }
-};
-
-// Add event listeners to staff buttons
-const addStaffEventListeners = () => {
-  // Add staff button
-  document.getElementById('add-staff-btn').addEventListener('click', () => {
-    clearForm('staff-form');
-    document.getElementById('staff-form-title').textContent = 'Add New Staff';
-    document.getElementById('staff-form').setAttribute('data-mode', 'add');
-    
-    // Reset checkboxes and positions
-    document.getElementById('access-all-rooms').checked = false;
-    document.getElementById('specific-rooms-container').style.display = 'block';
-    
-    document.querySelectorAll('.room-checkbox').forEach(checkbox => {
-      checkbox.checked = false;
-      const roomId = checkbox.value;
-      const positionInput = document.getElementById(`room-pos-${roomId}`);
-      if (positionInput) {
-        positionInput.disabled = true;
-        positionInput.value = "";
-      }
-    });
-    
-    document.querySelectorAll('.entry-point-checkbox').forEach(checkbox => {
-      checkbox.checked = false;
-      const entryId = checkbox.value;
-      const positionInput = document.getElementById(`entry-pos-${entryId}`);
-      if (positionInput) {
-        positionInput.disabled = true;
-        positionInput.value = "";
-      }
-    });
-    
-    showModal('staff-modal');
-  });
-  
-  // Edit staff buttons
-  document.querySelectorAll('.edit-staff-btn').forEach(button => {
-    button.addEventListener('click', () => {
-      const staffData = JSON.parse(button.getAttribute('data-staff'));
-      document.getElementById('staff-form-title').textContent = 'Edit Staff';
-      document.getElementById('staff-name').value = staffData.name;
-      document.getElementById('staff-email').value = staffData.email;
-      document.getElementById('staff-phone').value = staffData.phone || '';
-      document.getElementById('staff-password').value = ''; // Don't show password
-      
-      // Set access_all_rooms checkbox
-      const accessAllRooms = document.getElementById('access-all-rooms');
-      accessAllRooms.checked = staffData.access_all_rooms == 1;
-      
-      // Show/hide specific rooms container based on access_all_rooms
-      document.getElementById('specific-rooms-container').style.display = 
-        staffData.access_all_rooms == 1 ? 'none' : 'block';
-      
-      // Set selected rooms and positions
-      const roomIds = staffData.rooms ? staffData.rooms.split(',') : [];
-      const roomPositions = staffData.room_positions ? staffData.room_positions.split(',') : [];
-      
-      document.querySelectorAll('.room-checkbox').forEach(checkbox => {
-        const roomId = checkbox.value;
-        const index = roomIds.indexOf(roomId);
-        checkbox.checked = index !== -1;
-        
-        const positionInput = document.getElementById(`room-pos-${roomId}`);
-        if (positionInput) {
-          positionInput.disabled = index === -1;
-          positionInput.value = index !== -1 ? (roomPositions[index] || "1") : "";
-        }
-      });
-      
-      // Set selected entry points and positions
-      const entryIds = staffData.entry_points ? staffData.entry_points.split(',') : [];
-      const entryPositions = staffData.entry_point_positions ? staffData.entry_point_positions.split(',') : [];
-      
-      document.querySelectorAll('.entry-point-checkbox').forEach(checkbox => {
-        const entryId = checkbox.value;
-        const index = entryIds.indexOf(entryId);
-        checkbox.checked = index !== -1;
-        
-        const positionInput = document.getElementById(`entry-pos-${entryId}`);
-        if (positionInput) {
-          positionInput.disabled = index === -1;
-          positionInput.value = index !== -1 ? (entryPositions[index] || "1") : "";
-        }
-      });
-      
-      // Set form mode and staff ID
-      document.getElementById('staff-form').setAttribute('data-mode', 'edit');
-      document.getElementById('staff-form').setAttribute('data-staff-id', staffData.id);
-      
-      showModal('staff-modal');
-    });
-  });
-  
-  // Delete staff buttons
-  document.querySelectorAll('.delete-staff-btn').forEach(button => {
-    button.addEventListener('click', () => {
-      const staffId = button.getAttribute('data-id');
-      const staffName = button.getAttribute('data-name');
-      if (confirm(`Are you sure you want to delete staff member "${staffName}"?`)) {
-        deleteStaff(staffId);
-      }
-    });
-  });
-  
-  // Toggle access all rooms
-  document.getElementById('access-all-rooms').addEventListener('change', (e) => {
-    const specificRoomsContainer = document.getElementById('specific-rooms-container');
-    specificRoomsContainer.style.display = e.target.checked ? 'none' : 'block';
-  });
 };
 
 // Save staff (add or edit)
@@ -416,10 +421,45 @@ const initStaffModule = () => {
     await loadEntryPointsForStaffForm();
   });
   
-  // Save staff button
+  // Add event listener for the save staff button
   document.addEventListener('click', (e) => {
     if (e.target.id === 'save-staff-btn') {
       saveStaff();
+    }
+  });
+  
+  // Add event listener for the add staff button (works when panel is shown)
+  document.addEventListener('click', (e) => {
+    if (e.target.id === 'add-staff-btn') {
+      clearForm('staff-form');
+      document.getElementById('staff-form-title').textContent = 'Add New Staff';
+      document.getElementById('staff-form').setAttribute('data-mode', 'add');
+      document.getElementById('access-all-rooms').checked = false;
+      document.getElementById('specific-rooms-container').style.display = 'block';
+      
+      // Reset room checkboxes
+      document.querySelectorAll('.room-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+        const roomId = checkbox.value;
+        const positionInput = document.getElementById(`room-pos-${roomId}`);
+        if (positionInput) {
+          positionInput.disabled = true;
+          positionInput.value = "";
+        }
+      });
+      
+      // Reset entry point checkboxes
+      document.querySelectorAll('.entry-point-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+        const entryId = checkbox.value;
+        const positionInput = document.getElementById(`entry-pos-${entryId}`);
+        if (positionInput) {
+          positionInput.disabled = true;
+          positionInput.value = "";
+        }
+      });
+      
+      showModal('staff-modal');
     }
   });
   
