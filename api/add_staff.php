@@ -27,7 +27,7 @@ $data = json_decode($json, true);
 if (!isset($data['name']) || empty($data['name']) || 
     !isset($data['email']) || empty($data['email']) ||
     !isset($data['password']) || empty($data['password'])) {
-    echo json_encode(['success' => false, 'message' => 'Name, email, and password are required']);
+    echo json_encode(['success' => false, 'message' => 'Name, email, and PIN code are required']);
     exit;
 }
 
@@ -46,9 +46,10 @@ try {
     }
     
     // Insert new staff
-    $stmt = $pdo->prepare("INSERT INTO staff (name, email, phone, password, access_all_rooms, rooms, room_positions, entry_points, entry_point_positions) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt = $pdo->prepare("INSERT INTO staff (name, email, phone, pin_code, access_all_rooms, rooms, room_positions, entry_points, entry_point_positions) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
     
-    $password = password_hash($data['password'], PASSWORD_DEFAULT);
+    // Store the pin code as is, no hashing needed since it's an entry code
+    $pinCode = $data['password']; // Using the 'password' field from the form as the PIN code
     $accessAllRooms = isset($data['access_all_rooms']) ? $data['access_all_rooms'] : 0;
     $rooms = isset($data['rooms']) ? $data['rooms'] : '';
     $roomPositions = isset($data['room_positions']) ? $data['room_positions'] : '';
@@ -59,7 +60,7 @@ try {
         $data['name'],
         $data['email'],
         isset($data['phone']) ? $data['phone'] : '',
-        $password,
+        $pinCode,
         $accessAllRooms,
         $rooms,
         $roomPositions,

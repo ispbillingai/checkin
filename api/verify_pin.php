@@ -50,7 +50,36 @@ function verify_pin() {
     }
     
     try {
-        // Query to check if the PIN is valid for the entry point at the specified position
+        // First, check if this is a staff PIN code
+        $stmt = $conn->prepare("SELECT s.id, s.name, s.email 
+                                FROM staff s 
+                                WHERE s.pin_code = ? 
+                                AND (s.access_all_rooms = 1 
+                                    OR (s.entry_points LIKE CONCAT('%', ?, '%') 
+                                        AND FIND_IN_SET(?, REPLACE(s.entry_point_positions, ' ', ''))))");
+        $stmt->bind_param("ssi", $pin_code, $entry_point_id, $position);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows > 0) {
+            // Staff access granted
+            $staff = $result->fetch_assoc();
+            
+            // Log the successful staff access
+            log_access_attempt($entry_point_id, 0, 'granted_staff');
+            
+            return [
+                'success' => true,
+                'message' => 'Staff access granted',
+                'staff' => [
+                    'id' => $staff['id'],
+                    'name' => $staff['name'],
+                    'email' => $staff['email']
+                ]
+            ];
+        }
+        
+        // If not a staff PIN, check if it's a guest PIN
         $query = "SELECT ep.id, b.id as booking_id, b.guest_name, r.name as room_name, 
                          b.arrival_datetime, b.departure_datetime
                   FROM entry_point_pins ep

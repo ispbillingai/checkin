@@ -58,10 +58,10 @@ try {
         isset($data['entry_point_positions']) ? $data['entry_point_positions'] : ''
     ];
     
-    // If password is provided, update it too
+    // If password is provided, update it too (as PIN code)
     if (isset($data['password']) && !empty($data['password'])) {
-        $sql .= ", password = ?";
-        $params[] = password_hash($data['password'], PASSWORD_DEFAULT);
+        $sql .= ", pin_code = ?";
+        $params[] = $data['password']; // Store directly as PIN code
     }
     
     // Complete the query

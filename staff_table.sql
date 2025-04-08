@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS `staff` (
   `name` varchar(100) NOT NULL,
   `email` varchar(100) NOT NULL,
   `phone` varchar(20) DEFAULT NULL,
-  `password` varchar(255) NOT NULL,
+  `pin_code` varchar(20) NOT NULL COMMENT 'PIN code for entry access',
   `access_all_rooms` tinyint(1) NOT NULL DEFAULT '0',
   `rooms` text,
   `room_positions` text,

@@ -25,7 +25,7 @@ try {
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
     // Get all staff
-    $stmt = $pdo->prepare("SELECT * FROM staff ORDER BY name");
+    $stmt = $pdo->prepare("SELECT id, name, email, phone, pin_code, access_all_rooms, rooms, room_positions, entry_points, entry_point_positions, created_at FROM staff ORDER BY name");
     $stmt->execute();
     $staff = $stmt->fetchAll(PDO::FETCH_ASSOC);
     

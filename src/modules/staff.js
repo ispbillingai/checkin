@@ -1,4 +1,3 @@
-
 import { logError } from '../utils/error-utils.js';
 import { showToast } from '../utils/toast-utils.js';
 import { checkAuthStatus } from './auth.js';
@@ -75,7 +74,7 @@ const addStaffEventListeners = () => {
       document.getElementById('staff-name').value = staffData.name;
       document.getElementById('staff-email').value = staffData.email;
       document.getElementById('staff-phone').value = staffData.phone || '';
-      document.getElementById('staff-password').value = ''; // Don't show password
+      document.getElementById('staff-password').value = ''; // Don't show PIN code
       
       // Set access_all_rooms checkbox
       const accessAllRooms = document.getElementById('access-all-rooms');
@@ -270,7 +269,7 @@ const saveStaff = async () => {
     const staffName = document.getElementById('staff-name').value.trim();
     const staffEmail = document.getElementById('staff-email').value.trim();
     const staffPhone = document.getElementById('staff-phone').value.trim();
-    const staffPassword = document.getElementById('staff-password').value.trim();
+    const staffPinCode = document.getElementById('staff-password').value.trim(); // Changed variable name to reflect it's a PIN code
     const accessAllRooms = document.getElementById('access-all-rooms').checked;
     
     if (!staffName || !staffEmail) {
@@ -278,8 +277,8 @@ const saveStaff = async () => {
       return;
     }
     
-    if (mode === 'add' && !staffPassword) {
-      showToast('Password is required for new staff members', 'error');
+    if (mode === 'add' && !staffPinCode) {
+      showToast('PIN code is required for new staff members', 'error');
       return;
     }
     
@@ -314,7 +313,7 @@ const saveStaff = async () => {
       name: staffName,
       email: staffEmail,
       phone: staffPhone,
-      password: staffPassword, // Only sent if not empty
+      password: staffPinCode, // Keep using 'password' as the field name for API compatibility
       access_all_rooms: accessAllRooms ? 1 : 0,
       rooms: selectedRooms.join(','),
       room_positions: roomPositions.join(','),
