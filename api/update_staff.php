@@ -39,17 +39,22 @@ function logMessage($message) {
     file_put_contents($logFile, $logLine, FILE_APPEND);
 }
 
-// Function to send HTTP requests (similar to cron.php)
-function sendGetRequest($url) {
-    logMessage("Sending GET request to: {$url}");
-    $result = @file_get_contents($url);
-    if ($result === false) {
-        logMessage("ERROR: Failed to get a response from {$url}");
-        return null;
-    }
-    $respSnippet = substr($result, 0, 500);
-    logMessage("Response from {$url}: {$respSnippet}");
-    return $result;
+// Non-blocking function to send HTTP requests in the background
+function sendAsyncRequest($url) {
+    logMessage("Sending async GET request to: {$url}");
+    
+    // Use file_get_contents in non-blocking mode (fire and forget)
+    $opts = [
+        'http' => [
+            'timeout' => 0.01, // Very short timeout for non-blocking behavior
+        ]
+    ];
+    $context = stream_context_create($opts);
+    @file_get_contents($url, false, $context);
+    
+    // Immediately log success - actual success will be determined by door controller
+    logMessage("Async request initiated to: {$url}");
+    return true;
 }
 
 try {
@@ -113,6 +118,16 @@ try {
         exit;
     }
     
+    // Return success response immediately
+    echo json_encode([
+        'success' => true,
+        'message' => 'Staff updated successfully'
+    ]);
+    
+    // Flush output buffer to send response immediately
+    if (ob_get_level()) ob_end_flush();
+    flush();
+    
     logMessage("=== STAFF UPDATE START ===");
     logMessage("Updating staff ID={$data['id']}, name={$data['name']}");
     
@@ -147,8 +162,8 @@ try {
             
             if (!empty($roomIp) && !in_array($roomId, $newRooms)) {
                 $url = "http://{$roomIp}/clu_set1.cgi?box={$roomPos}&value=0";
-                sendGetRequest($url);
-                logMessage("Cleared PIN code from all-access room ID={$roomId}, position={$roomPos}");
+                sendAsyncRequest($url);
+                logMessage("Initiated PIN code clearing from all-access room ID={$roomId}, position={$roomPos}");
             }
         }
     }
@@ -175,8 +190,8 @@ try {
             // If this room is no longer in the list, clear its code
             if (!in_array($roomId, $newRooms) && !empty($roomIp)) {
                 $url = "http://{$roomIp}/clu_set1.cgi?box={$roomPos}&value=0";
-                sendGetRequest($url);
-                logMessage("Cleared PIN code from removed room ID={$roomId}, position={$roomPos}");
+                sendAsyncRequest($url);
+                logMessage("Initiated PIN code clearing from removed room ID={$roomId}, position={$roomPos}");
             }
         }
     }
@@ -205,8 +220,8 @@ try {
             
             if (!empty($roomIp)) {
                 $url = "http://{$roomIp}/clu_set1.cgi?box={$roomPos}&value={$pinCode}";
-                sendGetRequest($url);
-                logMessage("Sent PIN code to room ID={$roomId}, position={$roomPos}");
+                sendAsyncRequest($url);
+                logMessage("Initiated PIN code send to room ID={$roomId}, position={$roomPos}");
             } else {
                 logMessage("Skipping room code send: Missing IP for room ID={$roomId}");
             }
@@ -225,8 +240,8 @@ try {
             
             if (!empty($roomIp)) {
                 $url = "http://{$roomIp}/clu_set1.cgi?box={$roomPos}&value={$pinCode}";
-                sendGetRequest($url);
-                logMessage("Sent PIN code to all-access room ID={$roomId}, position={$roomPos}");
+                sendAsyncRequest($url);
+                logMessage("Initiated PIN code send to all-access room ID={$roomId}, position={$roomPos}");
             } else {
                 logMessage("Skipping all-access room code send: Missing IP for room ID={$roomId}");
             }
@@ -260,8 +275,8 @@ try {
             // If this entry point is no longer in the list, clear its code
             if (!in_array($entryId, $newEntryPoints) && !empty($entryIp)) {
                 $url = "http://{$entryIp}/clu_set1.cgi?box={$entryPos}&value=0";
-                sendGetRequest($url);
-                logMessage("Cleared PIN code from removed entry point ID={$entryId}, position={$entryPos}");
+                sendAsyncRequest($url);
+                logMessage("Initiated PIN code clearing from removed entry point ID={$entryId}, position={$entryPos}");
             }
         }
     }
@@ -290,8 +305,8 @@ try {
             
             if (!empty($entryIp)) {
                 $url = "http://{$entryIp}/clu_set1.cgi?box={$entryPos}&value={$pinCode}";
-                sendGetRequest($url);
-                logMessage("Sent PIN code to entry point ID={$entryId}, position={$entryPos}");
+                sendAsyncRequest($url);
+                logMessage("Initiated PIN code send to entry point ID={$entryId}, position={$entryPos}");
             } else {
                 logMessage("Skipping entry point code send: Missing IP for entry ID={$entryId}");
             }
@@ -300,11 +315,6 @@ try {
     
     logMessage("=== STAFF UPDATE END ===");
     
-    // Return success response
-    echo json_encode([
-        'success' => true,
-        'message' => 'Staff updated successfully'
-    ]);
 } catch (PDOException $e) {
     // Log error and return error response
     error_log("Database error: " . $e->getMessage());

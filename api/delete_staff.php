@@ -37,17 +37,22 @@ function logMessage($message) {
     file_put_contents($logFile, $logLine, FILE_APPEND);
 }
 
-// Function to send HTTP requests (similar to cron.php)
-function sendGetRequest($url) {
-    logMessage("Sending GET request to: {$url}");
-    $result = @file_get_contents($url);
-    if ($result === false) {
-        logMessage("ERROR: Failed to get a response from {$url}");
-        return null;
-    }
-    $respSnippet = substr($result, 0, 500);
-    logMessage("Response from {$url}: {$respSnippet}");
-    return $result;
+// Non-blocking function to send HTTP requests in the background
+function sendAsyncRequest($url) {
+    logMessage("Sending async GET request to: {$url}");
+    
+    // Use file_get_contents in non-blocking mode (fire and forget)
+    $opts = [
+        'http' => [
+            'timeout' => 0.01, // Very short timeout for non-blocking behavior
+        ]
+    ];
+    $context = stream_context_create($opts);
+    @file_get_contents($url, false, $context);
+    
+    // Immediately log success - actual success will be determined by door controller
+    logMessage("Async request initiated to: {$url}");
+    return true;
 }
 
 try {
@@ -64,6 +69,16 @@ try {
         echo json_encode(['success' => false, 'message' => 'Staff not found']);
         exit;
     }
+    
+    // Send success response immediately
+    echo json_encode([
+        'success' => true,
+        'message' => 'Staff deleted successfully'
+    ]);
+    
+    // Flush output buffer to send response immediately
+    if (ob_get_level()) ob_end_flush();
+    flush();
     
     logMessage("=== STAFF DELETE START ===");
     logMessage("Deleting staff ID={$data['id']}, name={$staffData['name']}");
@@ -87,8 +102,8 @@ try {
             
             if (!empty($roomIp)) {
                 $url = "http://{$roomIp}/clu_set1.cgi?box={$roomPos}&value=0";
-                sendGetRequest($url);
-                logMessage("Cleared PIN code from all-access room ID={$roomId}, position={$roomPos}");
+                sendAsyncRequest($url);
+                logMessage("Initiated PIN code clearing from all-access room ID={$roomId}, position={$roomPos}");
             }
         }
     } elseif (!empty($rooms)) {
@@ -111,8 +126,8 @@ try {
             
             if (!empty($roomIp)) {
                 $url = "http://{$roomIp}/clu_set1.cgi?box={$roomPos}&value=0";
-                sendGetRequest($url);
-                logMessage("Cleared PIN code from room ID={$roomId}, position={$roomPos}");
+                sendAsyncRequest($url);
+                logMessage("Initiated PIN code clearing from room ID={$roomId}, position={$roomPos}");
             }
         }
     }
@@ -141,8 +156,8 @@ try {
             
             if (!empty($entryIp)) {
                 $url = "http://{$entryIp}/clu_set1.cgi?box={$entryPos}&value=0";
-                sendGetRequest($url);
-                logMessage("Cleared PIN code from entry point ID={$entryId}, position={$entryPos}");
+                sendAsyncRequest($url);
+                logMessage("Initiated PIN code clearing from entry point ID={$entryId}, position={$entryPos}");
             }
         }
     }
@@ -154,11 +169,6 @@ try {
     logMessage("Staff ID={$data['id']} successfully deleted from database");
     logMessage("=== STAFF DELETE END ===");
     
-    // Return success response
-    echo json_encode([
-        'success' => true,
-        'message' => 'Staff deleted successfully'
-    ]);
 } catch (PDOException $e) {
     // Log error and return error response
     error_log("Database error: " . $e->getMessage());

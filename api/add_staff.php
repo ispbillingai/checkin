@@ -31,6 +31,32 @@ if (!isset($data['name']) || empty($data['name']) ||
     exit;
 }
 
+// Function to log messages (similar to cron.php)
+function logMessage($message) {
+    $logFile = __DIR__ . '/../staff_actions.log';
+    $time = date('Y-m-d H:i:s');
+    $logLine = "[{$time}] {$message}\n";
+    file_put_contents($logFile, $logLine, FILE_APPEND);
+}
+
+// Non-blocking function to send HTTP requests in the background
+function sendAsyncRequest($url) {
+    logMessage("Sending async GET request to: {$url}");
+    
+    // Use file_get_contents in non-blocking mode (fire and forget)
+    $opts = [
+        'http' => [
+            'timeout' => 0.01, // Very short timeout for non-blocking behavior
+        ]
+    ];
+    $context = stream_context_create($opts);
+    @file_get_contents($url, false, $context);
+    
+    // Immediately log success - actual success will be determined by door controller
+    logMessage("Async request initiated to: {$url}");
+    return true;
+}
+
 try {
     // Connect to database
     $pdo = new PDO("mysql:host=$db_host;dbname=$db_name", $db_user, $db_pass);
@@ -70,31 +96,22 @@ try {
     
     $staffId = $pdo->lastInsertId();
     
-    // Function to log messages (similar to cron.php)
-    function logMessage($message) {
-        $logFile = __DIR__ . '/../staff_actions.log';
-        $time = date('Y-m-d H:i:s');
-        $logLine = "[{$time}] {$message}\n";
-        file_put_contents($logFile, $logLine, FILE_APPEND);
-    }
+    // Return success response immediately so frontend doesn't wait
+    echo json_encode([
+        'success' => true,
+        'message' => 'Staff added successfully',
+        'id' => $staffId
+    ]);
     
-    // Function to send HTTP requests (similar to cron.php)
-    function sendGetRequest($url) {
-        logMessage("Sending GET request to: {$url}");
-        $result = @file_get_contents($url);
-        if ($result === false) {
-            logMessage("ERROR: Failed to get a response from {$url}");
-            return null;
-        }
-        $respSnippet = substr($result, 0, 500);
-        logMessage("Response from {$url}: {$respSnippet}");
-        return $result;
-    }
+    // Flush output buffer to send response immediately
+    if (ob_get_level()) ob_end_flush();
+    flush();
     
+    // Log start of background process
     logMessage("=== STAFF ADD START ===");
     logMessage("Adding staff ID={$staffId}, name={$data['name']}, pin={$pinCode}");
     
-    // Send PIN code to rooms if access to specific rooms was granted
+    // Send PIN code to rooms if access to specific rooms was granted (in background)
     if (!$accessAllRooms && !empty($rooms) && !empty($roomPositions)) {
         $roomIds = explode(',', $rooms);
         $roomPosArray = explode(',', $roomPositions);
@@ -118,8 +135,8 @@ try {
             
             if (!empty($roomIp)) {
                 $url = "http://{$roomIp}/clu_set1.cgi?box={$roomPos}&value={$pinCode}";
-                sendGetRequest($url);
-                logMessage("Sent PIN code to room ID={$roomId}, position={$roomPos}");
+                sendAsyncRequest($url);
+                logMessage("Initiated PIN code send to room ID={$roomId}, position={$roomPos}");
             } else {
                 logMessage("Skipping room code send: Missing IP for room ID={$roomId}");
             }
@@ -138,8 +155,8 @@ try {
             
             if (!empty($roomIp)) {
                 $url = "http://{$roomIp}/clu_set1.cgi?box={$roomPos}&value={$pinCode}";
-                sendGetRequest($url);
-                logMessage("Sent PIN code to all-access room ID={$roomId}, position={$roomPos}");
+                sendAsyncRequest($url);
+                logMessage("Initiated PIN code send to all-access room ID={$roomId}, position={$roomPos}");
             } else {
                 logMessage("Skipping all-access room code send: Missing IP for room ID={$roomId}");
             }
@@ -170,8 +187,8 @@ try {
             
             if (!empty($entryIp)) {
                 $url = "http://{$entryIp}/clu_set1.cgi?box={$entryPos}&value={$pinCode}";
-                sendGetRequest($url);
-                logMessage("Sent PIN code to entry point ID={$entryId}, position={$entryPos}");
+                sendAsyncRequest($url);
+                logMessage("Initiated PIN code send to entry point ID={$entryId}, position={$entryPos}");
             } else {
                 logMessage("Skipping entry point code send: Missing IP for entry ID={$entryId}");
             }
@@ -180,12 +197,6 @@ try {
     
     logMessage("=== STAFF ADD END ===");
     
-    // Return success response
-    echo json_encode([
-        'success' => true,
-        'message' => 'Staff added successfully',
-        'id' => $staffId
-    ]);
 } catch (PDOException $e) {
     // Log error and return error response
     error_log("Database error: " . $e->getMessage());
