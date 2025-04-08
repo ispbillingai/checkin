@@ -15,6 +15,7 @@ import {
   saveAppearanceSettings, 
   saveEmailSettings 
 } from './modules/settings.js';
+import { loadStaff, initStaffModule, saveStaff, deleteStaff } from './modules/staff.js';
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', async () => {
@@ -32,6 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Initialize room and entry point modules
   initRoomsModule();
   initEntryPointsModule();
+  initStaffModule();
   
   // Check authentication
   if (checkAuthStatus()) {
@@ -53,6 +55,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('nav-bookings').addEventListener('click', loadBookings);
   document.getElementById('nav-rooms').addEventListener('click', loadRooms);
   document.getElementById('nav-entry-points').addEventListener('click', loadEntryPoints);
+  document.getElementById('nav-staff').addEventListener('click', loadStaff);
   document.getElementById('nav-settings').addEventListener('click', loadSettings);
   
   // Settings forms
@@ -117,3 +120,7 @@ window.editEntryPoint = (entryPointId) => {
   }
 };
 window.deleteEntryPoint = deleteEntryPoint;
+window.editStaff = (staffId) => {
+  // This functionality is already handled in the staff.js module
+};
+window.deleteStaff = deleteStaff;
