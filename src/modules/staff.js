@@ -1,3 +1,4 @@
+
 import { logError } from '../utils/error-utils.js';
 import { showToast } from '../utils/toast-utils.js';
 import { checkAuthStatus } from './auth.js';
@@ -64,41 +65,7 @@ const loadStaff = async () => {
 
 // Add event listeners to staff buttons
 const addStaffEventListeners = () => {
-  // Add staff button
-  const addStaffBtn = document.getElementById('add-staff-btn');
-  if (addStaffBtn) {
-    addStaffBtn.addEventListener('click', () => {
-      clearForm('staff-form');
-      document.getElementById('staff-form-title').textContent = 'Add New Staff';
-      document.getElementById('staff-form').setAttribute('data-mode', 'add');
-      
-      // Reset checkboxes and positions
-      document.getElementById('access-all-rooms').checked = false;
-      document.getElementById('specific-rooms-container').style.display = 'block';
-      
-      document.querySelectorAll('.room-checkbox').forEach(checkbox => {
-        checkbox.checked = false;
-        const roomId = checkbox.value;
-        const positionInput = document.getElementById(`room-pos-${roomId}`);
-        if (positionInput) {
-          positionInput.disabled = true;
-          positionInput.value = "";
-        }
-      });
-      
-      document.querySelectorAll('.entry-point-checkbox').forEach(checkbox => {
-        checkbox.checked = false;
-        const entryId = checkbox.value;
-        const positionInput = document.getElementById(`entry-pos-${entryId}`);
-        if (positionInput) {
-          positionInput.disabled = true;
-          positionInput.value = "";
-        }
-      });
-      
-      showModal('staff-modal');
-    });
-  }
+  // Add staff button - moved to initStaffModule to avoid duplication
   
   // Edit staff buttons
   document.querySelectorAll('.edit-staff-btn').forEach(button => {
@@ -428,9 +395,47 @@ const initStaffModule = () => {
     }
   });
   
-  // Add event listener for the add staff button (works when panel is shown)
+  // Add event listener for the add staff button directly on the button
+  const addStaffBtn = document.getElementById('add-staff-btn');
+  if (addStaffBtn) {
+    addStaffBtn.addEventListener('click', () => {
+      clearForm('staff-form');
+      document.getElementById('staff-form-title').textContent = 'Add New Staff';
+      document.getElementById('staff-form').setAttribute('data-mode', 'add');
+      document.getElementById('access-all-rooms').checked = false;
+      document.getElementById('specific-rooms-container').style.display = 'block';
+      
+      // Reset room checkboxes
+      document.querySelectorAll('.room-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+        const roomId = checkbox.value;
+        const positionInput = document.getElementById(`room-pos-${roomId}`);
+        if (positionInput) {
+          positionInput.disabled = true;
+          positionInput.value = "";
+        }
+      });
+      
+      // Reset entry point checkboxes
+      document.querySelectorAll('.entry-point-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+        const entryId = checkbox.value;
+        const positionInput = document.getElementById(`entry-pos-${entryId}`);
+        if (positionInput) {
+          positionInput.disabled = true;
+          positionInput.value = "";
+        }
+      });
+      
+      showModal('staff-modal');
+    });
+  }
+  
+  // Also add a global event listener for the add staff button
+  // This helps when the button is dynamically added to the DOM after the page loads
   document.addEventListener('click', (e) => {
-    if (e.target.id === 'add-staff-btn') {
+    if (e.target.id === 'add-staff-btn' || 
+        (e.target.parentElement && e.target.parentElement.id === 'add-staff-btn')) {
       clearForm('staff-form');
       document.getElementById('staff-form-title').textContent = 'Add New Staff';
       document.getElementById('staff-form').setAttribute('data-mode', 'add');
