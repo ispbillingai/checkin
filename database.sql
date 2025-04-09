@@ -180,6 +180,23 @@ CREATE TABLE `users` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ----
 
+
+CREATE TABLE IF NOT EXISTS `staff` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `pin_code` varchar(20) NOT NULL COMMENT 'PIN code for entry access',
+  `access_all_rooms` tinyint(1) NOT NULL DEFAULT '0',
+  `rooms` text,
+  `room_positions` text,
+  `entry_points` text,
+  `entry_point_positions` text,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`)
+)
+
 --
 -- Dumping data for table `users`
 --
@@ -231,6 +248,8 @@ ALTER TABLE `notification_settings`
 --
 ALTER TABLE `rooms`
   ADD PRIMARY KEY (`id`);
+
+
 
 --
 -- Indexesss for table `room_entry_points`
@@ -321,3 +340,4 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+ALTER TABLE bookings ADD COLUMN codes_cleared TINYINT(1) NOT NULL DEFAULT 0;
