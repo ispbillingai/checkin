@@ -2,6 +2,7 @@ import { logError } from '../utils/error-utils.js';
 import { showToast } from '../utils/toast-utils.js';
 import { checkAuthStatus } from './auth.js';
 import { showPanel, showModal, hideModal, clearForm } from './navigation.js';
+import { generatePinCode } from '../utils/pin-utils.js';
 
 // Load staff data
 const loadStaff = async () => {
@@ -47,7 +48,6 @@ const loadStaff = async () => {
         tableBody.appendChild(row);
       }
       
-      // Add event listeners to the new buttons
       addStaffEventListeners();
     } else {
       tableBody.innerHTML = `
@@ -472,6 +472,15 @@ const initStaffModule = () => {
     button.addEventListener('click', () => {
       hideModal('staff-modal');
     });
+  });
+  
+  // Add event listener for PIN code generation
+  document.addEventListener('click', (e) => {
+    if (e.target.id === 'generate-pin-btn' || 
+        (e.target.parentElement && e.target.parentElement.id === 'generate-pin-btn')) {
+      const pinInput = document.getElementById('staff-password');
+      pinInput.value = generatePinCode(5);
+    }
   });
 };
 
