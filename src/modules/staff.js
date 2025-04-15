@@ -152,13 +152,8 @@ const getNextAvailablePosition = (existingPositions) => {
   
   // Find the first gap in the sequence, starting from 1
   let nextPos = 1;
-  for (const pos of positions) {
-    if (pos === nextPos) {
-      nextPos++;
-    } else if (pos > nextPos) {
-      // Found a gap
-      break;
-    }
+  while (positions.includes(nextPos)) {
+    nextPos++;
   }
   
   return nextPos.toString();
@@ -188,12 +183,20 @@ const getCurrentPositions = async () => {
     data.staff.forEach(staff => {
       if (staff.room_positions) {
         const positions = staff.room_positions.split(',');
-        roomPositions.push(...positions);
+        positions.forEach(pos => {
+          if (pos && !isNaN(parseInt(pos))) {
+            roomPositions.push(pos);
+          }
+        });
       }
       
       if (staff.entry_point_positions) {
         const positions = staff.entry_point_positions.split(',');
-        entryPositions.push(...positions);
+        positions.forEach(pos => {
+          if (pos && !isNaN(parseInt(pos))) {
+            entryPositions.push(pos);
+          }
+        });
       }
     });
     
@@ -206,11 +209,15 @@ const getCurrentPositions = async () => {
 
 // Set up position auto-assignment
 const setupPositionAutoAssignment = async () => {
+  // Get current positions in use
   const { roomPositions, entryPositions } = await getCurrentPositions();
   
   // Store the next available positions
   const nextRoomPos = getNextAvailablePosition(roomPositions);
   const nextEntryPos = getNextAvailablePosition(entryPositions);
+  
+  console.log("Next available room position:", nextRoomPos);
+  console.log("Next available entry position:", nextEntryPos);
   
   // Add event listeners to room checkboxes for real-time position assignment
   document.querySelectorAll('.room-checkbox').forEach(checkbox => {
@@ -221,8 +228,11 @@ const setupPositionAutoAssignment = async () => {
       if (positionInput) {
         positionInput.disabled = !e.target.checked;
         if (e.target.checked) {
-          // Immediately assign the next available position
-          positionInput.value = nextRoomPos;
+          // Assign the next available position when checked
+          getCurrentPositions().then(({ roomPositions }) => {
+            const nextPos = getNextAvailablePosition(roomPositions);
+            positionInput.value = nextPos;
+          });
         } else {
           positionInput.value = "";
         }
@@ -239,8 +249,11 @@ const setupPositionAutoAssignment = async () => {
       if (positionInput) {
         positionInput.disabled = !e.target.checked;
         if (e.target.checked) {
-          // Immediately assign the next available position
-          positionInput.value = nextEntryPos;
+          // Assign the next available position when checked
+          getCurrentPositions().then(({ entryPositions }) => {
+            const nextPos = getNextAvailablePosition(entryPositions);
+            positionInput.value = nextPos;
+          });
         } else {
           positionInput.value = "";
         }
@@ -339,28 +352,37 @@ const autoAssignPositions = async () => {
   // Get current positions in use
   const { roomPositions, entryPositions } = await getCurrentPositions();
   
-  // Determine next available position for rooms
-  const nextRoomPos = getNextAvailablePosition(roomPositions);
-  
-  // Determine next available position for entry points
-  const nextEntryPos = getNextAvailablePosition(entryPositions);
-  
-  // Set positions for all checked rooms
+  // Get all checked rooms without positions
+  const roomsWithoutPosition = [];
   document.querySelectorAll('.room-checkbox:checked').forEach(checkbox => {
     const roomId = checkbox.value;
     const posInput = document.getElementById(`room-pos-${roomId}`);
-    if (posInput && posInput.value === "") {
-      posInput.value = nextRoomPos;
+    if (posInput && (posInput.value === "" || isNaN(parseInt(posInput.value)))) {
+      roomsWithoutPosition.push({ id: roomId, input: posInput });
     }
   });
   
-  // Set positions for all checked entry points
+  // Get all checked entry points without positions
+  const entriesWithoutPosition = [];
   document.querySelectorAll('.entry-point-checkbox:checked').forEach(checkbox => {
     const entryId = checkbox.value;
     const posInput = document.getElementById(`entry-pos-${entryId}`);
-    if (posInput && posInput.value === "") {
-      posInput.value = nextEntryPos;
+    if (posInput && (posInput.value === "" || isNaN(parseInt(posInput.value)))) {
+      entriesWithoutPosition.push({ id: entryId, input: posInput });
     }
+  });
+  
+  // Assign positions sequentially, filling gaps
+  roomsWithoutPosition.forEach(item => {
+    const nextPos = getNextAvailablePosition(roomPositions);
+    item.input.value = nextPos;
+    roomPositions.push(nextPos); // Add to existing positions for next item
+  });
+  
+  entriesWithoutPosition.forEach(item => {
+    const nextPos = getNextAvailablePosition(entryPositions);
+    item.input.value = nextPos;
+    entryPositions.push(nextPos); // Add to existing positions for next item
   });
 };
 
@@ -372,7 +394,7 @@ const saveStaff = async () => {
     const staffName = document.getElementById('staff-name').value.trim();
     const staffEmail = document.getElementById('staff-email').value.trim();
     const staffPhone = document.getElementById('staff-phone').value.trim();
-    const staffPinCode = document.getElementById('staff-password').value.trim(); // Changed variable name to reflect it's a PIN code
+    const staffPinCode = document.getElementById('staff-password').value.trim();
     const accessAllRooms = document.getElementById('access-all-rooms').checked;
     
     if (!staffName || !staffEmail) {
@@ -421,7 +443,7 @@ const saveStaff = async () => {
       name: staffName,
       email: staffEmail,
       phone: staffPhone,
-      password: staffPinCode, // Keep using 'password' as the field name for API compatibility
+      password: staffPinCode,
       access_all_rooms: accessAllRooms ? 1 : 0,
       rooms: selectedRooms.join(','),
       room_positions: roomPositions.join(','),
