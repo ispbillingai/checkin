@@ -1,4 +1,3 @@
-
 <?php
 require_once '../php/db_config.php';
 
@@ -81,6 +80,15 @@ try {
     $roomPositions = isset($data['room_positions']) ? $data['room_positions'] : '';
     $entryPoints = isset($data['entry_points']) ? $data['entry_points'] : '';
     $entryPointPositions = isset($data['entry_point_positions']) ? $data['entry_point_positions'] : '';
+    
+    // Add PIN code length validation
+    if (strlen($pinCode) > 15) {
+        echo json_encode([
+            'success' => false, 
+            'message' => 'PIN code must be 15 characters or less'
+        ]);
+        exit;
+    }
     
     $stmt->execute([
         $data['name'],

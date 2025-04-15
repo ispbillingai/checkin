@@ -1,4 +1,3 @@
-
 <?php
 // Include database configuration
 require_once '../php/db_config.php';
@@ -46,6 +45,14 @@ function verify_pin() {
         return [
             'success' => false,
             'message' => 'Position must be between 1 and 64'
+        ];
+    }
+    
+    // Validate PIN code length
+    if (strlen($pin_code) > 15) {
+        return [
+            'success' => false,
+            'message' => 'PIN code must be 15 characters or less'
         ];
     }
     
