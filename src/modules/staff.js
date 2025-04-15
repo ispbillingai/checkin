@@ -1,3 +1,4 @@
+
 import { logError } from '../utils/error-utils.js';
 import { showToast } from '../utils/toast-utils.js';
 import { checkAuthStatus } from './auth.js';
@@ -200,6 +201,9 @@ const getCurrentPositions = async () => {
       }
     });
     
+    console.log("Current room positions:", roomPositions);
+    console.log("Current entry positions:", entryPositions);
+    
     return { roomPositions, entryPositions };
   } catch (error) {
     logError(error, 'Getting Current Positions');
@@ -211,13 +215,6 @@ const getCurrentPositions = async () => {
 const setupPositionAutoAssignment = async () => {
   // Get current positions in use
   const { roomPositions, entryPositions } = await getCurrentPositions();
-  
-  // Store the next available positions
-  const nextRoomPos = getNextAvailablePosition(roomPositions);
-  const nextEntryPos = getNextAvailablePosition(entryPositions);
-  
-  console.log("Next available room position:", nextRoomPos);
-  console.log("Next available entry position:", nextEntryPos);
   
   // Add event listeners to room checkboxes for real-time position assignment
   document.querySelectorAll('.room-checkbox').forEach(checkbox => {
@@ -232,6 +229,7 @@ const setupPositionAutoAssignment = async () => {
           getCurrentPositions().then(({ roomPositions }) => {
             const nextPos = getNextAvailablePosition(roomPositions);
             positionInput.value = nextPos;
+            console.log(`Assigned room ${roomId} to position ${nextPos}`);
           });
         } else {
           positionInput.value = "";
@@ -253,6 +251,7 @@ const setupPositionAutoAssignment = async () => {
           getCurrentPositions().then(({ entryPositions }) => {
             const nextPos = getNextAvailablePosition(entryPositions);
             positionInput.value = nextPos;
+            console.log(`Assigned entry point ${entryId} to position ${nextPos}`);
           });
         } else {
           positionInput.value = "";
@@ -372,17 +371,24 @@ const autoAssignPositions = async () => {
     }
   });
   
+  console.log("Rooms without position:", roomsWithoutPosition.length);
+  console.log("Entries without position:", entriesWithoutPosition.length);
+  
   // Assign positions sequentially, filling gaps
+  let usedRoomPositions = [...roomPositions]; // Copy to avoid modifying the original
   roomsWithoutPosition.forEach(item => {
-    const nextPos = getNextAvailablePosition(roomPositions);
+    const nextPos = getNextAvailablePosition(usedRoomPositions);
     item.input.value = nextPos;
-    roomPositions.push(nextPos); // Add to existing positions for next item
+    usedRoomPositions.push(nextPos); // Add to used positions for next item
+    console.log(`Auto-assigned room ${item.id} to position ${nextPos}`);
   });
   
+  let usedEntryPositions = [...entryPositions]; // Copy to avoid modifying the original
   entriesWithoutPosition.forEach(item => {
-    const nextPos = getNextAvailablePosition(entryPositions);
+    const nextPos = getNextAvailablePosition(usedEntryPositions);
     item.input.value = nextPos;
-    entryPositions.push(nextPos); // Add to existing positions for next item
+    usedEntryPositions.push(nextPos); // Add to used positions for next item
+    console.log(`Auto-assigned entry ${item.id} to position ${nextPos}`);
   });
 };
 
@@ -437,6 +443,9 @@ const saveStaff = async () => {
       const positionInput = document.getElementById(`entry-pos-${entryId}`);
       entryPositions.push(positionInput ? positionInput.value || "1" : "1");
     });
+    
+    console.log("Saving staff with room positions:", roomPositions);
+    console.log("Saving staff with entry positions:", entryPositions);
     
     const staffData = {
       id: staffId,
