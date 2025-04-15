@@ -1,4 +1,3 @@
-
 import { logError } from '../utils/error-utils.js';
 import { showToast } from '../utils/toast-utils.js';
 import { checkAuthStatus } from './auth.js';
@@ -146,6 +145,25 @@ const addStaffEventListeners = () => {
   }
 };
 
+// Determine the next available position
+const getNextAvailablePosition = (existingPositions) => {
+  // Convert positions to numbers and sort them
+  const positions = existingPositions.map(pos => parseInt(pos)).sort((a, b) => a - b);
+  
+  // Find the first gap in the sequence, starting from 1
+  let nextPos = 1;
+  for (const pos of positions) {
+    if (pos === nextPos) {
+      nextPos++;
+    } else if (pos > nextPos) {
+      // Found a gap
+      break;
+    }
+  }
+  
+  return nextPos.toString();
+};
+
 // Load rooms for staff form
 const loadRoomsForStaffForm = async () => {
   try {
@@ -188,7 +206,8 @@ const loadRoomsForStaffForm = async () => {
           if (positionInput) {
             positionInput.disabled = !e.target.checked;
             if (e.target.checked) {
-              positionInput.value = "1"; // Default position
+              // Position will be auto-assigned later
+              positionInput.value = "";
             } else {
               positionInput.value = "";
             }
@@ -246,7 +265,8 @@ const loadEntryPointsForStaffForm = async () => {
           if (positionInput) {
             positionInput.disabled = !e.target.checked;
             if (e.target.checked) {
-              positionInput.value = "1"; // Default position
+              // Position will be auto-assigned later
+              positionInput.value = "";
             } else {
               positionInput.value = "";
             }
@@ -260,6 +280,76 @@ const loadEntryPointsForStaffForm = async () => {
     logError(error, 'Loading Entry Points for Staff Form');
     document.getElementById('entry-points-selection').innerHTML = '<p class="text-red-500 text-sm">Failed to load entry points</p>';
   }
+};
+
+// Get currently used positions
+const getCurrentPositions = async () => {
+  try {
+    // Fetch all staff to get their positions
+    const response = await fetch('/api/get_staff.php', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+      },
+    });
+    
+    const data = await response.json();
+    
+    if (!data.success || !data.staff) {
+      return { roomPositions: [], entryPositions: [] };
+    }
+    
+    // Extract all room positions
+    const roomPositions = [];
+    // Extract all entry positions
+    const entryPositions = [];
+    
+    data.staff.forEach(staff => {
+      if (staff.room_positions) {
+        const positions = staff.room_positions.split(',');
+        roomPositions.push(...positions);
+      }
+      
+      if (staff.entry_point_positions) {
+        const positions = staff.entry_point_positions.split(',');
+        entryPositions.push(...positions);
+      }
+    });
+    
+    return { roomPositions, entryPositions };
+  } catch (error) {
+    logError(error, 'Getting Current Positions');
+    return { roomPositions: [], entryPositions: [] };
+  }
+};
+
+// Auto-assign positions to new staff selections
+const autoAssignPositions = async () => {
+  // Get current positions in use
+  const { roomPositions, entryPositions } = await getCurrentPositions();
+  
+  // Determine next available position for rooms
+  const nextRoomPos = getNextAvailablePosition(roomPositions);
+  
+  // Determine next available position for entry points
+  const nextEntryPos = getNextAvailablePosition(entryPositions);
+  
+  // Set positions for all checked rooms
+  document.querySelectorAll('.room-checkbox:checked').forEach(checkbox => {
+    const roomId = checkbox.value;
+    const posInput = document.getElementById(`room-pos-${roomId}`);
+    if (posInput && posInput.value === "") {
+      posInput.value = nextRoomPos;
+    }
+  });
+  
+  // Set positions for all checked entry points
+  document.querySelectorAll('.entry-point-checkbox:checked').forEach(checkbox => {
+    const entryId = checkbox.value;
+    const posInput = document.getElementById(`entry-pos-${entryId}`);
+    if (posInput && posInput.value === "") {
+      posInput.value = nextEntryPos;
+    }
+  });
 };
 
 // Save staff (add or edit)
@@ -281,6 +371,11 @@ const saveStaff = async () => {
     if (mode === 'add' && !staffPinCode) {
       showToast('PIN code is required for new staff members', 'error');
       return;
+    }
+    
+    // For new staff, auto-assign positions before saving
+    if (mode === 'add') {
+      await autoAssignPositions();
     }
     
     // Get selected rooms and positions
@@ -398,7 +493,7 @@ const initStaffModule = () => {
   // Add event listener for the add staff button directly on the button
   const addStaffBtn = document.getElementById('add-staff-btn');
   if (addStaffBtn) {
-    addStaffBtn.addEventListener('click', () => {
+    addStaffBtn.addEventListener('click', async () => {
       clearForm('staff-form');
       document.getElementById('staff-form-title').textContent = 'Add New Staff';
       document.getElementById('staff-form').setAttribute('data-mode', 'add');
