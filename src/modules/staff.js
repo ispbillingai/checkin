@@ -1,3 +1,4 @@
+
 import { logError } from '../utils/error-utils.js';
 import { showToast } from '../utils/toast-utils.js';
 import { checkAuthStatus } from './auth.js';
@@ -404,6 +405,9 @@ const initStaffModule = () => {
       document.getElementById('access-all-rooms').checked = false;
       document.getElementById('specific-rooms-container').style.display = 'block';
       
+      // Auto-generate a PIN code for new staff
+      document.getElementById('staff-password').value = generatePinCode(5);
+      
       // Reset room checkboxes
       document.querySelectorAll('.room-checkbox').forEach(checkbox => {
         checkbox.checked = false;
@@ -440,6 +444,9 @@ const initStaffModule = () => {
       document.getElementById('staff-form').setAttribute('data-mode', 'add');
       document.getElementById('access-all-rooms').checked = false;
       document.getElementById('specific-rooms-container').style.display = 'block';
+      
+      // Auto-generate a PIN code for new staff
+      document.getElementById('staff-password').value = generatePinCode(5);
       
       // Reset room checkboxes
       document.querySelectorAll('.room-checkbox').forEach(checkbox => {
