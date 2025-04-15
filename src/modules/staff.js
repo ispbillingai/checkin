@@ -164,6 +164,91 @@ const getNextAvailablePosition = (existingPositions) => {
   return nextPos.toString();
 };
 
+// Get currently used positions
+const getCurrentPositions = async () => {
+  try {
+    // Fetch all staff to get their positions
+    const response = await fetch('/api/get_staff.php', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+      },
+    });
+    
+    const data = await response.json();
+    
+    if (!data.success || !data.staff) {
+      return { roomPositions: [], entryPositions: [] };
+    }
+    
+    // Extract all room positions
+    const roomPositions = [];
+    // Extract all entry positions
+    const entryPositions = [];
+    
+    data.staff.forEach(staff => {
+      if (staff.room_positions) {
+        const positions = staff.room_positions.split(',');
+        roomPositions.push(...positions);
+      }
+      
+      if (staff.entry_point_positions) {
+        const positions = staff.entry_point_positions.split(',');
+        entryPositions.push(...positions);
+      }
+    });
+    
+    return { roomPositions, entryPositions };
+  } catch (error) {
+    logError(error, 'Getting Current Positions');
+    return { roomPositions: [], entryPositions: [] };
+  }
+};
+
+// Set up position auto-assignment
+const setupPositionAutoAssignment = async () => {
+  const { roomPositions, entryPositions } = await getCurrentPositions();
+  
+  // Store the next available positions
+  const nextRoomPos = getNextAvailablePosition(roomPositions);
+  const nextEntryPos = getNextAvailablePosition(entryPositions);
+  
+  // Add event listeners to room checkboxes for real-time position assignment
+  document.querySelectorAll('.room-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', (e) => {
+      const roomId = e.target.value;
+      const positionInput = document.getElementById(`room-pos-${roomId}`);
+      
+      if (positionInput) {
+        positionInput.disabled = !e.target.checked;
+        if (e.target.checked) {
+          // Immediately assign the next available position
+          positionInput.value = nextRoomPos;
+        } else {
+          positionInput.value = "";
+        }
+      }
+    });
+  });
+  
+  // Add event listeners to entry point checkboxes for real-time position assignment
+  document.querySelectorAll('.entry-point-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', (e) => {
+      const entryId = e.target.value;
+      const positionInput = document.getElementById(`entry-pos-${entryId}`);
+      
+      if (positionInput) {
+        positionInput.disabled = !e.target.checked;
+        if (e.target.checked) {
+          // Immediately assign the next available position
+          positionInput.value = nextEntryPos;
+        } else {
+          positionInput.value = "";
+        }
+      }
+    });
+  });
+};
+
 // Load rooms for staff form
 const loadRoomsForStaffForm = async () => {
   try {
@@ -197,23 +282,8 @@ const loadRoomsForStaffForm = async () => {
         roomsContainer.appendChild(roomDiv);
       }
       
-      // Add event listeners to checkboxes to enable/disable position inputs
-      document.querySelectorAll('.room-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', (e) => {
-          const roomId = e.target.value;
-          const positionInput = document.getElementById(`room-pos-${roomId}`);
-          
-          if (positionInput) {
-            positionInput.disabled = !e.target.checked;
-            if (e.target.checked) {
-              // Position will be auto-assigned later
-              positionInput.value = "";
-            } else {
-              positionInput.value = "";
-            }
-          }
-        });
-      });
+      // Set up auto-assignment after rendering all rooms
+      setupPositionAutoAssignment();
     } else {
       roomsContainer.innerHTML = '<p class="text-gray-500 text-sm">No rooms available</p>';
     }
@@ -255,70 +325,12 @@ const loadEntryPointsForStaffForm = async () => {
         
         entryPointsContainer.appendChild(entryPointDiv);
       }
-      
-      // Add event listeners to checkboxes to enable/disable position inputs
-      document.querySelectorAll('.entry-point-checkbox').forEach(checkbox => {
-        checkbox.addEventListener('change', (e) => {
-          const entryId = e.target.value;
-          const positionInput = document.getElementById(`entry-pos-${entryId}`);
-          
-          if (positionInput) {
-            positionInput.disabled = !e.target.checked;
-            if (e.target.checked) {
-              // Position will be auto-assigned later
-              positionInput.value = "";
-            } else {
-              positionInput.value = "";
-            }
-          }
-        });
-      });
     } else {
       entryPointsContainer.innerHTML = '<p class="text-gray-500 text-sm">No entry points available</p>';
     }
   } catch (error) {
     logError(error, 'Loading Entry Points for Staff Form');
     document.getElementById('entry-points-selection').innerHTML = '<p class="text-red-500 text-sm">Failed to load entry points</p>';
-  }
-};
-
-// Get currently used positions
-const getCurrentPositions = async () => {
-  try {
-    // Fetch all staff to get their positions
-    const response = await fetch('/api/get_staff.php', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
-      },
-    });
-    
-    const data = await response.json();
-    
-    if (!data.success || !data.staff) {
-      return { roomPositions: [], entryPositions: [] };
-    }
-    
-    // Extract all room positions
-    const roomPositions = [];
-    // Extract all entry positions
-    const entryPositions = [];
-    
-    data.staff.forEach(staff => {
-      if (staff.room_positions) {
-        const positions = staff.room_positions.split(',');
-        roomPositions.push(...positions);
-      }
-      
-      if (staff.entry_point_positions) {
-        const positions = staff.entry_point_positions.split(',');
-        entryPositions.push(...positions);
-      }
-    });
-    
-    return { roomPositions, entryPositions };
-  } catch (error) {
-    logError(error, 'Getting Current Positions');
-    return { roomPositions: [], entryPositions: [] };
   }
 };
 
