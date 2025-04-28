@@ -49,12 +49,29 @@ const loadBookings = async () => {
           return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         };
         
+        const getPositionsInfo = () => {
+          const entryPoints = booking.entry_point_id.split(',');
+          const positions = booking.positions.split(',');
+          let posInfo = `Room pos: ${booking.room_position || 'N/A'}<br>`;
+          
+          entryPoints.forEach((ep, index) => {
+            const pos = positions[index] || 'N/A';
+            posInfo += `${ep}: pos ${pos}<br>`;
+          });
+          
+          return posInfo;
+        };
+        
         row.innerHTML = `
           <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${booking.id}</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${booking.guest_name}</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${booking.room_name}</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(booking.arrival_datetime)}</td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatDate(booking.departure_datetime)}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 tooltip" title="${getPositionsInfo()}">
+            <span class="underline dotted cursor-help">Positions</span>
+            <span class="tooltiptext">${getPositionsInfo()}</span>
+          </td>
           <td class="px-6 py-4 whitespace-nowrap text-sm">
             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
             ${booking.status === 'active' ? 'bg-green-100 text-green-800' : 
@@ -74,7 +91,7 @@ const loadBookings = async () => {
     } else {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="7" class="px-6 py-4 text-center text-gray-500">No bookings found</td>
+          <td colspan="8" class="px-6 py-4 text-center text-gray-500">No bookings found</td>
         </tr>
       `;
     }

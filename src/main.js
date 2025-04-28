@@ -245,16 +245,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       event.preventDefault();
       
       try {
-        // Validate room selection and position
+        // Validate room selection
         const roomSelect = document.getElementById('room');
-        const roomPosition = document.getElementById('room-position');
         
         if (!roomSelect.value) {
           throw new Error('Please select a room');
-        }
-        
-        if (!roomPosition.value) {
-          throw new Error('Please provide a position for the room');
         }
         
         // Validate that at least one entry point is selected
@@ -263,19 +258,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           throw new Error('Please select at least one entry point');
         }
         
-        // Validate that all selected entry points have a position
-        let hasEmptyPosition = false;
-        selectedEntryPoints.forEach(entryPoint => {
-          const positionInput = entryPoint.parentElement.querySelector('input[type="number"]');
-          if (!positionInput.value) {
-            hasEmptyPosition = true;
-          }
-        });
-        
-        if (hasEmptyPosition) {
-          throw new Error('Please provide a position for each selected entry point');
-        }
-        
+        // No need to validate positions as they will be assigned automatically
+      
         // Validate dates and times
         const arrivalDate = document.getElementById('arrival-date').value;
         const arrivalTime = document.getElementById('arrival-time').value;
@@ -317,22 +301,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         formData.append('arrival_datetime', `${arrivalDate} ${arrivalTime}:00`);
         formData.append('departure_datetime', `${departureDate} ${departureTime}:00`);
         
-        // Get selected entry points and their positions
+        // Get selected entry points
         const entryPoints = [];
         selectedEntryPoints.forEach(checkbox => {
           const entryId = checkbox.value;
-          const positionInput = document.querySelector(`input[name="positions[${entryId}]"]`);
-          entryPoints.push({
-            id: entryId,
-            position: positionInput.value
-          });
+          entryPoints.push(entryId);
         });
         
-        // Add entry points data as JSON
-        formData.append('entry_points_data', JSON.stringify(entryPoints));
-        formData.append('room_position', roomPosition.value);
-        
-        // Submit the booking to our new PHP endpoint
+        // Submit the booking to our PHP endpoint
         const response = await fetch('/api/submit_booking.php', {
           method: 'POST',
           body: formData
@@ -350,8 +326,13 @@ document.addEventListener('DOMContentLoaded', async () => {
           document.querySelectorAll('.position-input').forEach(div => {
             div.classList.add('hidden');
           });
+          
           // Reset room position input to hidden
-          roomPositionInput.classList.add('hidden');
+          const roomPositionInput = document.getElementById('room-position-input');
+          if (roomPositionInput) {
+            roomPositionInput.classList.add('hidden');
+          }
+          
           // Clear entry points
           document.getElementById('entry-points-container').innerHTML = 
             '<p class="text-gray-500">Please select a room to see available entry points.</p>';
@@ -366,4 +347,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 });
-

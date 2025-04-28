@@ -1,3 +1,4 @@
+
 <?php
 // Include database configuration, which already defines secure_input()
 require_once '../php/db_config.php';
@@ -63,46 +64,31 @@ function process_booking() {
     $arrival_datetime   = $_POST['arrival_date'] . ' ' . $_POST['arrival_time'] . ':00';
     $departure_datetime = $_POST['departure_date'] . ' ' . $_POST['departure_time'] . ':00';
     
-    // Build arrays of entry points & their positions
-    $entry_ids       = [];
-    $entry_positions = [];
+    // Build arrays of entry points
+    $entry_ids = [];
     
     foreach ($_POST['entry_points'] as $entry_id) {
-        if (empty($_POST['positions'][$entry_id])) {
-            return [
-                'success' => false,
-                'message' => "Position is required for entry point ID {$entry_id}"
-            ];
-        }
-        $pos = (int)$_POST['positions'][$entry_id];
-        if ($pos < 1 || $pos > 64) {
-            return [
-                'success' => false,
-                'message' => 'Entry point position must be between 1 and 64'
-            ];
-        }
-        $entry_ids[]       = $entry_id;
-        $entry_positions[] = $pos;
+        $entry_ids[] = $entry_id;
     }
     
-    // Convert arrays to comma-separated strings
-    $entry_ids_str  = implode(',', $entry_ids);
-    $positions_str  = implode(',', $entry_positions);
+    // Convert entry points array to comma-separated string
+    $entry_ids_str = implode(',', $entry_ids);
 
-    // Read & validate the room_position
-    // If you want it required, do additional checks here
-    $room_position = null;
-    if (!empty($_POST['room_position'])) {
-        $room_pos_val = (int)$_POST['room_position'];
-        // If you want to enforce same 1..64 range, do:
-        if ($room_pos_val < 1 || $room_pos_val > 64) {
-            return [
-                'success' => false,
-                'message' => 'Room position must be between 1 and 64'
-            ];
-        }
-        $room_position = $room_pos_val;
+    // Get room number for position assignment
+    $room_number = null;
+    if (preg_match('/room(\d+)/', $room_id, $matches)) {
+        $room_number = (int)$matches[1];
+    } else {
+        // If room ID doesn't follow the pattern, use 1 as default
+        $room_number = 1;
     }
+
+    // Set room position to 1 (constant for all rooms)
+    $room_position = 1;
+    
+    // Set entry point positions to the room number
+    $entry_positions = array_fill(0, count($entry_ids), $room_number);
+    $positions_str = implode(',', $entry_positions);
 
     // Start transaction
     $conn->begin_transaction();
@@ -127,8 +113,6 @@ function process_booking() {
             VALUES
                 (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?)
         ";
-        // Note the param types: 'ssssssssssi'
-        // The final one is an integer for $room_position
         $stmt = $conn->prepare($sql);
         $stmt->bind_param(
             "ssssssssssi",
