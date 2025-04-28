@@ -1,4 +1,3 @@
-
 import { logError } from '../utils/error-utils.js';
 import { showToast } from '../utils/toast-utils.js';
 import { checkAuthStatus } from './auth.js';
@@ -146,13 +145,35 @@ const addStaffEventListeners = () => {
   }
 };
 
-// Determine the next available position
-const getNextAvailablePosition = (existingPositions) => {
+// Get the total number of rooms for entry point position calculation
+const getTotalRoomCount = async () => {
+  try {
+    const response = await fetch('/api/get_rooms.php', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+      },
+    });
+    
+    const data = await response.json();
+    
+    if (data.success && data.rooms) {
+      return data.rooms.length;
+    }
+    
+    return 0;
+  } catch (error) {
+    logError(error, 'Getting Room Count');
+    return 0;
+  }
+};
+
+// Get next available staff position for rooms (starting from 2, not 1)
+const getNextAvailableStaffPosition = (existingPositions, startPosition = 2) => {
   // Convert positions to numbers and sort them
   const positions = existingPositions.map(pos => parseInt(pos)).sort((a, b) => a - b);
   
-  // Find the first gap in the sequence, starting from 1
-  let nextPos = 1;
+  // Find the first gap in the sequence, starting from startPosition
+  let nextPos = startPosition;
   while (positions.includes(nextPos)) {
     nextPos++;
   }
@@ -211,10 +232,11 @@ const getCurrentPositions = async () => {
   }
 };
 
-// Set up position auto-assignment
+// Set up position auto-assignment with the new rules
 const setupPositionAutoAssignment = async () => {
   // Get current positions in use
   const { roomPositions, entryPositions } = await getCurrentPositions();
+  const totalRooms = await getTotalRoomCount();
   
   // Add event listeners to room checkboxes for real-time position assignment
   document.querySelectorAll('.room-checkbox').forEach(checkbox => {
@@ -225,9 +247,9 @@ const setupPositionAutoAssignment = async () => {
       if (positionInput) {
         positionInput.disabled = !e.target.checked;
         if (e.target.checked) {
-          // Assign the next available position when checked
+          // Assign the next available position when checked (starting from 2)
           getCurrentPositions().then(({ roomPositions }) => {
-            const nextPos = getNextAvailablePosition(roomPositions);
+            const nextPos = getNextAvailableStaffPosition(roomPositions, 2);
             positionInput.value = nextPos;
             console.log(`Assigned room ${roomId} to position ${nextPos}`);
           });
@@ -247,11 +269,13 @@ const setupPositionAutoAssignment = async () => {
       if (positionInput) {
         positionInput.disabled = !e.target.checked;
         if (e.target.checked) {
-          // Assign the next available position when checked
+          // Assign the next available position when checked (starting after total room count)
           getCurrentPositions().then(({ entryPositions }) => {
-            const nextPos = getNextAvailablePosition(entryPositions);
+            // Entry positions start after the total room count
+            const startPos = totalRooms + 1;
+            const nextPos = getNextAvailableStaffPosition(entryPositions, startPos);
             positionInput.value = nextPos;
-            console.log(`Assigned entry point ${entryId} to position ${nextPos}`);
+            console.log(`Assigned entry point ${entryId} to position ${nextPos} (starting from ${startPos})`);
           });
         } else {
           positionInput.value = "";
@@ -287,7 +311,11 @@ const loadRoomsForStaffForm = async () => {
           </div>
           <div class="flex items-center">
             <label for="room-pos-${room.id}" class="mr-2 text-xs text-gray-600">Position:</label>
-            <input type="number" id="room-pos-${room.id}" name="room-positions[]" min="1" max="99" class="room-position w-16 px-2 py-1 text-sm border border-gray-300 rounded" disabled>
+            <input type="number" id="room-pos-${room.id}" name="room-positions[]" min="2" max="99" class="room-position w-16 px-2 py-1 text-sm border border-gray-300 rounded" disabled>
+            <span class="tooltip ml-1">
+              <i class="fas fa-info-circle text-gray-500"></i>
+              <span class="tooltiptext">Staff positions start at 2 (position 1 is for guests)</span>
+            </span>
           </div>
         `;
         
@@ -319,6 +347,7 @@ const loadEntryPointsForStaffForm = async () => {
     
     if (data.success && data.entry_points.length > 0) {
       entryPointsContainer.innerHTML = '';
+      const totalRooms = await getTotalRoomCount();
       
       for (const entryPoint of data.entry_points) {
         const entryPointDiv = document.createElement('div');
@@ -331,7 +360,11 @@ const loadEntryPointsForStaffForm = async () => {
           </div>
           <div class="flex items-center">
             <label for="entry-pos-${entryPoint.id}" class="mr-2 text-xs text-gray-600">Position:</label>
-            <input type="number" id="entry-pos-${entryPoint.id}" name="entry-point-positions[]" min="1" max="99" class="entry-position w-16 px-2 py-1 text-sm border border-gray-300 rounded" disabled>
+            <input type="number" id="entry-pos-${entryPoint.id}" name="entry-point-positions[]" min="${totalRooms + 1}" max="99" class="entry-position w-16 px-2 py-1 text-sm border border-gray-300 rounded" disabled>
+            <span class="tooltip ml-1">
+              <i class="fas fa-info-circle text-gray-500"></i>
+              <span class="tooltiptext">Entry positions start at position ${totalRooms + 1} (after all rooms)</span>
+            </span>
           </div>
         `;
         
@@ -346,10 +379,11 @@ const loadEntryPointsForStaffForm = async () => {
   }
 };
 
-// Auto-assign positions to new staff selections
+// Auto-assign positions to new staff selections with new rules
 const autoAssignPositions = async () => {
   // Get current positions in use
   const { roomPositions, entryPositions } = await getCurrentPositions();
+  const totalRooms = await getTotalRoomCount();
   
   // Get all checked rooms without positions
   const roomsWithoutPosition = [];
@@ -374,21 +408,23 @@ const autoAssignPositions = async () => {
   console.log("Rooms without position:", roomsWithoutPosition.length);
   console.log("Entries without position:", entriesWithoutPosition.length);
   
-  // Assign positions sequentially, filling gaps
+  // Assign positions sequentially, filling gaps, starting at 2 for rooms
   let usedRoomPositions = [...roomPositions]; // Copy to avoid modifying the original
   roomsWithoutPosition.forEach(item => {
-    const nextPos = getNextAvailablePosition(usedRoomPositions);
+    const nextPos = getNextAvailableStaffPosition(usedRoomPositions, 2);
     item.input.value = nextPos;
     usedRoomPositions.push(nextPos); // Add to used positions for next item
     console.log(`Auto-assigned room ${item.id} to position ${nextPos}`);
   });
   
+  // Entry positions start after total room count
+  const entryStartPos = totalRooms + 1;
   let usedEntryPositions = [...entryPositions]; // Copy to avoid modifying the original
   entriesWithoutPosition.forEach(item => {
-    const nextPos = getNextAvailablePosition(usedEntryPositions);
+    const nextPos = getNextAvailableStaffPosition(usedEntryPositions, entryStartPos);
     item.input.value = nextPos;
     usedEntryPositions.push(nextPos); // Add to used positions for next item
-    console.log(`Auto-assigned entry ${item.id} to position ${nextPos}`);
+    console.log(`Auto-assigned entry ${item.id} to position ${nextPos} (starting from ${entryStartPos})`);
   });
 };
 
