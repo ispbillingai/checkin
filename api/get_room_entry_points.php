@@ -18,20 +18,30 @@ if (empty($room_id)) {
 }
 
 try {
-    // Query to get entry points for the specified room
-    $query = "SELECT e.id, e.name, e.description, e.ip_address
-              FROM entry_points e
-              JOIN room_entry_points re ON e.id = re.entry_point_id
-              WHERE re.room_id = ?
-              ORDER BY e.name";
+    // First, get all entry points
+    $all_query = "SELECT id, name, description, ip_address FROM entry_points ORDER BY name";
+    $all_result = $conn->query($all_query);
     
-    $stmt = $conn->prepare($query);
+    // Get the entry points that are specifically associated with this room
+    $room_query = "SELECT entry_point_id 
+                  FROM room_entry_points 
+                  WHERE room_id = ?";
+    
+    $stmt = $conn->prepare($room_query);
     $stmt->bind_param("s", $room_id);
     $stmt->execute();
-    $result = $stmt->get_result();
+    $room_result = $stmt->get_result();
     
+    // Create an array of associated entry point IDs for easy lookup
+    $associated_entry_points = [];
+    while ($row = $room_result->fetch_assoc()) {
+        $associated_entry_points[] = $row['entry_point_id'];
+    }
+    
+    // Now process all entry points and add a flag if they're associated with the room
     $entry_points = [];
-    while ($row = $result->fetch_assoc()) {
+    while ($row = $all_result->fetch_assoc()) {
+        $row['is_associated'] = in_array($row['id'], $associated_entry_points);
         $entry_points[] = $row;
     }
     

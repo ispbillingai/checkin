@@ -134,7 +134,7 @@ const populateEntryPoints = async (entryPoints) => {
   container.innerHTML = '';
   
   if (entryPoints.length === 0) {
-    container.innerHTML = '<p class="text-gray-500">No entry points available for this room.</p>';
+    container.innerHTML = '<p class="text-gray-500">No entry points available.</p>';
     return;
   }
 
@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const rooms = await fetchRooms();
   populateRoomsDropdown(rooms);
 
-  // Handle room selection to show position input and load room-specific entry points
+  // Handle room selection to show position input and load all entry points
   const roomSelect = document.getElementById('room');
   const roomPositionInput = document.getElementById('room-position-input');
   
@@ -221,8 +221,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Auto-populate room position (always 1 for guest bookings)
         setRoomPosition();
         
-        // Fetch and display entry points specific to this room
-        const entryPoints = await fetchRoomEntryPoints(this.value);
+        // Fetch and display all entry points with room-specific ones marked
+        const entryPoints = await fetchEntryPoints();
         populateEntryPoints(entryPoints);
       } else {
         roomPositionInput.classList.add('hidden');
@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Fetch and display all entry points regardless of room selection
+  // Always fetch and display all entry points regardless of room selection
   const entryPoints = await fetchEntryPoints();
   populateEntryPoints(entryPoints);
 
