@@ -1,3 +1,4 @@
+
 // Setup error logging
 const logError = (error, context = '') => {
   console.error(`[ERROR] ${context}:`, error);
@@ -89,6 +90,14 @@ const fetchRoomEntryPoints = async (roomId) => {
   }
 };
 
+// Set position for room (always 1 for guests)
+const setRoomPosition = () => {
+  const roomPositionField = document.getElementById('room-position');
+  if (roomPositionField) {
+    roomPositionField.value = '1'; // Always set to 1 for guests
+  }
+};
+
 // Populate rooms select dropdown with data from database
 const populateRoomsDropdown = (rooms) => {
   const roomSelect = document.getElementById('room');
@@ -109,6 +118,13 @@ const populateRoomsDropdown = (rooms) => {
   });
 };
 
+// Get room number from room ID
+const getRoomNumber = (roomId) => {
+  // Extract room number from ID like "room1", "room2", etc.
+  const matches = roomId.match(/room(\d+)/);
+  return matches ? parseInt(matches[1]) : 1; // Default to 1 if no match
+};
+
 // Populate entry points container with data from database
 const populateEntryPoints = async (entryPoints) => {
   const container = document.getElementById('entry-points-container');
@@ -121,6 +137,11 @@ const populateEntryPoints = async (entryPoints) => {
     container.innerHTML = '<p class="text-gray-500">No entry points available for this room.</p>';
     return;
   }
+
+  // Get the selected room ID to determine entry point positions
+  const roomSelect = document.getElementById('room');
+  const selectedRoomId = roomSelect ? roomSelect.value : '';
+  const roomNumber = getRoomNumber(selectedRoomId);
   
   // Create HTML for each entry point
   entryPoints.forEach(entryPoint => {
@@ -132,7 +153,7 @@ const populateEntryPoints = async (entryPoints) => {
       <div class="position-input hidden ml-4">
         <label for="position-${entryPoint.id}" class="text-sm text-gray-600">Position:</label>
         <input type="number" id="position-${entryPoint.id}" name="positions[${entryPoint.id}]" min="1" max="64" 
-          class="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500">
+          class="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" value="${roomNumber}">
       </div>
       ${entryPoint.description ? `<span class="text-xs text-gray-500">(${entryPoint.description})</span>` : ''}
     `;
@@ -148,11 +169,6 @@ const populateEntryPoints = async (entryPoints) => {
         positionInput.classList.remove('hidden');
       } else {
         positionInput.classList.add('hidden');
-        // Clear the position value when unchecked
-        const positionField = positionInput.querySelector('input[type="number"]');
-        if (positionField) {
-          positionField.value = '';
-        }
       }
     });
   });
@@ -199,14 +215,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   const roomPositionInput = document.getElementById('room-position-input');
   
   if (roomSelect && roomPositionInput) {
-    roomSelect.addEventListener('change', function() {
+    roomSelect.addEventListener('change', async function() {
       if (this.value) {
         roomPositionInput.classList.remove('hidden');
+        // Auto-populate room position (always 1 for guest bookings)
+        setRoomPosition();
+        
+        // Fetch and display entry points specific to this room
+        const entryPoints = await fetchRoomEntryPoints(this.value);
+        populateEntryPoints(entryPoints);
       } else {
         roomPositionInput.classList.add('hidden');
         const roomPositionField = document.getElementById('room-position');
         if (roomPositionField) {
           roomPositionField.value = '';
+        }
+        // Clear entry points when no room is selected
+        const container = document.getElementById('entry-points-container');
+        if (container) {
+          container.innerHTML = '<p class="text-gray-500">Please select a room to see available entry points.</p>';
         }
       }
     });
