@@ -1,3 +1,4 @@
+
 // Setup error logging
 const logError = (error, context = '') => {
   console.error(`[ERROR] ${context}:`, error);
@@ -133,7 +134,7 @@ const populateEntryPoints = async (entryPoints) => {
   container.innerHTML = '';
   
   if (entryPoints.length === 0) {
-    container.innerHTML = '<p class="text-gray-500">No entry points available in the system. Please create entry points first.</p>';
+    container.innerHTML = '<p class="text-gray-500">No entry points available for this room.</p>';
     return;
   }
 
@@ -146,14 +147,10 @@ const populateEntryPoints = async (entryPoints) => {
   entryPoints.forEach(entryPoint => {
     const entryPointDiv = document.createElement('div');
     entryPointDiv.className = 'flex items-center space-x-2';
-    
-    // Pre-check the checkbox if this entry point is associated with the room
-    const isChecked = entryPoint.is_associated ? 'checked' : '';
-    
     entryPointDiv.innerHTML = `
-      <input type="checkbox" id="${entryPoint.id}" name="entry_points[]" value="${entryPoint.id}" class="entry-point-checkbox" ${isChecked}>
+      <input type="checkbox" id="${entryPoint.id}" name="entry_points[]" value="${entryPoint.id}" class="entry-point-checkbox">
       <label for="${entryPoint.id}">${entryPoint.name}</label>
-      <div class="position-input ${isChecked ? '' : 'hidden'} ml-4">
+      <div class="position-input hidden ml-4">
         <label for="position-${entryPoint.id}" class="text-sm text-gray-600">Position:</label>
         <input type="number" id="position-${entryPoint.id}" name="positions[${entryPoint.id}]" min="1" max="64" 
           class="w-20 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500" value="${roomNumber}">
@@ -242,9 +239,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // Fetch and display all entry points if no room is selected
+  // Fetch and display all entry points regardless of room selection
   const entryPoints = await fetchEntryPoints();
-  
+  populateEntryPoints(entryPoints);
+
   // Handle PIN code generation
   const generatePinBtn = document.getElementById('generate-pin');
   const pinCodeInput = document.getElementById('pin-code');

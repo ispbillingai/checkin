@@ -18,11 +18,11 @@ if (empty($room_id)) {
 }
 
 try {
-    // Query to get ALL entry points (not just associated ones)
-    // So that users can choose which ones they want to enable for this room
-    $query = "SELECT e.id, e.name, e.description, e.ip_address,
-              (SELECT COUNT(*) FROM room_entry_points re WHERE re.entry_point_id = e.id AND re.room_id = ?) as is_associated
+    // Query to get entry points for the specified room
+    $query = "SELECT e.id, e.name, e.description, e.ip_address
               FROM entry_points e
+              JOIN room_entry_points re ON e.id = re.entry_point_id
+              WHERE re.room_id = ?
               ORDER BY e.name";
     
     $stmt = $conn->prepare($query);
@@ -32,8 +32,6 @@ try {
     
     $entry_points = [];
     while ($row = $result->fetch_assoc()) {
-        // Convert is_associated to boolean for easier handling in JavaScript
-        $row['is_associated'] = ($row['is_associated'] > 0);
         $entry_points[] = $row;
     }
     
