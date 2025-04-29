@@ -232,11 +232,22 @@ const getCurrentPositions = async () => {
   }
 };
 
-// Set up position auto-assignment with the new rules
+// Set up position auto-assignment with the new rules - prevent double triggers
 const setupPositionAutoAssignment = async () => {
   // Get current positions in use
   const { roomPositions, entryPositions } = await getCurrentPositions();
   const totalRooms = await getTotalRoomCount();
+  
+  // Remove any existing event listeners (to prevent duplicates)
+  document.querySelectorAll('.room-checkbox').forEach(checkbox => {
+    const newCheckbox = checkbox.cloneNode(true);
+    checkbox.parentNode.replaceChild(newCheckbox, checkbox);
+  });
+  
+  document.querySelectorAll('.entry-point-checkbox').forEach(checkbox => {
+    const newCheckbox = checkbox.cloneNode(true);
+    checkbox.parentNode.replaceChild(newCheckbox, checkbox);
+  });
   
   // Add event listeners to room checkboxes for real-time position assignment
   document.querySelectorAll('.room-checkbox').forEach(checkbox => {
@@ -336,6 +347,15 @@ const loadRoomsForStaffForm = async () => {
 // Load entry points for staff form
 const loadEntryPointsForStaffForm = async () => {
   try {
+    // Clear any existing entry points first to prevent duplicates
+    const entryPointsContainer = document.getElementById('entry-points-selection');
+    if (entryPointsContainer) {
+      entryPointsContainer.innerHTML = '<p class="text-gray-500 text-sm">Loading entry points...</p>';
+    } else {
+      console.error("Entry points container not found in the DOM");
+      return;
+    }
+    
     const response = await fetch('/api/get_entry_points.php', {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
@@ -343,13 +363,25 @@ const loadEntryPointsForStaffForm = async () => {
     });
     
     const data = await response.json();
-    const entryPointsContainer = document.getElementById('entry-points-selection');
     
     if (data.success && data.entry_points.length > 0) {
+      // Clear the container again before adding new elements
       entryPointsContainer.innerHTML = '';
       const totalRooms = await getTotalRoomCount();
       
+      // Add a tracking set to prevent duplicates
+      const addedEntryPointIds = new Set();
+      
       for (const entryPoint of data.entry_points) {
+        // Skip if this entry point was already added
+        if (addedEntryPointIds.has(entryPoint.id)) {
+          console.log(`Skipping duplicate entry point: ${entryPoint.id}`);
+          continue;
+        }
+        
+        // Mark this entry point as added
+        addedEntryPointIds.add(entryPoint.id);
+        
         const entryPointDiv = document.createElement('div');
         entryPointDiv.className = 'flex items-center justify-between border-b last:border-0 py-2';
         
@@ -371,11 +403,13 @@ const loadEntryPointsForStaffForm = async () => {
         entryPointsContainer.appendChild(entryPointDiv);
       }
       
+      console.log(`Added ${addedEntryPointIds.size} unique entry points`);
+      
       // After adding all entry points to the DOM, set up the position auto-assignment
-      // This is important - we need to make sure this happens AFTER the entry points are added to the DOM
+      // With a longer delay to ensure everything is rendered
       setTimeout(() => {
         setupPositionAutoAssignment();
-      }, 100);
+      }, 200);
     } else {
       entryPointsContainer.innerHTML = '<p class="text-gray-500 text-sm">No entry points available</p>';
     }
@@ -559,11 +593,12 @@ const deleteStaff = async (staffId) => {
   }
 };
 
-// Initialize staff module
+// Initialize staff module with improved loading logic
 const initStaffModule = () => {
   // Add event listener to the nav link to load staff
   document.getElementById('nav-staff').addEventListener('click', async () => {
     await loadStaff();
+    // First load rooms, then load entry points sequentially
     await loadRoomsForStaffForm();
     await loadEntryPointsForStaffForm();
   });
@@ -588,29 +623,17 @@ const initStaffModule = () => {
       // Auto-generate a PIN code for new staff
       document.getElementById('staff-password').value = generatePinCode(5);
       
-      // Reset room checkboxes
-      document.querySelectorAll('.room-checkbox').forEach(checkbox => {
+      // Reset room and entry point checkboxes
+      document.querySelectorAll('.room-checkbox, .entry-point-checkbox').forEach(checkbox => {
         checkbox.checked = false;
-        const roomId = checkbox.value;
-        const positionInput = document.getElementById(`room-pos-${roomId}`);
-        if (positionInput) {
-          positionInput.disabled = true;
-          positionInput.value = "";
-        }
       });
       
-      // Reset entry point checkboxes
-      document.querySelectorAll('.entry-point-checkbox').forEach(checkbox => {
-        checkbox.checked = false;
-        const entryId = checkbox.value;
-        const positionInput = document.getElementById(`entry-pos-${entryId}`);
-        if (positionInput) {
-          positionInput.disabled = true;
-          positionInput.value = "";
-        }
+      document.querySelectorAll('[id^="room-pos-"], [id^="entry-pos-"]').forEach(posInput => {
+        posInput.disabled = true;
+        posInput.value = "";
       });
       
-      // Load rooms and entry points for staff form to ensure everything is up to date
+      // Load rooms and entry points sequentially to avoid conflicts
       await loadRoomsForStaffForm();
       await loadEntryPointsForStaffForm();
       
@@ -623,42 +646,32 @@ const initStaffModule = () => {
   document.addEventListener('click', (e) => {
     if (e.target.id === 'add-staff-btn' || 
         (e.target.parentElement && e.target.parentElement.id === 'add-staff-btn')) {
-      clearForm('staff-form');
-      document.getElementById('staff-form-title').textContent = 'Add New Staff';
-      document.getElementById('staff-form').setAttribute('data-mode', 'add');
-      document.getElementById('access-all-rooms').checked = false;
-      document.getElementById('specific-rooms-container').style.display = 'block';
-      
-      // Auto-generate a PIN code for new staff
-      document.getElementById('staff-password').value = generatePinCode(5);
-      
-      // Reset room checkboxes
-      document.querySelectorAll('.room-checkbox').forEach(checkbox => {
-        checkbox.checked = false;
-        const roomId = checkbox.value;
-        const positionInput = document.getElementById(`room-pos-${roomId}`);
-        if (positionInput) {
-          positionInput.disabled = true;
-          positionInput.value = "";
-        }
-      });
-      
-      // Reset entry point checkboxes
-      document.querySelectorAll('.entry-point-checkbox').forEach(checkbox => {
-        checkbox.checked = false;
-        const entryId = checkbox.value;
-        const positionInput = document.getElementById(`entry-pos-${entryId}`);
-        if (positionInput) {
-          positionInput.disabled = true;
-          positionInput.value = "";
-        }
-      });
-      
-      // Load rooms and entry points for staff form to ensure everything is up to date
-      loadRoomsForStaffForm();
-      loadEntryPointsForStaffForm();
-      
-      showModal('staff-modal');
+      (async () => {
+        clearForm('staff-form');
+        document.getElementById('staff-form-title').textContent = 'Add New Staff';
+        document.getElementById('staff-form').setAttribute('data-mode', 'add');
+        document.getElementById('access-all-rooms').checked = false;
+        document.getElementById('specific-rooms-container').style.display = 'block';
+        
+        // Auto-generate a PIN code for new staff
+        document.getElementById('staff-password').value = generatePinCode(5);
+        
+        // Reset room and entry point checkboxes
+        document.querySelectorAll('.room-checkbox, .entry-point-checkbox').forEach(checkbox => {
+          checkbox.checked = false;
+        });
+        
+        document.querySelectorAll('[id^="room-pos-"], [id^="entry-pos-"]').forEach(posInput => {
+          posInput.disabled = true;
+          posInput.value = "";
+        });
+        
+        // Load rooms and entry points sequentially to avoid conflicts
+        await loadRoomsForStaffForm();
+        await loadEntryPointsForStaffForm();
+        
+        showModal('staff-modal');
+      })();
     }
   });
   

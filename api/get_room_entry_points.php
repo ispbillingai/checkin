@@ -18,7 +18,7 @@ if (empty($room_id)) {
 }
 
 try {
-    // Query to get entry points for the specified room
+    // Query to get entry points associated with the specified room
     $query = "SELECT e.id, e.name, e.description, e.ip_address
               FROM entry_points e
               JOIN room_entry_points re ON e.id = re.entry_point_id
