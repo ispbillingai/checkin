@@ -370,12 +370,6 @@ const loadEntryPointsForStaffForm = async () => {
         
         entryPointsContainer.appendChild(entryPointDiv);
       }
-      
-      // After adding all entry points to the DOM, set up the position auto-assignment
-      // This is important - we need to make sure this happens AFTER the entry points are added to the DOM
-      setTimeout(() => {
-        setupPositionAutoAssignment();
-      }, 100);
     } else {
       entryPointsContainer.innerHTML = '<p class="text-gray-500 text-sm">No entry points available</p>';
     }
@@ -610,10 +604,6 @@ const initStaffModule = () => {
         }
       });
       
-      // Load rooms and entry points for staff form to ensure everything is up to date
-      await loadRoomsForStaffForm();
-      await loadEntryPointsForStaffForm();
-      
       showModal('staff-modal');
     });
   }
@@ -653,10 +643,6 @@ const initStaffModule = () => {
           positionInput.value = "";
         }
       });
-      
-      // Load rooms and entry points for staff form to ensure everything is up to date
-      loadRoomsForStaffForm();
-      loadEntryPointsForStaffForm();
       
       showModal('staff-modal');
     }
