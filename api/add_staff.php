@@ -1,3 +1,4 @@
+
 <?php
 require_once '../php/db_config.php';
 
@@ -38,22 +39,37 @@ function logMessage($message) {
     file_put_contents($logFile, $logLine, FILE_APPEND);
 }
 
-// Non-blocking function to send HTTP requests in the background
-function sendAsyncRequest($url) {
-    logMessage("Sending async GET request to: {$url}");
+// Enhanced function to send HTTP requests in the background with better logging
+function sendAsyncRequest($url, $deviceType, $deviceId, $position, $pinCode) {
+    // Log detailed information about the request
+    logMessage("SENDING PIN: Device={$deviceType}, ID={$deviceId}, Position={$position}, PIN={$pinCode}");
+    logMessage("REQUEST URL: {$url}");
     
-    // Use file_get_contents in non-blocking mode (fire and forget)
+    // Validate URL format
+    if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        logMessage("ERROR: Invalid URL format: {$url}");
+        return false;
+    }
+    
+    // Use file_get_contents in non-blocking mode
     $opts = [
         'http' => [
             'timeout' => 0.01, // Very short timeout for non-blocking behavior
+            'ignore_errors' => true // Don't throw exceptions on HTTP errors
         ]
     ];
-    $context = stream_context_create($opts);
-    @file_get_contents($url, false, $context);
     
-    // Immediately log success - actual success will be determined by door controller
-    logMessage("Async request initiated to: {$url}");
-    return true;
+    $context = stream_context_create($opts);
+    
+    // Attempt to send the request and log the result
+    try {
+        @file_get_contents($url, false, $context);
+        logMessage("PIN CODE SENT: Request initiated to {$deviceType} ID={$deviceId}");
+        return true;
+    } catch (Exception $e) {
+        logMessage("ERROR: Exception when sending request: " . $e->getMessage());
+        return false;
+    }
 }
 
 try {
@@ -129,10 +145,14 @@ try {
         $roomsStmt->execute($roomIds);
         $roomsData = $roomsStmt->fetchAll(PDO::FETCH_ASSOC);
         
+        // Log retrieved room IPs for debugging
+        logMessage("Retrieved " . count($roomsData) . " room IPs for staff " . $staffId);
+        
         // Map room IDs to their IPs for easy lookup
         $roomIpMap = [];
         foreach ($roomsData as $room) {
             $roomIpMap[$room['id']] = $room['ip_address'];
+            logMessage("Room ID={$room['id']} has IP={$room['ip_address']}");
         }
         
         // Loop through each room and send PIN code
@@ -142,11 +162,15 @@ try {
             $roomIp = isset($roomIpMap[$roomId]) ? $roomIpMap[$roomId] : '';
             
             if (!empty($roomIp)) {
-                $url = "http://{$roomIp}/clu_set1.cgi?box={$roomPos}&value={$pinCode}";
-                sendAsyncRequest($url);
-                logMessage("Initiated PIN code send to room ID={$roomId}, position={$roomPos}");
+                // Ensure IP address has http:// prefix
+                if (strpos($roomIp, 'http://') !== 0 && strpos($roomIp, 'https://') !== 0) {
+                    $roomIp = 'http://' . $roomIp;
+                }
+                
+                $url = $roomIp . "/clu_set1.cgi?box={$roomPos}&value={$pinCode}";
+                sendAsyncRequest($url, "Room", $roomId, $roomPos, $pinCode);
             } else {
-                logMessage("Skipping room code send: Missing IP for room ID={$roomId}");
+                logMessage("ERROR: Missing IP for room ID={$roomId}");
             }
         }
     } elseif ($accessAllRooms) {
@@ -155,6 +179,8 @@ try {
         $allRoomsStmt->execute();
         $allRooms = $allRoomsStmt->fetchAll(PDO::FETCH_ASSOC);
         
+        logMessage("Access all rooms: Retrieved " . count($allRooms) . " rooms");
+        
         foreach ($allRooms as $room) {
             $roomId = $room['id'];
             $roomIp = $room['ip_address'];
@@ -162,11 +188,15 @@ try {
             $roomPos = 1;
             
             if (!empty($roomIp)) {
-                $url = "http://{$roomIp}/clu_set1.cgi?box={$roomPos}&value={$pinCode}";
-                sendAsyncRequest($url);
-                logMessage("Initiated PIN code send to all-access room ID={$roomId}, position={$roomPos}");
+                // Ensure IP address has http:// prefix
+                if (strpos($roomIp, 'http://') !== 0 && strpos($roomIp, 'https://') !== 0) {
+                    $roomIp = 'http://' . $roomIp;
+                }
+                
+                $url = $roomIp . "/clu_set1.cgi?box={$roomPos}&value={$pinCode}";
+                sendAsyncRequest($url, "All-Access Room", $roomId, $roomPos, $pinCode);
             } else {
-                logMessage("Skipping all-access room code send: Missing IP for room ID={$roomId}");
+                logMessage("ERROR: Missing IP for all-access room ID={$roomId}");
             }
         }
     }
@@ -181,10 +211,14 @@ try {
         $entryStmt->execute($entryPointIds);
         $entryData = $entryStmt->fetchAll(PDO::FETCH_ASSOC);
         
+        // Log retrieved entry point IPs for debugging
+        logMessage("Retrieved " . count($entryData) . " entry point IPs for staff " . $staffId);
+        
         // Map entry point IDs to their IPs for easy lookup
         $entryIpMap = [];
         foreach ($entryData as $entry) {
             $entryIpMap[$entry['id']] = $entry['ip_address'];
+            logMessage("Entry Point ID={$entry['id']} has IP={$entry['ip_address']}");
         }
         
         // Loop through each entry point and send PIN code
@@ -194,11 +228,15 @@ try {
             $entryIp = isset($entryIpMap[$entryId]) ? $entryIpMap[$entryId] : '';
             
             if (!empty($entryIp)) {
-                $url = "http://{$entryIp}/clu_set1.cgi?box={$entryPos}&value={$pinCode}";
-                sendAsyncRequest($url);
-                logMessage("Initiated PIN code send to entry point ID={$entryId}, position={$entryPos}");
+                // Ensure IP address has http:// prefix
+                if (strpos($entryIp, 'http://') !== 0 && strpos($entryIp, 'https://') !== 0) {
+                    $entryIp = 'http://' . $entryIp;
+                }
+                
+                $url = $entryIp . "/clu_set1.cgi?box={$entryPos}&value={$pinCode}";
+                sendAsyncRequest($url, "Entry Point", $entryId, $entryPos, $pinCode);
             } else {
-                logMessage("Skipping entry point code send: Missing IP for entry ID={$entryId}");
+                logMessage("ERROR: Missing IP for entry point ID={$entryId}");
             }
         }
     }
