@@ -270,7 +270,7 @@ try {
                 
                 $url = $roomIp . "/clu_set1.cgi?box={$roomPos}&value={$pinCode}";
                 sendAsyncRequest($url, "Room", $roomId, $roomPos, $pinCode);
-                logMessage("Room {$i+1} of " . count($roomIds) . " updated: ID={$roomId}, position={$roomPos}");
+
             } else {
                 logMessage("ERROR: Missing IP for room ID={$roomId}");
             }
@@ -382,7 +382,7 @@ try {
                 
                 $url = $entryIp . "/clu_set1.cgi?box={$entryPos}&value={$pinCode}";
                 sendAsyncRequest($url, "Entry Point", $entryId, $entryPos, $pinCode);
-                logMessage("Entry point {$i+1} of " . count($entryPointIds) . " updated: ID={$entryId}, position={$entryPos}");
+
             } else {
                 logMessage("ERROR: Missing IP for entry point ID={$entryId}");
             }
