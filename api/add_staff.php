@@ -39,7 +39,7 @@ function logMessage($message) {
     file_put_contents($logFile, $logLine, FILE_APPEND);
 }
 
-// Enhanced function to send HTTP requests in the background with better logging
+// Enhanced function to send HTTP requests with better handling for multiple requests
 function sendAsyncRequest($url, $deviceType, $deviceId, $position, $pinCode) {
     // Log detailed information about the request
     logMessage("SENDING PIN: Device={$deviceType}, ID={$deviceId}, Position={$position}, PIN={$pinCode}");
@@ -51,11 +51,13 @@ function sendAsyncRequest($url, $deviceType, $deviceId, $position, $pinCode) {
         return false;
     }
     
-    // Use file_get_contents in non-blocking mode
+    // Use file_get_contents in non-blocking mode but with a slightly longer timeout
+    // to ensure the request is properly initiated
     $opts = [
         'http' => [
-            'timeout' => 0.01, // Very short timeout for non-blocking behavior
-            'ignore_errors' => true // Don't throw exceptions on HTTP errors
+            'timeout' => 0.5, // Slightly longer timeout to ensure the request is initiated
+            'ignore_errors' => true, // Don't throw exceptions on HTTP errors
+            'header' => "Connection: Close\r\n" // Close connection immediately after request
         ]
     ];
     
@@ -64,7 +66,12 @@ function sendAsyncRequest($url, $deviceType, $deviceId, $position, $pinCode) {
     // Attempt to send the request and log the result
     try {
         @file_get_contents($url, false, $context);
-        logMessage("PIN CODE SENT: Request initiated to {$deviceType} ID={$deviceId}");
+        logMessage("PIN CODE SENT: Request initiated to {$deviceType} ID={$deviceId}, Position={$position}");
+        
+        // Small sleep to ensure requests are processed separately
+        // This helps when sending multiple requests to the same IP with different positions
+        usleep(100000); // 100ms delay between requests
+        
         return true;
     } catch (Exception $e) {
         logMessage("ERROR: Exception when sending request: " . $e->getMessage());
@@ -169,6 +176,7 @@ try {
                 
                 $url = $roomIp . "/clu_set1.cgi?box={$roomPos}&value={$pinCode}";
                 sendAsyncRequest($url, "Room", $roomId, $roomPos, $pinCode);
+                logMessage("Room {$i+1} of " . count($roomIds) . " processed");
             } else {
                 logMessage("ERROR: Missing IP for room ID={$roomId}");
             }
@@ -181,6 +189,7 @@ try {
         
         logMessage("Access all rooms: Retrieved " . count($allRooms) . " rooms");
         
+        $processedCount = 0;
         foreach ($allRooms as $room) {
             $roomId = $room['id'];
             $roomIp = $room['ip_address'];
@@ -195,6 +204,8 @@ try {
                 
                 $url = $roomIp . "/clu_set1.cgi?box={$roomPos}&value={$pinCode}";
                 sendAsyncRequest($url, "All-Access Room", $roomId, $roomPos, $pinCode);
+                $processedCount++;
+                logMessage("All-access room {$processedCount} of " . count($allRooms) . " processed");
             } else {
                 logMessage("ERROR: Missing IP for all-access room ID={$roomId}");
             }
@@ -235,6 +246,7 @@ try {
                 
                 $url = $entryIp . "/clu_set1.cgi?box={$entryPos}&value={$pinCode}";
                 sendAsyncRequest($url, "Entry Point", $entryId, $entryPos, $pinCode);
+                logMessage("Entry point {$i+1} of " . count($entryPointIds) . " processed");
             } else {
                 logMessage("ERROR: Missing IP for entry point ID={$entryId}");
             }

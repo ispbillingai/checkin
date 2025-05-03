@@ -37,22 +37,44 @@ function logMessage($message) {
     file_put_contents($logFile, $logLine, FILE_APPEND);
 }
 
-// Non-blocking function to send HTTP requests in the background
-function sendAsyncRequest($url) {
-    logMessage("Sending async GET request to: {$url}");
+// Enhanced function to send HTTP requests with better handling for multiple requests
+function sendAsyncRequest($url, $deviceType = '', $deviceId = '', $position = '', $pinCode = '') {
+    // Log detailed information about the request
+    logMessage("SENDING REQUEST: Device={$deviceType}, ID={$deviceId}, Position={$position}, PIN={$pinCode}");
+    logMessage("REQUEST URL: {$url}");
     
-    // Use file_get_contents in non-blocking mode (fire and forget)
+    // Validate URL format
+    if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        logMessage("ERROR: Invalid URL format: {$url}");
+        return false;
+    }
+    
+    // Use file_get_contents in non-blocking mode but with a slightly longer timeout
+    // to ensure the request is properly initiated
     $opts = [
         'http' => [
-            'timeout' => 0.01, // Very short timeout for non-blocking behavior
+            'timeout' => 0.5, // Slightly longer timeout to ensure the request is initiated
+            'ignore_errors' => true, // Don't throw exceptions on HTTP errors
+            'header' => "Connection: Close\r\n" // Close connection immediately after request
         ]
     ];
-    $context = stream_context_create($opts);
-    @file_get_contents($url, false, $context);
     
-    // Immediately log success - actual success will be determined by door controller
-    logMessage("Async request initiated to: {$url}");
-    return true;
+    $context = stream_context_create($opts);
+    
+    // Attempt to send the request and log the result
+    try {
+        @file_get_contents($url, false, $context);
+        logMessage("REQUEST SENT: Request initiated to {$deviceType} ID={$deviceId}, Position={$position}");
+        
+        // Small sleep to ensure requests are processed separately
+        // This helps when sending multiple requests to the same IP with different positions
+        usleep(100000); // 100ms delay between requests
+        
+        return true;
+    } catch (Exception $e) {
+        logMessage("ERROR: Exception when sending request: " . $e->getMessage());
+        return false;
+    }
 }
 
 try {
@@ -94,6 +116,7 @@ try {
         $allRoomsStmt->execute();
         $allRooms = $allRoomsStmt->fetchAll(PDO::FETCH_ASSOC);
         
+        $processedCount = 0;
         foreach ($allRooms as $room) {
             $roomId = $room['id'];
             $roomIp = $room['ip_address'];
@@ -101,9 +124,14 @@ try {
             $roomPos = 1;
             
             if (!empty($roomIp)) {
-                $url = "http://{$roomIp}/clu_set1.cgi?box={$roomPos}&value=0";
-                sendAsyncRequest($url);
-                logMessage("Initiated PIN code clearing from all-access room ID={$roomId}, position={$roomPos}");
+                if (strpos($roomIp, 'http://') !== 0 && strpos($roomIp, 'https://') !== 0) {
+                    $roomIp = 'http://' . $roomIp;
+                }
+                
+                $url = $roomIp . "/clu_set1.cgi?box={$roomPos}&value=0";
+                sendAsyncRequest($url, "All-Access Room", $roomId, $roomPos, "0");
+                $processedCount++;
+                logMessage("Cleared PIN code from all-access room {$processedCount}: ID={$roomId}, position={$roomPos}");
             }
         }
     } elseif (!empty($rooms)) {
@@ -125,9 +153,13 @@ try {
             $roomIp = isset($roomIpMap[$roomId]) ? $roomIpMap[$roomId] : '';
             
             if (!empty($roomIp)) {
-                $url = "http://{$roomIp}/clu_set1.cgi?box={$roomPos}&value=0";
-                sendAsyncRequest($url);
-                logMessage("Initiated PIN code clearing from room ID={$roomId}, position={$roomPos}");
+                if (strpos($roomIp, 'http://') !== 0 && strpos($roomIp, 'https://') !== 0) {
+                    $roomIp = 'http://' . $roomIp;
+                }
+                
+                $url = $roomIp . "/clu_set1.cgi?box={$roomPos}&value=0";
+                sendAsyncRequest($url, "Room", $roomId, $roomPos, "0");
+                logMessage("Cleared PIN code from room {$i+1} of " . count($rooms) . ": ID={$roomId}, position={$roomPos}");
             }
         }
     }
@@ -155,9 +187,13 @@ try {
             $entryIp = isset($entryIpMap[$entryId]) ? $entryIpMap[$entryId] : '';
             
             if (!empty($entryIp)) {
-                $url = "http://{$entryIp}/clu_set1.cgi?box={$entryPos}&value=0";
-                sendAsyncRequest($url);
-                logMessage("Initiated PIN code clearing from entry point ID={$entryId}, position={$entryPos}");
+                if (strpos($entryIp, 'http://') !== 0 && strpos($entryIp, 'https://') !== 0) {
+                    $entryIp = 'http://' . $entryIp;
+                }
+                
+                $url = $entryIp . "/clu_set1.cgi?box={$entryPos}&value=0";
+                sendAsyncRequest($url, "Entry Point", $entryId, $entryPos, "0");
+                logMessage("Cleared PIN code from entry point {$i+1} of " . count($entryPoints) . ": ID={$entryId}, position={$entryPos}");
             }
         }
     }
