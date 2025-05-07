@@ -50,14 +50,17 @@ const loadBookings = async () => {
         };
         
         const getPositionsInfo = () => {
-          const entryPoints = booking.entry_point_id.split(',');
-          const positions = booking.positions.split(',');
+          // Safely handle potentially undefined values
           let posInfo = `Room pos: ${booking.room_position || 'N/A'}<br>`;
           
-          entryPoints.forEach((ep, index) => {
-            const pos = positions[index] || 'N/A';
-            posInfo += `${ep}: pos ${pos}<br>`;
-          });
+          // Check if entry_points array exists and has elements
+          if (booking.entry_points && booking.entry_points.length > 0) {
+            booking.entry_points.forEach(ep => {
+              posInfo += `${ep.name || 'Unknown'}: pos ${ep.position || 'N/A'}<br>`;
+            });
+          } else {
+            posInfo += 'No entry points assigned';
+          }
           
           return posInfo;
         };
@@ -97,6 +100,17 @@ const loadBookings = async () => {
     }
   } catch (error) {
     logError(error, 'Loading Bookings');
+    // Display error to the user
+    const tableBody = document.getElementById('bookings-table');
+    if (tableBody) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="8" class="px-6 py-4 text-center text-red-500">
+            Error loading bookings. Please try again later.
+          </td>
+        </tr>
+      `;
+    }
   }
 };
 
