@@ -1,40 +1,43 @@
-
 <?php
-// Updated: Include your db_config.php from the php folder in the root directory
+// Include database configuration
 require_once __DIR__ . '/php/db_config.php';
 
-/**
- * Simple function to log messages to codes.log in the same folder as this script.
- * It captures the date/time, then the message.
- */
-function logMessage($message) {
-    // Adjust path as needed; this will place codes.log in the same directory as the script
-    $logFile = __DIR__ . '/codes.log';
+// Set PHP timezone to match server (CEST, UTC+2)
+date_default_timezone_set('Europe/Paris'); // CEST
 
-    // Format the log line: [YYYY-mm-dd HH:MM:SS] <message>
-    $time = date('Y-m-d H:i:s');
-    $logLine = "[{$time}] {$message}\n";
+// Set database session timezone to CEST
+$conn->query("SET time_zone = '+02:00'");
 
-    // Append to the log file
-    file_put_contents($logFile, $logLine, FILE_APPEND);
-}
-
-// Define how to send HTTP GET requests in PHP
+// Define how to send HTTP GET requests
 function sendGetRequest($url) {
-    logMessage("Sending GET request to: {$url}");
-    $result = @file_get_contents($url);
+    // Ensure URL has a valid protocol
+    if (!preg_match('#^https?://#', $url)) {
+        $url = 'http://' . $url;
+    }
+    error_log("Sending GET request to: {$url}");
+    $opts = [
+        'http' => [
+            'timeout' => 0.5,
+            'ignore_errors' => true,
+            'header' => "Connection: Close\r\n"
+        ]
+    ];
+    $context = stream_context_create($opts);
+    $result = @file_get_contents($url, false, $context);
     if ($result === false) {
-        logMessage("ERROR: Failed to get a response from {$url}");
+        error_log("ERROR: Failed to get a response from {$url}");
         return null;
     }
     // Limit response log to 500 characters for brevity
     $respSnippet = substr($result, 0, 500);
-    logMessage("Response from {$url}: {$respSnippet}");
+    error_log("Response from {$url}: {$respSnippet}");
     return $result;
 }
 
 try {
-    logMessage("=== CRON START ===");
+    error_log("=== CRON START ===");
+    error_log("PHP timezone: " . date_default_timezone_get());
+    error_log("Database NOW(): " . $conn->query("SELECT NOW() AS now")->fetch_assoc()['now']);
 
     // Find all bookings within the next hour that haven't been sent yet
     $sql = "
@@ -47,7 +50,7 @@ try {
           AND b.arrival_datetime <= DATE_ADD(NOW(), INTERVAL 1 HOUR)
     ";
 
-    logMessage("Executing query to find upcoming bookings:\n{$sql}");
+    error_log("Executing query to find upcoming bookings:\n{$sql}");
     $stmt = $conn->prepare($sql);
     if (!$stmt) {
         throw new Exception("Failed to prepare statement: " . $conn->error);
@@ -55,48 +58,68 @@ try {
     $stmt->execute();
     $result = $stmt->get_result();
 
-    // Loop through each booking that needs codes
+    // Loop through each booking that needs codes (insertion)
     while ($booking = $result->fetch_assoc()) {
         $bookingId     = $booking['id'];
         $roomId        = $booking['room_id'];
-        $roomIp        = $booking['room_ip'];         // from the JOIN
-        $roomPosition  = $booking['room_position'];   // int
-        $pinCode       = $booking['access_code'];     // e.g. "00100"
+        $roomIp        = $booking['room_ip'];
+        $roomPosition  = $booking['room_position'];
+        $pinCode       = $booking['access_code'];
+        $entryPointIds = $booking['entry_point_id'];
+        $entryPositions = $booking['positions'];
 
-        logMessage("Processing booking ID={$bookingId}, roomId={$roomId}, roomIp={$roomIp}, roomPos={$roomPosition}, pinCode={$pinCode}");
+        error_log("Processing booking ID={$bookingId}, roomId={$roomId}, roomIp={$roomIp}, roomPos={$roomPosition}, pinCode={$pinCode}");
 
-        // Send the code to the room if there's a valid room IP and position
-        if (!empty($roomIp) && !empty($roomPosition)) {
-            $url = "http://{$roomIp}/clu_set1.cgi?box={$roomPosition}&value={$pinCode}";
-            sendGetRequest($url);
-        } else {
-            logMessage("Skipping room code send: Missing room IP or room position for booking ID={$bookingId}");
+        // Validate PIN code
+        if (empty($pinCode) || strlen($pinCode) > 15) {
+            error_log("ERROR: Invalid PIN code for booking ID={$bookingId}: " . ($pinCode ?: 'empty'));
+            continue;
         }
 
-        // Send codes to each entry point used by this booking
-        $entryPointIds  = $booking['entry_point_id']; // e.g. "entry1,entry2,entry3"
-        $entryPositions = $booking['positions'];      // e.g. "2,5,10"
+        $allRequestsSuccessful = true;
 
+        // Send the code to the room (set value to PIN code)
+        if (!empty($roomIp) && !empty($roomPosition)) {
+            $url = "http://{$roomIp}/clu_set1.cgi?box={$roomPosition}&value={$pinCode}";
+            if (!sendGetRequest($url)) {
+                $allRequestsSuccessful = false;
+            } else {
+                error_log("Set room code for booking ID={$bookingId} at position={$roomPosition} to {$pinCode}");
+            }
+        } else {
+            error_log("Skipping room code send: Missing room IP or room position for booking ID={$bookingId}");
+            $allRequestsSuccessful = false;
+        }
+
+        // Send codes to each entry point
         if (!empty($entryPointIds) && !empty($entryPositions)) {
             $entryPointsArray = explode(',', $entryPointIds);
             $positionsArray   = explode(',', $entryPositions);
 
-            // We assume these arrays are the same length
+            // Validate array lengths
+            if (count($entryPointsArray) !== count($positionsArray)) {
+                error_log("ERROR: Mismatch in entry points and positions for booking ID={$bookingId}");
+                $allRequestsSuccessful = false;
+                continue;
+            }
+
             for ($i = 0; $i < count($entryPointsArray); $i++) {
-                $epId = trim($entryPointsArray[$i]);   // e.g. "entry1"
-                $pos  = trim($positionsArray[$i]);     // e.g. "5"
+                $epId = trim($entryPointsArray[$i]);
+                $pos  = trim($positionsArray[$i]);
 
-                logMessage(" Booking ID={$bookingId}: Attempting to send code to entry point ID={$epId} at position={$pos}");
+                error_log("Booking ID={$bookingId}: Attempting to send code to entry point ID={$epId} at position={$pos}");
 
-                // Lookup that entry point's IP address from `entry_points`
+                // Lookup entry point's IP address
                 $stmtIp = $conn->prepare("SELECT ip_address FROM entry_points WHERE id = ? LIMIT 1");
                 if (!$stmtIp) {
-                    logMessage("ERROR: Could not prepare statement for IP lookup: " . $conn->error);
+                    error_log("ERROR: Could not prepare statement for IP lookup: " . $conn->error);
+                    $allRequestsSuccessful = false;
                     continue;
                 }
                 $stmtIp->bind_param("s", $epId);
                 if (!$stmtIp->execute()) {
-                    logMessage("ERROR: Could not execute IP lookup for {$epId}: " . $stmtIp->error);
+                    error_log("ERROR: Could not execute IP lookup for {$epId}: " . $stmtIp->error);
+                    $allRequestsSuccessful = false;
                     continue;
                 }
                 $resIp = $stmtIp->get_result();
@@ -107,54 +130,63 @@ try {
                 $stmtIp->close();
 
                 if (empty($entryIp)) {
-                    logMessage("No IP found for entry point ID={$epId}. Skipping.");
+                    error_log("No IP found for entry point ID={$epId}. Skipping.");
+                    $allRequestsSuccessful = false;
                     continue;
                 }
 
                 if (!empty($pos)) {
                     $url = "http://{$entryIp}/clu_set1.cgi?box={$pos}&value={$pinCode}";
-                    sendGetRequest($url);
+                    if (!sendGetRequest($url)) {
+                        $allRequestsSuccessful = false;
+                    } else {
+                        error_log("Set entry point code for booking ID={$bookingId} at entry point ID={$epId}, position={$pos} to {$pinCode}");
+                    }
                 } else {
-                    logMessage("Skipping code send for booking ID={$bookingId}, epId={$epId}: position is empty.");
+                    error_log("Skipping code send for booking ID={$bookingId}, epId={$epId}: position is empty.");
+                    $allRequestsSuccessful = false;
                 }
             }
         } else {
-            logMessage("No entry points or positions for booking ID={$bookingId}. Possibly none were selected.");
+            error_log("No entry points or positions for booking ID={$bookingId}. Possibly none were selected.");
         }
 
-        // Mark this booking's codes as sent so we don't send them again
-        $updateSql = "UPDATE bookings SET codes_sent = 1 WHERE id = ?";
-        $updateStmt = $conn->prepare($updateSql);
-        if (!$updateStmt) {
-            logMessage("ERROR: Could not prepare codes_sent update for booking ID={$bookingId}: " . $conn->error);
-            continue;
-        }
-        $updateStmt->bind_param("i", $bookingId);
-        if (!$updateStmt->execute()) {
-            logMessage("ERROR: Could not update codes_sent for booking ID={$bookingId}: " . $updateStmt->error);
+        // Mark codes as sent only if all requests succeeded
+        if ($allRequestsSuccessful) {
+            $updateSql = "UPDATE bookings SET codes_sent = 1 WHERE id = ?";
+            $updateStmt = $conn->prepare($updateSql);
+            if (!$updateStmt) {
+                error_log("ERROR: Could not prepare codes_sent update for booking ID={$bookingId}: " . $conn->error);
+                continue;
+            }
+            $updateStmt->bind_param("i", $bookingId);
+            if (!$updateStmt->execute()) {
+                error_log("ERROR: Could not update codes_sent for booking ID={$bookingId}: " . $updateStmt->error);
+            } else {
+                error_log("Successfully marked codes_sent=1 for booking ID={$bookingId}");
+            }
+            $updateStmt->close();
         } else {
-            logMessage("Successfully marked codes_sent=1 for booking ID={$bookingId}");
+            error_log("Not marking codes_sent for booking ID={$bookingId}: Some requests failed");
         }
-        $updateStmt->close();
     }
 
     $stmt->close();
     
-    // NEW FUNCTIONALITY: Clear access codes an hour after checkout
-    logMessage("=== STARTING CHECKOUT CLEANUP ===");
+    // Clear access codes an hour after checkout (set value to 0)
+    error_log("=== STARTING CHECKOUT CLEANUP ===");
     
-    // Find all bookings where checkout was an hour ago and codes haven't been cleared
+    // Find all bookings where checkout was up to an hour ago and codes haven't been cleared
     $clearSql = "
         SELECT b.*, r.ip_address AS room_ip  
         FROM bookings b
         JOIN rooms r ON b.room_id = r.id
-        WHERE b.status = 'completed'
-          AND b.codes_cleared = 0
-          AND b.departure_datetime < NOW() 
+        WHERE b.codes_cleared = 0
+          AND b.departure_datetime <= NOW()
           AND b.departure_datetime >= DATE_SUB(NOW(), INTERVAL 1 HOUR)
     ";
     
-    logMessage("Executing query to find recent checkouts:\n{$clearSql}");
+    error_log("Executing query to find recent checkouts:\n{$clearSql}");
     $clearStmt = $conn->prepare($clearSql);
     if (!$clearStmt) {
         throw new Exception("Failed to prepare checkout statement: " . $conn->error);
@@ -162,97 +194,152 @@ try {
     $clearStmt->execute();
     $clearResult = $clearStmt->get_result();
     
+    // Current time for logging
+    $currentTime = date('Y-m-d H:i:s');
+    error_log("Current server time: {$currentTime}");
+    error_log("Found " . $clearResult->num_rows . " bookings for cleanup");
+    
     // Loop through each booking that needs codes cleared
     while ($checkout = $clearResult->fetch_assoc()) {
         $bookingId = $checkout['id'];
         $roomId = $checkout['room_id'];
         $roomIp = $checkout['room_ip'];
         $roomPosition = $checkout['room_position'];
-        
-        logMessage("Clearing codes for completed booking ID={$bookingId}, roomId={$roomId}");
-        
-        // Clear the room code by setting value to 0
-        if (!empty($roomIp) && !empty($roomPosition)) {
-            $url = "http://{$roomIp}/clu_set1.cgi?box={$roomPosition}&value=0";
-            sendGetRequest($url);
-            logMessage("Cleared room code at roomIp={$roomIp}, position={$roomPosition}");
-        } else {
-            logMessage("Skipping room code clear: Missing room IP or position for booking ID={$bookingId}");
-        }
-        
-        // Clear codes from each entry point used by this booking
         $entryPointIds = $checkout['entry_point_id'];
         $entryPositions = $checkout['positions'];
+        $departureTime = $checkout['departure_datetime'];
+        $status = $checkout['status'];
         
+        error_log("Processing checkout for booking ID={$bookingId}, roomId={$roomId}, status={$status}, departure_datetime={$departureTime}");
+        
+        // Calculate time difference to check 1-hour window
+        $currentTimestamp = strtotime($currentTime);
+        $departureTimestamp = strtotime($departureTime);
+        $timeDiffMinutes = ($currentTimestamp - $departureTimestamp) / 60;
+        if ($timeDiffMinutes < 0) {
+            error_log("Booking ID={$bookingId} not yet eligible for cleanup: departure_datetime={$departureTime} is in the future (current time={$currentTime})");
+            continue;
+        } elseif ($timeDiffMinutes > 60) {
+            error_log("Booking ID={$bookingId} outside 1-hour window: departure_datetime={$departureTime} is {$timeDiffMinutes} minutes ago");
+            continue;
+        } else {
+            error_log("Booking ID={$bookingId} within 1-hour window: departure_datetime={$departureTime}, {$timeDiffMinutes} minutes ago");
+        }
+        
+        $allClearRequestsSuccessful = true;
+
+        // Clear the room code by setting value to 0
+        // WARNING: If clu_set1.cgi?value=0 clears all codes on the card instead of just the specified box,
+        // this is a hardware/API issue. Verify with the vendor or check API documentation for the correct endpoint.
+        if (!empty($roomIp) && !empty($roomPosition)) {
+            $url = "http://{$roomIp}/clu_set1.cgi?box={$roomPosition}&value=0";
+            if (!sendGetRequest($url)) {
+                error_log("Failed to clear room code for booking ID={$bookingId} at roomIp={$roomIp}, position={$roomPosition}");
+                $allClearRequestsSuccessful = false;
+            } else {
+                error_log("Successfully set room code to 0 for booking ID={$bookingId} at roomIp={$roomIp}, position={$roomPosition}");
+            }
+        } else {
+            error_log("Skipping room code clear for booking ID={$bookingId}: " . (empty($roomIp) ? "Missing room IP" : "") . (empty($roomPosition) ? " Missing room position" : ""));
+            $allClearRequestsSuccessful = false;
+        }
+        
+        // Clear codes from each entry point
         if (!empty($entryPointIds) && !empty($entryPositions)) {
             $entryPointsArray = explode(',', $entryPointIds);
             $positionsArray = explode(',', $entryPositions);
             
-            // Loop through each entry point
+            // Validate array lengths
+            if (count($entryPointsArray) !== count($positionsArray)) {
+                error_log("ERROR: Mismatch in entry points and positions for booking ID={$bookingId}: entryPoints=" . count($entryPointsArray) . ", positions=" . count($positionsArray));
+                $allClearRequestsSuccessful = false;
+                continue;
+            }
+            
+            error_log("Processing " . count($entryPointsArray) . " entry points for booking ID={$bookingId}");
+            
             for ($i = 0; $i < count($entryPointsArray); $i++) {
                 $epId = trim($entryPointsArray[$i]);
                 $pos = trim($positionsArray[$i]);
                 
-                logMessage("Booking ID={$bookingId}: Clearing code from entry point ID={$epId} at position={$pos}");
+                error_log("Booking ID={$bookingId}: Attempting to clear code from entry point ID={$epId} at position={$pos}");
                 
                 // Get the entry point IP
                 $epIpStmt = $conn->prepare("SELECT ip_address FROM entry_points WHERE id = ? LIMIT 1");
                 if (!$epIpStmt) {
-                    logMessage("ERROR: Could not prepare statement for entry point IP lookup: " . $conn->error);
+                    error_log("ERROR: Could not prepare statement for entry point IP lookup for epId={$epId}: " . $conn->error);
+                    $allClearRequestsSuccessful = false;
                     continue;
                 }
                 $epIpStmt->bind_param("s", $epId);
                 if (!$epIpStmt->execute()) {
-                    logMessage("ERROR: Could not execute IP lookup for entry point {$epId}: " . $epIpStmt->error);
+                    error_log("ERROR: Could not execute IP lookup for entry point epId={$epId}: " . $epIpStmt->error);
+                    $allClearRequestsSuccessful = false;
                     continue;
                 }
                 $epIpResult = $epIpStmt->get_result();
                 $entryIp = '';
                 if ($epIpRow = $epIpResult->fetch_assoc()) {
                     $entryIp = $epIpRow['ip_address'];
+                } else {
+                    error_log("No IP found for entry point ID={$epId} for booking ID={$bookingId}. Skipping code clearing.");
+                    $allClearRequestsSuccessful = false;
+                    continue;
                 }
                 $epIpStmt->close();
                 
                 if (empty($entryIp)) {
-                    logMessage("No IP found for entry point ID={$epId}. Skipping code clearing.");
+                    error_log("Empty IP address for entry point ID={$epId} for booking ID={$bookingId}. Skipping code clearing.");
+                    $allClearRequestsSuccessful = false;
                     continue;
                 }
                 
                 if (!empty($pos)) {
-                    // Clear the code by setting value to 0
+                    // WARNING: If clu_set1.cgi?value=0 clears all codes on the card instead of just the specified box,
+                    // this is a hardware/API issue. Verify with the vendor or check API documentation.
                     $url = "http://{$entryIp}/clu_set1.cgi?box={$pos}&value=0";
-                    sendGetRequest($url);
-                    logMessage("Cleared entry point code at entryIp={$entryIp}, position={$pos}");
+                    if (!sendGetRequest($url)) {
+                        error_log("Failed to clear entry point code for booking ID={$bookingId} at entryIp={$entryIp}, position={$pos}");
+                        $allClearRequestsSuccessful = false;
+                    } else {
+                        error_log("Successfully set entry point code to 0 for booking ID={$bookingId} at entryIp={$entryIp}, position={$pos}");
+                    }
                 } else {
-                    logMessage("Skipping code clear for booking ID={$bookingId}, epId={$epId}: position is empty.");
+                    error_log("Skipping code clear for booking ID={$bookingId}, epId={$epId}: position is empty.");
+                    $allClearRequestsSuccessful = false;
                 }
             }
         } else {
-            logMessage("No entry points or positions for booking ID={$bookingId}. Skipping entry code clearing.");
+            error_log("No entry points or positions for booking ID={$bookingId}. Skipping entry code clearing.");
         }
         
-        // Mark this booking's codes as cleared
-        $updateClearSql = "UPDATE bookings SET codes_cleared = 1 WHERE id = ?";
-        $updateClearStmt = $conn->prepare($updateClearSql);
-        if (!$updateClearStmt) {
-            logMessage("ERROR: Could not prepare codes_cleared update for booking ID={$bookingId}: " . $conn->error);
-            continue;
-        }
-        $updateClearStmt->bind_param("i", $bookingId);
-        if (!$updateClearStmt->execute()) {
-            logMessage("ERROR: Could not update codes_cleared for booking ID={$bookingId}: " . $updateClearStmt->error);
+        // Mark codes as cleared only if all requests succeeded
+        if ($allClearRequestsSuccessful) {
+            $updateClearSql = "UPDATE bookings SET codes_cleared = 1 WHERE id = ?";
+            $updateClearStmt = $conn->prepare($updateClearSql);
+            if (!$updateClearStmt) {
+                error_log("ERROR: Could not prepare codes_cleared update for booking ID={$bookingId}: " . $conn->error);
+                continue;
+            }
+            $updateClearStmt->bind_param("i", $bookingId);
+            if (!$updateClearStmt->execute()) {
+                error_log("ERROR: Could not update codes_cleared for booking ID={$bookingId}: " . $updateClearStmt->error);
+            } else {
+                error_log("Successfully marked codes_cleared=1 for booking ID={$bookingId}");
+            }
+            $updateClearStmt->close();
         } else {
-            logMessage("Successfully marked codes_cleared=1 for booking ID={$bookingId}");
+            error_log("Not marking codes_cleared for booking ID={$bookingId}: Some clear requests failed or were skipped");
         }
-        $updateClearStmt->close();
     }
     
     $clearStmt->close();
-    logMessage("Checkout cleanup completed successfully.");
-    logMessage("=== CRON END ===\n");
+    error_log("Checkout cleanup completed successfully.");
+    error_log("=== CRON END ===\n");
 
 } catch (Exception $e) {
     $errorMsg = "Error in cron script: " . $e->getMessage();
-    logMessage($errorMsg);
+    error_log($errorMsg);
     echo $errorMsg . "\n";
 }
+?>

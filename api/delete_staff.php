@@ -105,6 +105,7 @@ try {
         $allRoomsStmt->execute();
         $allRooms = $allRoomsStmt->fetchAll(PDO::FETCH_ASSOC);
         
+        logMessage("Clearing PIN codes for all rooms (access_all_rooms)");
         $processedCount = 0;
         foreach ($allRooms as $room) {
             $roomId = $room['id'];
@@ -117,6 +118,8 @@ try {
                 sendAsyncRequest($url, "All-Access Room", $roomId, $roomPos, "0");
                 $processedCount++;
                 logMessage("Cleared PIN code from all-access room {$processedCount}: ID={$roomId}, position={$roomPos}");
+            } else {
+                logMessage("ERROR: Missing IP for all-access room ID={$roomId}");
             }
         }
     } elseif (!empty($rooms)) {
@@ -124,21 +127,25 @@ try {
         $roomsStmt->execute($rooms);
         $roomsData = $roomsStmt->fetchAll(PDO::FETCH_ASSOC);
         
+        logMessage("Retrieved " . count($roomsData) . " room IPs for clearing");
         $roomIpMap = [];
         foreach ($roomsData as $room) {
             $roomIpMap[$room['id']] = $room['ip_address'];
+            logMessage("Room ID={$room['id']} has IP={$room['ip_address']}");
         }
         
         for ($i = 0; $i < count($rooms); $i++) {
             $roomId = $rooms[$i];
             $roomPos = isset($roomPositions[$i]) ? $roomPositions[$i] : 1;
-            $roomIp = isset($roomIpMap[$roomId]) ? $roomIpArray[$roomId] : '';
+            $roomIp = isset($roomIpMap[$roomId]) ? $roomIpMap[$roomId] : '';
             
             if (!empty($roomIp)) {
                 $roomIp = strpos($roomIp, 'http://') === 0 || strpos($roomIp, 'https://') === 0 ? $roomIp : 'http://' . $roomIp;
                 $url = "{$roomIp}/clu_set1.cgi?box={$roomPos}&value=0";
                 sendAsyncRequest($url, "Room", $roomId, $roomPos, "0");
                 logMessage("Cleared PIN code from room " . ($i + 1) . " of " . count($rooms) . ": ID={$roomId}, position={$roomPos}");
+            } else {
+                logMessage("ERROR: Missing IP for room ID={$roomId}");
             }
         }
     }
@@ -152,9 +159,11 @@ try {
         $entryStmt->execute($entryPoints);
         $entryData = $entryStmt->fetchAll(PDO::FETCH_ASSOC);
         
+        logMessage("Retrieved " . count($entryData) . " entry point IPs for clearing");
         $entryIpMap = [];
         foreach ($entryData as $entry) {
             $entryIpMap[$entry['id']] = $entry['ip_address'];
+            logMessage("Entry Point ID={$entry['id']} has IP={$entry['ip_address']}");
         }
         
         for ($i = 0; $i < count($entryPoints); $i++) {
@@ -167,6 +176,8 @@ try {
                 $url = "{$entryIp}/clu_set1.cgi?box={$entryPos}&value=0";
                 sendAsyncRequest($url, "Entry Point", $entryId, $entryPos, "0");
                 logMessage("Cleared PIN code from entry point " . ($i + 1) . " of " . count($entryPoints) . ": ID={$entryId}, position={$entryPos}");
+            } else {
+                logMessage("ERROR: Missing IP for entry point ID={$entryId}");
             }
         }
     }
