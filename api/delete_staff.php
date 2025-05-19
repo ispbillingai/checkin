@@ -111,13 +111,15 @@ try {
             $roomId = $room['id'];
             $roomIp = $room['ip_address'];
             $roomPos = 1;
+            // Subtract 1 to account for card's +1 adjustment
+            $cardPos = $roomPos - 1; // Maps to 0, card clears position 1
             
             if (!empty($roomIp)) {
                 $roomIp = strpos($roomIp, 'http://') === 0 || strpos($roomIp, 'https://') === 0 ? $roomIp : 'http://' . $roomIp;
-                $url = "{$roomIp}/clu_set1.cgi?box={$roomPos}&value=0";
-                sendAsyncRequest($url, "All-Access Room", $roomId, $roomPos, "0");
+                $url = "{$roomIp}/clu_set1.cgi?box={$cardPos}&value=0";
+                sendAsyncRequest($url, "All-Access Room", $roomId, $cardPos, "0");
                 $processedCount++;
-                logMessage("Cleared PIN code from all-access room {$processedCount}: ID={$roomId}, position={$roomPos}");
+                logMessage("Cleared PIN code from all-access room {$processedCount}: ID={$roomId}, card position {$cardPos} (database position {$roomPos}, card clears position " . ($cardPos + 1) . ")");
             } else {
                 logMessage("ERROR: Missing IP for all-access room ID={$roomId}");
             }
@@ -137,13 +139,20 @@ try {
         for ($i = 0; $i < count($rooms); $i++) {
             $roomId = $rooms[$i];
             $roomPos = isset($roomPositions[$i]) ? $roomPositions[$i] : 1;
+            // Subtract 1 to account for card's +1 adjustment
+            $cardPos = (int)$roomPos - 1;
             $roomIp = isset($roomIpMap[$roomId]) ? $roomIpMap[$roomId] : '';
+            
+            if ($cardPos < 0) {
+                logMessage("ERROR: Invalid card position {$cardPos} for room ID={$roomId}, database position={$roomPos}");
+                continue;
+            }
             
             if (!empty($roomIp)) {
                 $roomIp = strpos($roomIp, 'http://') === 0 || strpos($roomIp, 'https://') === 0 ? $roomIp : 'http://' . $roomIp;
-                $url = "{$roomIp}/clu_set1.cgi?box={$roomPos}&value=0";
-                sendAsyncRequest($url, "Room", $roomId, $roomPos, "0");
-                logMessage("Cleared PIN code from room " . ($i + 1) . " of " . count($rooms) . ": ID={$roomId}, position={$roomPos}");
+                $url = "{$roomIp}/clu_set1.cgi?box={$cardPos}&value=0";
+                sendAsyncRequest($url, "Room", $roomId, $cardPos, "0");
+                logMessage("Cleared PIN code from room " . ($i + 1) . " of " . count($rooms) . ": ID={$roomId}, card position {$cardPos} (database position {$roomPos}, card clears position " . ($cardPos + 1) . ")");
             } else {
                 logMessage("ERROR: Missing IP for room ID={$roomId}");
             }
@@ -169,13 +178,20 @@ try {
         for ($i = 0; $i < count($entryPoints); $i++) {
             $entryId = $entryPoints[$i];
             $entryPos = isset($entryPositions[$i]) ? $entryPositions[$i] : 1;
+            // Subtract 1 to account for card's +1 adjustment
+            $cardPos = (int)$entryPos - 1;
             $entryIp = isset($entryIpMap[$entryId]) ? $entryIpMap[$entryId] : '';
+            
+            if ($cardPos < 0) {
+                logMessage("ERROR: Invalid card position {$cardPos} for entry point ID={$entryId}, database position={$entryPos}");
+                continue;
+            }
             
             if (!empty($entryIp)) {
                 $entryIp = strpos($entryIp, 'http://') === 0 || strpos($entryIp, 'https://') === 0 ? $entryIp : 'http://' . $entryIp;
-                $url = "{$entryIp}/clu_set1.cgi?box={$entryPos}&value=0";
-                sendAsyncRequest($url, "Entry Point", $entryId, $entryPos, "0");
-                logMessage("Cleared PIN code from entry point " . ($i + 1) . " of " . count($entryPoints) . ": ID={$entryId}, position={$entryPos}");
+                $url = "{$entryIp}/clu_set1.cgi?box={$cardPos}&value=0";
+                sendAsyncRequest($url, "Entry Point", $entryId, $cardPos, "0");
+                logMessage("Cleared PIN code from entry point " . ($i + 1) . " of " . count($entryPoints) . ": ID={$entryId}, card position {$cardPos} (database position {$entryPos}, card clears position " . ($cardPos + 1) . ")");
             } else {
                 logMessage("ERROR: Missing IP for entry point ID={$entryId}");
             }

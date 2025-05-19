@@ -147,13 +147,20 @@ try {
         for ($i = 0; $i < count($roomIds); $i++) {
             $roomId = $roomIds[$i];
             $roomPos = isset($roomPosArray[$i]) ? $roomPosArray[$i] : 1;
+            // Subtract 1 to account for card's +1 adjustment
+            $cardPos = (int)$roomPos - 1;
             $roomIp = isset($roomIpMap[$roomId]) ? $roomIpMap[$roomId] : '';
+            
+            if ($cardPos < 0) {
+                logMessage("ERROR: Invalid card position {$cardPos} for room ID={$roomId}, frontend position={$roomPos}");
+                continue;
+            }
             
             if (!empty($roomIp)) {
                 $roomIp = strpos($roomIp, 'http://') === 0 || strpos($roomIp, 'https://') === 0 ? $roomIp : 'http://' . $roomIp;
-                $url = "{$roomIp}/clu_set1.cgi?box={$roomPos}&value={$pinCode}";
-                sendAsyncRequest($url, "Room", $roomId, $roomPos, $pinCode);
-                logMessage("Room " . ($i + 1) . " of " . count($roomIds) . " processed");
+                $url = "{$roomIp}/clu_set1.cgi?box={$cardPos}&value={$pinCode}";
+                sendAsyncRequest($url, "Room", $roomId, $cardPos, $pinCode);
+                logMessage("Room " . ($i + 1) . " of " . count($roomIds) . " processed with card position {$cardPos} (frontend position {$roomPos}, card sets position " . ($cardPos + 1) . ")");
             } else {
                 logMessage("ERROR: Missing IP for room ID={$roomId}");
             }
@@ -169,14 +176,16 @@ try {
         foreach ($allRooms as $room) {
             $roomId = $room['id'];
             $roomIp = $room['ip_address'];
+            // Use position 1 for all-access, subtract 1 for card (1 becomes 0)
             $roomPos = 1;
+            $cardPos = $roomPos - 1; // Maps to 0, card sets position 1
             
             if (!empty($roomIp)) {
                 $roomIp = strpos($roomIp, 'http://') === 0 || strpos($roomIp, 'https://') === 0 ? $roomIp : 'http://' . $roomIp;
-                $url = "{$roomIp}/clu_set1.cgi?box={$roomPos}&value={$pinCode}";
-                sendAsyncRequest($url, "All-Access Room", $roomId, $roomPos, $pinCode);
+                $url = "{$roomIp}/clu_set1.cgi?box={$cardPos}&value={$pinCode}";
+                sendAsyncRequest($url, "All-Access Room", $roomId, $cardPos, $pinCode);
                 $processedCount++;
-                logMessage("All-access room {$processedCount} of " . count($allRooms) . " processed");
+                logMessage("All-access room {$processedCount} of " . count($allRooms) . " processed with card position {$cardPos} (frontend position {$roomPos}, card sets position " . ($cardPos + 1) . ")");
             } else {
                 logMessage("ERROR: Missing IP for all-access room ID={$roomId}");
             }
@@ -203,13 +212,20 @@ try {
         for ($i = 0; $i < count($entryPointIds); $i++) {
             $entryId = $entryPointIds[$i];
             $entryPos = isset($entryPosArray[$i]) ? $entryPosArray[$i] : 1;
+            // Subtract 1 to account for card's +1 adjustment
+            $cardPos = (int)$entryPos - 1;
             $entryIp = isset($entryIpMap[$entryId]) ? $entryIpMap[$entryId] : '';
             
+            if ($cardPos < 0) {
+                logMessage("ERROR: Invalid card position {$cardPos} for entry point ID={$entryId}, frontend position={$entryPos}");
+                continue;
+            }
+            
             if (!empty($entryIp)) {
-                $entryIp = strpos($entryIp, 'http://') === 0 || strpos($entryIp, 'https://') === 0 ? $entryIp : 'http://' . $entryIp;
-                $url = "{$entryIp}/clu_set1.cgi?box={$entryPos}&value={$pinCode}";
-                sendAsyncRequest($url, "Entry Point", $entryId, $entryPos, $pinCode);
-                logMessage("Entry point " . ($i + 1) . " of " . count($entryPointIds) . " processed");
+                $entryIp = strpos($entryIp, 'http://') === 0 || strpos($roomIp, 'https://') === 0 ? $entryIp : 'http://' . $entryIp;
+                $url = "{$entryIp}/clu_set1.cgi?box={$cardPos}&value={$pinCode}";
+                sendAsyncRequest($url, "Entry Point", $entryId, $cardPos, $pinCode);
+                logMessage("Entry point " . ($i + 1) . " of " . count($entryPointIds) . " processed with card position {$cardPos} (frontend position {$entryPos}, card sets position " . ($cardPos + 1) . ")");
             } else {
                 logMessage("ERROR: Missing IP for entry point ID={$entryId}");
             }

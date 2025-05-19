@@ -9,12 +9,12 @@ date_default_timezone_set('Europe/Paris'); // CEST
 $conn->query("SET time_zone = '+02:00'");
 
 // Define how to send HTTP GET requests
-function sendGetRequest($url) {
+function sendGetRequest($url, $deviceType, $deviceId, $position, $pinCode) {
     // Ensure URL has a valid protocol
     if (!preg_match('#^https?://#', $url)) {
         $url = 'http://' . $url;
     }
-    error_log("Sending GET request to: {$url}");
+    error_log("Sending GET request to: {$url}, Device={$deviceType}, ID={$deviceId}, Position={$position}, PIN={$pinCode}");
     $opts = [
         'http' => [
             'timeout' => 0.5,
@@ -26,12 +26,12 @@ function sendGetRequest($url) {
     $result = @file_get_contents($url, false, $context);
     if ($result === false) {
         error_log("ERROR: Failed to get a response from {$url}");
-        return null;
+        return false;
     }
     // Limit response log to 500 characters for brevity
     $respSnippet = substr($result, 0, 500);
     error_log("Response from {$url}: {$respSnippet}");
-    return $result;
+    return true;
 }
 
 try {
@@ -80,11 +80,18 @@ try {
 
         // Send the code to the room (set value to PIN code)
         if (!empty($roomIp) && !empty($roomPosition)) {
-            $url = "http://{$roomIp}/clu_set1.cgi?box={$roomPosition}&value={$pinCode}";
-            if (!sendGetRequest($url)) {
+            // Subtract 1 to account for card's +1 adjustment
+            $cardPos = (int)$roomPosition - 1;
+            if ($cardPos < 0) {
+                error_log("ERROR: Invalid card position {$cardPos} for booking ID={$bookingId}, room ID={$roomId}, database position={$roomPosition}");
                 $allRequestsSuccessful = false;
             } else {
-                error_log("Set room code for booking ID={$bookingId} at position={$roomPosition} to {$pinCode}");
+                $url = "http://{$roomIp}/clu_set1.cgi?box={$cardPos}&value={$pinCode}";
+                if (!sendGetRequest($url, "Room", $roomId, $cardPos, $pinCode)) {
+                    $allRequestsSuccessful = false;
+                } else {
+                    error_log("Set room code for booking ID={$bookingId} at roomIp={$roomIp}, card position {$cardPos} (database position {$roomPosition}, card sets position " . ($cardPos + 1) . ") to {$pinCode}");
+                }
             }
         } else {
             error_log("Skipping room code send: Missing room IP or room position for booking ID={$bookingId}");
@@ -98,7 +105,7 @@ try {
 
             // Validate array lengths
             if (count($entryPointsArray) !== count($positionsArray)) {
-                error_log("ERROR: Mismatch in entry points and positions for booking ID={$bookingId}");
+                error_log("ERROR: Mismatch in entry points and positions for booking ID={$bookingId}: entryPoints=" . count($entryPointsArray) . ", positions=" . count($positionsArray));
                 $allRequestsSuccessful = false;
                 continue;
             }
@@ -136,11 +143,18 @@ try {
                 }
 
                 if (!empty($pos)) {
-                    $url = "http://{$entryIp}/clu_set1.cgi?box={$pos}&value={$pinCode}";
-                    if (!sendGetRequest($url)) {
+                    // Subtract 1 to account for card's +1 adjustment
+                    $cardPos = (int)$pos - 1;
+                    if ($cardPos < 0) {
+                        error_log("ERROR: Invalid card position {$cardPos} for booking ID={$bookingId}, entry point ID={$epId}, database position={$pos}");
                         $allRequestsSuccessful = false;
                     } else {
-                        error_log("Set entry point code for booking ID={$bookingId} at entry point ID={$epId}, position={$pos} to {$pinCode}");
+                        $url = "http://{$entryIp}/clu_set1.cgi?box={$cardPos}&value={$pinCode}";
+                        if (!sendGetRequest($url, "Entry Point", $epId, $cardPos, $pinCode)) {
+                            $allRequestsSuccessful = false;
+                        } else {
+                            error_log("Set entry point code for booking ID={$bookingId} at entry point ID={$epId}, card position {$cardPos} (database position {$pos}, card sets position " . ($cardPos + 1) . ") to {$pinCode}");
+                        }
                     }
                 } else {
                     error_log("Skipping code send for booking ID={$bookingId}, epId={$epId}: position is empty.");
@@ -229,15 +243,20 @@ try {
         $allClearRequestsSuccessful = true;
 
         // Clear the room code by setting value to 0
-        // WARNING: If clu_set1.cgi?value=0 clears all codes on the card instead of just the specified box,
-        // this is a hardware/API issue. Verify with the vendor or check API documentation for the correct endpoint.
         if (!empty($roomIp) && !empty($roomPosition)) {
-            $url = "http://{$roomIp}/clu_set1.cgi?box={$roomPosition}&value=0";
-            if (!sendGetRequest($url)) {
-                error_log("Failed to clear room code for booking ID={$bookingId} at roomIp={$roomIp}, position={$roomPosition}");
+            // Subtract 1 to account for card's +1 adjustment
+            $cardPos = (int)$roomPosition - 1;
+            if ($cardPos < 0) {
+                error_log("ERROR: Invalid card position {$cardPos} for booking ID={$bookingId}, room ID={$roomId}, database position={$roomPosition}");
                 $allClearRequestsSuccessful = false;
             } else {
-                error_log("Successfully set room code to 0 for booking ID={$bookingId} at roomIp={$roomIp}, position={$roomPosition}");
+                $url = "http://{$roomIp}/clu_set1.cgi?box={$cardPos}&value=0";
+                if (!sendGetRequest($url, "Room", $roomId, $cardPos, "0")) {
+                    error_log("Failed to clear room code for booking ID={$bookingId} at roomIp={$roomIp}, card position {$cardPos} (database position {$roomPosition})");
+                    $allClearRequestsSuccessful = false;
+                } else {
+                    error_log("Successfully cleared room code for booking ID={$bookingId} at roomIp={$roomIp}, card position {$cardPos} (database position {$roomPosition}, card clears position " . ($cardPos + 1) . ")");
+                }
             }
         } else {
             error_log("Skipping room code clear for booking ID={$bookingId}: " . (empty($roomIp) ? "Missing room IP" : "") . (empty($roomPosition) ? " Missing room position" : ""));
@@ -295,14 +314,19 @@ try {
                 }
                 
                 if (!empty($pos)) {
-                    // WARNING: If clu_set1.cgi?value=0 clears all codes on the card instead of just the specified box,
-                    // this is a hardware/API issue. Verify with the vendor or check API documentation.
-                    $url = "http://{$entryIp}/clu_set1.cgi?box={$pos}&value=0";
-                    if (!sendGetRequest($url)) {
-                        error_log("Failed to clear entry point code for booking ID={$bookingId} at entryIp={$entryIp}, position={$pos}");
+                    // Subtract 1 to account for card's +1 adjustment
+                    $cardPos = (int)$pos - 1;
+                    if ($cardPos < 0) {
+                        error_log("ERROR: Invalid card position {$cardPos} for booking ID={$bookingId}, entry point ID={$epId}, database position={$pos}");
                         $allClearRequestsSuccessful = false;
                     } else {
-                        error_log("Successfully set entry point code to 0 for booking ID={$bookingId} at entryIp={$entryIp}, position={$pos}");
+                        $url = "http://{$entryIp}/clu_set1.cgi?box={$cardPos}&value=0";
+                        if (!sendGetRequest($url, "Entry Point", $epId, $cardPos, "0")) {
+                            error_log("Failed to clear entry point code for booking ID={$bookingId} at entryIp={$entryIp}, card position {$cardPos} (database position {$pos})");
+                            $allClearRequestsSuccessful = false;
+                        } else {
+                            error_log("Successfully cleared entry point code for booking ID={$bookingId} at entryIp={$entryIp}, card position {$cardPos} (database position {$pos}, card clears position " . ($cardPos + 1) . ")");
+                        }
                     }
                 } else {
                     error_log("Skipping code clear for booking ID={$bookingId}, epId={$epId}: position is empty.");
